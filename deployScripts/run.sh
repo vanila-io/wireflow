@@ -1,2 +1,2 @@
 #!/bin/sh
-pm2 start process.json
+METEOR_SETTINGS=$(cat settings.json) pm2 start process.json
