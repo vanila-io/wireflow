@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
+	<!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">
+	<!ENTITY ns_graphs "http://ns.adobe.com/Graphs/1.0/">
+	<!ENTITY ns_vars "http://ns.adobe.com/Variables/1.0/">
+	<!ENTITY ns_imrep "http://ns.adobe.com/ImageReplacement/1.0/">
+	<!ENTITY ns_sfw "http://ns.adobe.com/SaveForWeb/1.0/">
+	<!ENTITY ns_custom "http://ns.adobe.com/GenericCustomNamespace/1.0/">
+	<!ENTITY ns_adobe_xpath "http://ns.adobe.com/XPath/1.0/">
+]>
+<svg version="1.1" id="Layer_1" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 455 400"
+	 enable-background="new 0 0 455 400" xml:space="preserve">
+<metadata>
+	<sfw  xmlns="&ns_sfw;">
+		<slices></slices>
+		<sliceSourceBounds  width="443.9" height="392.6" y="-396.1" x="5.5" bottomLeftOrigin="true"></sliceSourceBounds>
+	</sfw>
+</metadata>
+<g id="Article_1">
+	<g id="Body_1_">
+		<path id="Placeholder_1_" fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" d="M6.5,53h441.9l0,0v338
+			c0,2.2-1.8,4.1-4.1,4.1H10.6c-2.2,0-4.1-1.8-4.1-4.1V53L6.5,53z"/>
+		<g>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="242.7" y1="258.6" x2="47.3" y2="258.6"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="242.7" y1="323.8" x2="47.3" y2="323.8"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="242.7" y1="283.1" x2="63.5" y2="283.1"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="242.7" y1="348.2" x2="63.5" y2="348.2"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="242.7" y1="303.4" x2="132.8" y2="303.4"/>
+			
+				<rect x="279" y="239.7" fill="#F1F2F2" stroke="#000000" stroke-width="2" stroke-miterlimit="10" width="123.1" height="123.1"/>
+		</g>
+		<g>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="218.3" y1="112" x2="413.8" y2="112"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="218.3" y1="177.2" x2="413.8" y2="177.2"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="218.3" y1="136.5" x2="397.5" y2="136.5"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="218.3" y1="201.6" x2="397.5" y2="201.6"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="218.3" y1="156.8" x2="328.3" y2="156.8"/>
+			<rect x="59" y="93.1" fill="#F1F2F2" stroke="#000000" stroke-width="2" stroke-miterlimit="10" width="123.1" height="123.1"/>
+		</g>
+	</g>
+	<g id="Header">
+		<path fill="#FFFFFF" stroke="#010101" stroke-width="2" stroke-miterlimit="10" d="M18.7,4.4h417.5c6.8,0,12.2,5.4,12.2,12.2v36.6
+			l0,0H6.5l0,0V16.7C6.5,9.9,12,4.4,18.7,4.4z"/>
+		<g>
+			<circle fill="#ECC85E" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="402.6" cy="26.6" r="9.9"/>
+			<circle fill="#E81D25" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="346.2" cy="26.6" r="9.9"/>
+			<circle fill="#83A28A" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="374" cy="26.6" r="9.9"/>
+		</g>
+		<text transform="matrix(1 0 0 1 47.2571 20)" fill="#414042" font-family="'ArialMT'" font-size="36">Blog</text>
+	</g>
+</g>
+</svg>

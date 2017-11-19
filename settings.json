@@ -1,0 +1,7 @@
+ {
+    "public": {},
+    "private": {},
+    "S3bucket": "<S3 Bucket>",
+    "AWSAccessKeyId": "<Aws Access Key id>",
+    "AWSSecretAccessKey": "<Aws Secret Access Key>"
+  }

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
+	<!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">
+	<!ENTITY ns_graphs "http://ns.adobe.com/Graphs/1.0/">
+	<!ENTITY ns_vars "http://ns.adobe.com/Variables/1.0/">
+	<!ENTITY ns_imrep "http://ns.adobe.com/ImageReplacement/1.0/">
+	<!ENTITY ns_sfw "http://ns.adobe.com/SaveForWeb/1.0/">
+	<!ENTITY ns_custom "http://ns.adobe.com/GenericCustomNamespace/1.0/">
+	<!ENTITY ns_adobe_xpath "http://ns.adobe.com/XPath/1.0/">
+]>
+<svg version="1.1" id="Layer_1" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 455 400"
+	 enable-background="new 0 0 455 400" xml:space="preserve">
+<metadata>
+	<sfw  xmlns="&ns_sfw;">
+		<slices></slices>
+		<sliceSourceBounds  width="444.3" height="393.3" y="-396.7" x="5.1" bottomLeftOrigin="true"></sliceSourceBounds>
+	</sfw>
+</metadata>
+<g id="Article_1">
+	<g id="Header">
+		<path fill="#FFFFFF" stroke="#010101" stroke-width="2" stroke-miterlimit="10" d="M18.7,4.4h417.5c6.8,0,12.2,5.4,12.2,12.2v36.6
+			l0,0H6.5l0,0V16.7C6.5,9.9,12,4.4,18.7,4.4z"/>
+		<g>
+			<circle fill="#ECC85E" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="402.6" cy="26.6" r="9.9"/>
+			<circle fill="#E81D25" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="346.2" cy="26.6" r="9.9"/>
+			<circle fill="#83A28A" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="374" cy="26.6" r="9.9"/>
+		</g>
+		<text transform="matrix(0.9822 0 0 1 47.2573 20)" fill="#414042" font-family="'ArialMT'" font-size="36">Feature</text>
+	</g>
+	<g id="Body_1_">
+		<g id="Placeholder_1_">
+			<path fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" d="M6.1,53.3h442.3l0,0v338.3
+				c0,2.3-1.8,4.1-4.1,4.1H10.2c-2.3,0-4.1-1.8-4.1-4.1V53.3L6.1,53.3z"/>
+		</g>
+		<g id="Button">
+			<path fill="#A7A9AC" stroke="#000000" stroke-width="2" stroke-miterlimit="10" d="M173.1,328.5h98.2c2.2,0,3.9,1.8,3.9,3.9V349
+				c0,2.2-1.8,3.9-3.9,3.9h-98.2c-2.2,0-3.9-1.8-3.9-3.9v-16.6C169.2,330.2,170.9,328.5,173.1,328.5z"/>
+		</g>
+		<g id="Feature_3">
+			<circle fill="#F1F2F2" stroke="#000000" stroke-width="2" stroke-miterlimit="10" cx="360.5" cy="127" r="32.9"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="315.9" y1="189.9" x2="405.6" y2="189.9"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="328.2" y1="206.2" x2="393.4" y2="206.2"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="328.2" y1="238.8" x2="393.4" y2="238.8"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="320" y1="222.5" x2="401.5" y2="222.5"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="336.3" y1="255.1" x2="385.2" y2="255.1"/>
+		</g>
+		<g id="Feature_2">
+			<circle fill="#F1F2F2" stroke="#000000" stroke-width="2" stroke-miterlimit="10" cx="222.4" cy="127" r="32.9"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="177.3" y1="189.9" x2="267" y2="189.9"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="189.6" y1="206.2" x2="254.8" y2="206.2"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="189.6" y1="238.8" x2="254.8" y2="238.8"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="181.4" y1="222.5" x2="262.9" y2="222.5"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="197.7" y1="255.1" x2="246.6" y2="255.1"/>
+		</g>
+		<g id="Feature_1">
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="51" y1="189.9" x2="140.6" y2="189.9"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="63.2" y1="206.2" x2="128.4" y2="206.2"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="63.2" y1="238.8" x2="128.4" y2="238.8"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="55" y1="222.5" x2="136.6" y2="222.5"/>
+			<line fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-miterlimit="10" x1="71.3" y1="255.1" x2="120.3" y2="255.1"/>
+			<circle fill="#F1F2F2" stroke="#000000" stroke-width="2" stroke-miterlimit="10" cx="96.1" cy="127" r="32.9"/>
+		</g>
+	</g>
+</g>
+</svg>

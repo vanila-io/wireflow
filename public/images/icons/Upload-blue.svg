@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="60px" height="60px" viewBox="0 0 60 60" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.3.3 (12081) - http://www.bohemiancoding.com/sketch -->
+    <title>Upload</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="colored" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Tech_sliced" sketch:type="MSLayerGroup" transform="translate(-720.000000, -1200.000000)"></g>
+        <g id="Imported-Layers" sketch:type="MSLayerGroup" transform="translate(-719.000000, -1198.000000)" fill="#539efb">
+            <path d="M775,1252 L723,1252 L723,1237 L731,1237 L731,1244 L767,1244 L767,1237 L775,1237 L775,1252 L775,1252 Z M725,1250 L773,1250 L773,1239 L769,1239 L769,1246 L729,1246 L729,1239 L725,1239 L725,1250 L725,1250 Z" id="Fill-716" sketch:type="MSShapeGroup"></path>
+            <path d="M748,1212.052 L750,1212.052 L750,1239 L748,1239 L748,1212.052 Z" id="Fill-717" sketch:type="MSShapeGroup"></path>
+            <path d="M755.724,1218.395 C755.468,1218.395 755.212,1218.297 755.017,1218.102 L748.898,1211.982 L742.983,1217.897 C742.593,1218.287 741.96,1218.287 741.569,1217.897 C741.179,1217.506 741.179,1216.873 741.569,1216.482 L748.19,1209.86 C748.565,1209.485 749.229,1209.485 749.604,1209.86 L756.431,1216.688 C756.821,1217.078 756.821,1217.711 756.431,1218.102 C756.235,1218.297 755.979,1218.395 755.724,1218.395" id="Fill-718" sketch:type="MSShapeGroup"></path>
+        </g>
+    </g>
+</svg>

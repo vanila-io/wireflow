@@ -1,0 +1,78 @@
+{
+  "name": "WireFlow",
+  "version": "0.0.1",
+  "description": "Flowchart collaboration App",
+  "scripts": {
+    "postinstall": "cp node_modules/materialize-css/js/date_picker/picker.js node_modules/materialize-css/bin",
+    "start": "meteor --settings settings.json"
+  },
+  "devDependencies": {
+    "chimp": "^0.39.1",
+    "eslint": "^2.13.1",
+    "eslint-config-airbnb": "^9.0.1",
+    "eslint-plugin-jsx-a11y": "^1.5.5",
+    "eslint-plugin-meteor": "^3.6.0",
+    "eslint-plugin-react": "^5.2.2",
+    "faker": "^3.1.0"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaFeatures": {
+        "jsx": true
+      }
+    },
+    "plugins": [
+      "meteor",
+      "react"
+    ],
+    "extends": [
+      "airbnb/base",
+      "plugin:meteor/guide",
+      "plugin:react/recommended"
+    ],
+    "globals": {
+      "server": false,
+      "browser": false,
+      "expect": false
+    },
+    "rules": {
+      "import/no-unresolved": 0,
+      "no-underscore-dangle": [
+        "error",
+        {
+          "allow": [
+            "_id",
+            "_ensureIndex",
+            "_verifyEmailToken",
+            "_resetPasswordToken",
+            "_name"
+          ]
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "bcrypt": "0.8.7",
+    "bootstrap": "3.3.7",
+    "country-city": "1.0.0",
+    "coupon-code": "0.4.4",
+    "fabric": "1.6.4",
+    "jquery": "2.2.4",
+    "jquery-mousewheel": "3.1.13",
+    "jquery-ui": "1.12.1",
+    "jquery-validation": "1.15.1",
+    "materialize-css": "0.97.7",
+    "meteor-node-stubs": "0.2.3",
+    "numeral": "1.5.3",
+    "react": "15.3.2",
+    "react-addons-pure-render-mixin": "15.3.0",
+    "react-bootstrap": "0.30.3",
+    "react-custom-scrollbars": "4.0.0",
+    "react-dom": "15.3.2",
+    "react-edit-inline": "1.0.7",
+    "react-komposer": "1.13.1",
+    "react-router": "2.6.1",
+    "react-router-bootstrap": "0.23.1",
+    "react-select": "0.9.1"
+  }
+}

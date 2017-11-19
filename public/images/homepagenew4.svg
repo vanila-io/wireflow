@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
+	<!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">
+	<!ENTITY ns_graphs "http://ns.adobe.com/Graphs/1.0/">
+	<!ENTITY ns_vars "http://ns.adobe.com/Variables/1.0/">
+	<!ENTITY ns_imrep "http://ns.adobe.com/ImageReplacement/1.0/">
+	<!ENTITY ns_sfw "http://ns.adobe.com/SaveForWeb/1.0/">
+	<!ENTITY ns_custom "http://ns.adobe.com/GenericCustomNamespace/1.0/">
+	<!ENTITY ns_adobe_xpath "http://ns.adobe.com/XPath/1.0/">
+]>
+<svg version="1.1" id="Layer_1" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 455 400"
+	 enable-background="new 0 0 455 400" xml:space="preserve">
+<metadata>
+	<sfw  xmlns="&ns_sfw;">
+		<slices></slices>
+		<sliceSourceBounds  width="443.9" height="391.2" y="5.4" x="5.5" bottomLeftOrigin="true"></sliceSourceBounds>
+	</sfw>
+</metadata>
+<g id="Header">
+	<path fill="#FFFFFF" stroke="#010101" stroke-width="2" stroke-miterlimit="10" d="M18.7,4.4h417.5c6.8,0,12.2,5.4,12.2,12.2v36.6
+		l0,0H6.5l0,0V16.7C6.5,9.9,12,4.4,18.7,4.4z"/>
+	<g>
+		<circle fill="#ECC85E" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="402.6" cy="26.6" r="9.9"/>
+		<circle fill="#E81D25" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="346.2" cy="26.6" r="9.9"/>
+		<circle fill="#83A28A" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="374" cy="26.6" r="9.9"/>
+	</g>
+	<text transform="matrix(1 0 0 1 33.565 20)" fill="#414042" font-family="'ArialMT'" font-size="36">HomePage</text>
+</g>
+<g id="Body">
+	<g id="Placeholder-2">
+		<path fill="#E56161" stroke="#000000" stroke-width="2.0058" stroke-miterlimit="10" d="M6.5,53.2h441.9l0,0v336.4
+			c0,2.2-1.8,4-4.1,4H10.6c-2.2,0-4.1-1.8-4.1-4V53.2L6.5,53.2z"/>
+	</g>
+	<g id="Play_Icon">
+		<path fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-miterlimit="10" d="M189.8,263.1v-27c0-3.7,5.1-6,9.2-4l30.3,13.5
+			l30.3,13.5c2.2,0.9,3.4,3.4,2.5,5.6c-0.4,1.2-1.4,2.1-2.5,2.5l-30.3,13.5l-30.3,13.5c-4.1,1.8-9.2-0.4-9.2-4L189.8,263.1
+			L189.8,263.1z"/>
+	</g>
+	<g id="Text">
+		<line fill="#E56161" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="165.3" y1="184.8" x2="287.5" y2="184.8"/>
+		<line fill="#E56161" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="124.6" y1="156.5" x2="328.3" y2="156.5"/>
+	</g>
+	<g id="Menu">
+		<line fill="#E56161" stroke="#000000" stroke-width="6" stroke-miterlimit="10" x1="303.8" y1="97.7" x2="360.8" y2="97.7"/>
+		<line fill="#E56161" stroke="#000000" stroke-width="6" stroke-miterlimit="10" x1="369" y1="97.7" x2="417.9" y2="97.7"/>
+		<line fill="#E56161" stroke="#000000" stroke-width="6" stroke-miterlimit="10" x1="246.8" y1="97.7" x2="295.7" y2="97.7"/>
+	</g>
+	<g id="Logo">
+		<line fill="#E56161" stroke="#000000" stroke-width="6" stroke-miterlimit="10" x1="35" y1="97.7" x2="83.9" y2="97.7"/>
+	</g>
+</g>
+</svg>

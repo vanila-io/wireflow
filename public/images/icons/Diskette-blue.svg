@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="60px" height="60px" viewBox="0 0 60 60" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.3.3 (12081) - http://www.bohemiancoding.com/sketch -->
+    <title>Diskette</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="colored" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Tech_sliced" sketch:type="MSLayerGroup" transform="translate(-600.000000, -960.000000)"></g>
+        <g id="Imported-Layers" sketch:type="MSLayerGroup" transform="translate(-599.000000, -958.000000)" fill="#539efb">
+            <path d="M654,1015 L604,1015 L604,963 L644.938,963 C649.935,963 654,967.065 654,972.061 L654,1015 L654,1015 Z M606,1013 L652,1013 L652,972.061 C652,968.167 648.832,965 644.938,965 L606,965 L606,1013 L606,1013 Z" id="Fill-546" sketch:type="MSShapeGroup"></path>
+            <path d="M612,963 L645,963 L645,979 L612,979 L612,963 Z M614,977 L643,977 L643,965 L614,965 L614,977 Z" id="Fill-547" sketch:type="MSShapeGroup"></path>
+            <path d="M615,966 L622,966 L622,976 L615,976 L615,966 Z M617,974 L620,974 L620,968 L617,968 L617,974 Z" id="Fill-548" sketch:type="MSShapeGroup"></path>
+            <path d="M610,991 L648,991 L648,1015 L610,1015 L610,991 Z M612,1013 L646,1013 L646,993 L612,993 L612,1013 Z" id="Fill-549" sketch:type="MSShapeGroup"></path>
+            <path d="M615,996 L643,996 L643,998 L615,998 L615,996 Z" id="Fill-550" sketch:type="MSShapeGroup"></path>
+            <path d="M615,1000 L643,1000 L643,1002 L615,1002 L615,1000 Z" id="Fill-551" sketch:type="MSShapeGroup"></path>
+            <path d="M615,1004 L643,1004 L643,1006 L615,1006 L615,1004 Z" id="Fill-552" sketch:type="MSShapeGroup"></path>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+	<!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
+	<!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">
+	<!ENTITY ns_graphs "http://ns.adobe.com/Graphs/1.0/">
+	<!ENTITY ns_vars "http://ns.adobe.com/Variables/1.0/">
+	<!ENTITY ns_imrep "http://ns.adobe.com/ImageReplacement/1.0/">
+	<!ENTITY ns_sfw "http://ns.adobe.com/SaveForWeb/1.0/">
+	<!ENTITY ns_custom "http://ns.adobe.com/GenericCustomNamespace/1.0/">
+	<!ENTITY ns_adobe_xpath "http://ns.adobe.com/XPath/1.0/">
+]>
+<svg version="1.1" id="Layer_1" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 x="0px" y="0px" viewBox="0 0 455 400" enable-background="new 0 0 455 400" xml:space="preserve">
+<metadata>
+	<sfw  xmlns="&ns_sfw;">
+		<slices></slices>
+		<sliceSourceBounds  width="443.9" height="393.1" y="-393.6" x="1.5" bottomLeftOrigin="true"></sliceSourceBounds>
+	</sfw>
+</metadata>
+<g id="Article_1">
+	<g id="Body">
+		<path id="Placeholder" fill="#FFFFFF" stroke="#010101" stroke-width="2" stroke-miterlimit="10" d="M6.5,53.4h441.9l0,0v338.1
+			c0,2.3-1.8,4-4,4H10.6c-2.3,0-4-1.8-4-4L6.5,53.4L6.5,53.4z"/>
+		<g>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="307.9" y1="100.3" x2="373.1" y2="100.3"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="307.9" y1="169.5" x2="385.4" y2="169.5"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="307.9" y1="124.7" x2="401.6" y2="124.7"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="307.9" y1="193.9" x2="360.9" y2="193.9"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="307.9" y1="145.1" x2="373.1" y2="145.1"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="307.9" y1="218.4" x2="373.1" y2="218.4"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="307.9" y1="242.8" x2="348.7" y2="242.8"/>
+		</g>
+		<g>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="173.6" x2="246.8" y2="173.6"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="124.7" x2="230.5" y2="124.7"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="198" x2="230.5" y2="198"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="149.1" x2="161.3" y2="149.1"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="222.5" x2="246.8" y2="222.5"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="271.3" x2="246.8" y2="271.3"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="246.9" x2="230.5" y2="246.9"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="295.7" x2="230.5" y2="295.7"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="344.6" x2="246.8" y2="344.6"/>
+			<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="320.2" x2="161.3" y2="320.2"/>
+			<g>
+				<line fill="none" stroke="#010101" stroke-width="2" stroke-miterlimit="10" x1="51.3" y1="98.2" x2="246.8" y2="98.2"/>
+			</g>
+		</g>
+	</g>
+	<g id="Header">
+		<path fill="#FFFFFF" stroke="#010101" stroke-width="2" stroke-miterlimit="10" d="M18.7,4.4h417.5c6.8,0,12.2,5.4,12.2,12.2v36.6
+			l0,0H6.5l0,0V16.7C6.5,9.9,12,4.4,18.7,4.4z"/>
+		<g>
+			<circle fill="#ECC85E" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="402.6" cy="26.6" r="9.9"/>
+			<circle fill="#E81D25" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="346.2" cy="26.6" r="9.9"/>
+			<circle fill="#83A28A" stroke="#010101" stroke-width="2" stroke-miterlimit="10" cx="374" cy="26.6" r="9.9"/>
+		</g>
+		<text transform="matrix(1 0 0 1 46.6356 20)" fill="#414042" font-family="'ArialMT'" font-size="36">ARTICLE</text>
+	</g>
+</g>
+</svg>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg version="1.0" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="800px" height="800px" viewBox="0 0 800 800" enable-background="new 0 0 800 800" xml:space="preserve">
+<g id="Header">
+	<path fill="#BCC2C6" d="M33.1,34.5h736.2c8.5,0,16.1,3.5,21.7,9l0,0c5.6,5.6,9,13.2,9,21.7v654.6c0,8.4-3.5,16.1-9,21.7l0,0
+		c-5.6,5.6-13.2,9-21.7,9H33.1c-8.5,0-16.1-3.5-21.7-9l0,0c-5.6-5.6-9-13.2-9-21.7V65.2c0-8.4,3.5-16.1,9-21.7l0,0
+		C16.9,38,24.6,34.5,33.1,34.5"/>
+	<path fill="#EBEFF0" d="M788.9,65.2v654.6c0,12.3-8.6,19.6-19.6,19.6H33.1c-11,0-19.6-7-19.6-19.6V65.2c0-12.8,8.6-19.6,19.6-19.6
+		h736.2C780.2,45.6,788.9,52.7,788.9,65.2"/>
+	<path fill="#94A4A5" d="M677.6,72.3c7.8,0,14.2,6.4,14.2,14.2s-6.3,14.2-14.2,14.2c-7.9,0-14.2-6.3-14.2-14.2
+		C663.4,78.7,669.7,72.3,677.6,72.3 M722.1,72.3c7.8,0,14.2,6.4,14.2,14.2s-6.4,14.2-14.2,14.2c-7.8,0-14.2-6.3-14.2-14.2
+		C707.9,78.7,714.3,72.3,722.1,72.3z M633,72.3c7.8,0,14.2,6.4,14.2,14.2s-6.3,14.2-14.2,14.2c-7.8,0-14.2-6.4-14.2-14.2
+		S625.2,72.3,633,72.3z"/>
+	<text transform="matrix(1 0 0 1 183.1045 85.2969)" fill="#93A2A3" font-family="'NexaBold'" font-size="44.0749">SITEMAP</text>
+</g>
+<g id="Body">
+	<path fill="#BCC2C6" d="M28.7,129.8h744.6c7.3,0,14,3,18.8,7.8c4.8,4.8,7.8,11.5,7.8,18.8v573c0,7.3-3,14-7.8,18.8
+		c-4.8,4.8-11.5,7.8-18.8,7.8H28.7c-7.3,0-14-3-18.8-7.8C5,743.5,2,736.8,2,729.5v-573c0-7.3,3-14,7.8-18.8
+		C14.7,132.8,21.3,129.8,28.7,129.8"/>
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#FFFFFF" d="M28.7,141c-4.1,0-8,1.7-10.9,4.6c-2.9,2.9-4.6,6.8-4.6,11v573
+		c0,4.1,1.6,8,4.6,11c2.9,2.9,6.8,4.6,10.9,4.6h744.6c4.1,0,8-1.6,11-4.6c2.9-2.9,4.6-6.8,4.6-11v-573c0-4.1-1.6-8-4.6-11
+		c-2.9-2.9-6.8-4.6-11-4.6H28.7z"/>
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#34495E" d="M609.1,579.7c6.3-1,11.1-6.5,11.1-13.1V447
+		c0-7.3-6-13.3-13.3-13.3H406.6v-47.8v-24.3h-11.2v24.3v47.8H195c-7.3,0-13.3,6-13.3,13.3v119.6c0,6.6,4.8,12.1,11.2,13.1V447
+		c0-1.2,0.9-2.1,2.1-2.1h200.4v55.2h11.2v-55.2H607c1.2,0,2.1,0.9,2.1,2.1V579.7z"/>
+	<rect x="126.5" y="500.1" fill-rule="evenodd" clip-rule="evenodd" fill="#34495E" width="130.8" height="130.8"/>
+	<rect x="137.2" y="510.8" fill="#22A6EF" width="109.4" height="109.4"/>
+	<rect x="126.5" y="579.9" fill-rule="evenodd" clip-rule="evenodd" fill="#34495E" width="130.8" height="51"/>
+	<rect x="137.2" y="590.6" fill="#FFFFFF" width="109.4" height="29.6"/>
+	<rect x="335.6" y="500.1" fill-rule="evenodd" clip-rule="evenodd" fill="#34495E" width="130.8" height="130.8"/>
+	<rect x="346.3" y="510.8" fill="#22A6EF" width="109.4" height="109.4"/>
+	<rect x="335.6" y="579.9" fill-rule="evenodd" clip-rule="evenodd" fill="#34495E" width="130.8" height="51"/>
+	<rect x="346.3" y="590.6" fill="#FFFFFF" width="109.4" height="29.6"/>
+	<rect x="544.7" y="500.1" fill-rule="evenodd" clip-rule="evenodd" fill="#34495E" width="130.8" height="130.8"/>
+	<rect x="555.4" y="510.8" fill="#22A6EF" width="109.4" height="109.4"/>
+	<rect x="544.7" y="579.9" fill-rule="evenodd" clip-rule="evenodd" fill="#34495E" width="130.8" height="51"/>
+	<rect x="555.4" y="590.6" fill="#FFFFFF" width="109.4" height="29.6"/>
+	<rect x="335.6" y="255.1" fill-rule="evenodd" clip-rule="evenodd" fill="#34495E" width="130.8" height="130.8"/>
+	<rect x="346.3" y="265.8" fill="#22A6EF" width="109.4" height="109.4"/>
+	<rect x="335.6" y="334.9" fill-rule="evenodd" clip-rule="evenodd" fill="#34495E" width="130.8" height="51"/>
+	<rect x="346.3" y="345.6" fill="#FFFFFF" width="109.4" height="29.6"/>
+</g>
+</svg>

@@ -1,0 +1,17 @@
+{
+  "apps": [
+    {
+      "name": "wireflow",
+      "script": "bundle/main.js",
+  		"exec_interpreter" : "/home/someone/.nvm/versions/node/v4.5.0/bin/node",
+      "log_date_format": "YYYY-MM-DD",
+      "exec_mode": "fork_mode",
+      "env": {
+        "PORT": 3001,
+        "MONGO_URL": "mongodb://127.0.0.1/wireflow",
+        "ROOT_URL": "http://localhost:3001",
+        "METEOR_ALLOW_SUPERUSER":true
+      }
+    }
+  ]
+}
