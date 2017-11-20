@@ -5,6 +5,8 @@ Alpha version of Wireflow app made by The Vanila Team.
 
 Website: [wireflow.co](https://wireflow.co)
 
+[Open Hub analysis of Wireflow code](https://www.openhub.net/p/wireflow)
+
 # Install
 
 1) Install [Meteor.js](https://www.meteor.com)
