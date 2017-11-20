@@ -3,7 +3,7 @@
 
 Alpha version of Wireflow app made by The Vanila Team.
 
-Website: [wireflow.co](http://wireflow.co)
+Website: [wireflow.co](https://wireflow.co)
 
 # Install
 
