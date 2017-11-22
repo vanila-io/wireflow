@@ -7,7 +7,7 @@ Check a blog post for whole story https://blog.vanila.io/we-were-hunted-on-produ
 
 Website: [wireflow.co](https://wireflow.co)
 
-Join our internal chat: https://chat.vanila.io
+Join our internal chat: https://chat.vanila.io/channel/wireflow
 
 [Open Hub analysis of Wireflow code](https://www.openhub.net/p/wireflow)
 
