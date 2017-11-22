@@ -3,7 +3,11 @@
 
 Alpha version of Wireflow app made by The Vanila Team.
 
+Check a blog post for whole story https://blog.vanila.io/we-were-hunted-on-producthunt-unexpectedly-e92e7179bdec
+
 Website: [wireflow.co](https://wireflow.co)
+
+Join our internal chat: https://chat.vanila.io
 
 [Open Hub analysis of Wireflow code](https://www.openhub.net/p/wireflow)
 
@@ -29,3 +33,4 @@ meteor npm install
 ```
 meteor npm start
 ```
+
