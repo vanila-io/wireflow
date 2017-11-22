@@ -3,6 +3,9 @@
 
 Alpha version of Wireflow app made by The Vanila Team.
 
+![Wireflow](https://i.imgur.com/ceXMd28.png)
+
+Youtube Video with a short story: https://youtu.be/zm0XbLmXtXY
 Check a blog post for whole story https://blog.vanila.io/we-were-hunted-on-producthunt-unexpectedly-e92e7179bdec
 
 Website: [wireflow.co](https://wireflow.co)
