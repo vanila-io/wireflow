@@ -9,6 +9,8 @@ Website: [wireflow.co](https://wireflow.co)
 
 Join our internal chat: https://chat.vanila.io/channel/wireflow
 
+ProductHunt page: https://www.producthunt.com/posts/wireflow 
+
 [Open Hub analysis of Wireflow code](https://www.openhub.net/p/wireflow)
 
 # Install
