@@ -1,7 +1,9 @@
 
 # Wireflow - flow chart collaboration app
 
-Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io). Website: [wireflow.co](https://wireflow.co)
+Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io).
+
+# Demo [wireflow.co](https://wireflow.co)
 
 ![Wireflow](https://i.imgur.com/ceXMd28.png)
 
