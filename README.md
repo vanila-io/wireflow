@@ -1,15 +1,15 @@
 
 # Wireflow - flow chart collaboration app
 
-Alpha version of Wireflow app made by The Vanila Team.
+Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io). Website: [wireflow.co](https://wireflow.co)
 
 ![Wireflow](https://i.imgur.com/ceXMd28.png)
 
 Youtube Video with a short story: https://youtu.be/zm0XbLmXtXY
 
-Check a blog post for whole story https://blog.vanila.io/we-were-hunted-on-producthunt-unexpectedly-e92e7179bdec
+Meteor Forum Post: https://forums.meteor.com/t/anyone-interested-in-collaboration-on-wireflow-co-open-source-project/40716
 
-Website: [wireflow.co](https://wireflow.co)
+Check a blog post for whole story https://blog.vanila.io/we-were-hunted-on-producthunt-unexpectedly-e92e7179bdec
 
 Join our internal chat: https://chat.vanila.io/channel/wireflow
 
