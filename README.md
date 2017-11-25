@@ -4,23 +4,23 @@
 [![dependencies Status](https://david-dm.org/vanila-io/wireflow/status.svg)](https://david-dm.org/vanila-io/wireflow)
 [![devDependencies Status](https://david-dm.org/vanila-io/wireflow/dev-status.svg)](https://david-dm.org/vanila-io/wireflow?type=dev)
 
-Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io). Website: [wireflow.co](https://wireflow.co)
+Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io).
+
+### Official Website: [Wireflow.co](https://wireflow.co)
 
 ![Wireflow](https://i.imgur.com/ceXMd28.png)
 
-Youtube Video with a short story: https://youtu.be/zm0XbLmXtXY
+## Around the web:
 
-Meteor Forum Post: https://forums.meteor.com/t/anyone-interested-in-collaboration-on-wireflow-co-open-source-project/40716
+- Join our internal chat: https://chat.vanila.io/channel/wireflow
+- [Youtube Video with a short story](https://youtu.be/zm0XbLmXtXY)
+- [Post regarding Contribution](https://forums.meteor.com/t/anyone-interested-in-collaboration-on-wireflow-co-open-source-project/40716)
+-
+[Check a blog post for whole story](https://blog.vanila.io/we-were-hunted-on-producthunt-unexpectedly-e92e7179bdec)
+- [ProductHunt page](https://www.producthunt.com/posts/wireflow)
+- [Open Hub analysis of Wireflow code](https://www.openhub.net/p/wireflow)
 
-Check a blog post for whole story https://blog.vanila.io/we-were-hunted-on-producthunt-unexpectedly-e92e7179bdec
-
-Join our internal chat: https://chat.vanila.io/channel/wireflow
-
-ProductHunt page: https://www.producthunt.com/posts/wireflow
-
-[Open Hub analysis of Wireflow code](https://www.openhub.net/p/wireflow)
-
-# Install
+# Install Locally
 
 1) Install [Meteor.js](https://www.meteor.com)
 
@@ -33,13 +33,13 @@ cd wireflow
 ```
 
 Install dependencies:
+
 ```
 sudo apt-get install libcairo2-dev libjpeg-dev libgif-dev libjpeg8-dev libpango1.0-dev build-essential g++
 meteor npm install
-
 ```
 
-# Starting Wireflow app
+Start wireflow
 
 ```
 meteor npm start
