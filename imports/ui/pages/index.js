@@ -7,8 +7,8 @@ import { Bert } from 'meteor/themeteorchef:bert';
 import { browserHistory } from 'react-router';
 
 import $ from 'jquery';
-import 'materialize-css/bin/materialize.css';
-import 'materialize-css/bin/materialize.js';
+import 'materialize-css/dist/css/materialize.css';
+import 'hammerjs';import 'materialize-css/dist/js/materialize.js';
 
 export class Index extends React.Component {
   componentWillReceiveProps(nextProps) {
@@ -53,7 +53,7 @@ export class Index extends React.Component {
      if (!Meteor.user()) {
       if (!Meteor._localStorage.getItem('wfg')) {
         Meteor._localStorage.setItem('wfg', `guest${Random.id(4)}`);
-      }        
+      }
     }
     return (<div>
         <div className="row homeCont">

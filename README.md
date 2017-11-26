@@ -34,9 +34,24 @@ cd wireflow
 
 Install dependencies:
 
+For Unix/Linux:
+
 ```
 sudo apt-get install libcairo2-dev libjpeg-dev libgif-dev libjpeg8-dev libpango1.0-dev build-essential g++
+```
+
+(Optional but recommended) Install yarn
+```
+meteor npm install -g yarn
+```
+
+Install node dependencies using npm
+```
 meteor npm install
+```
+or with yarn
+```
+meteor yarn
 ```
 
 Start wireflow
