@@ -34,22 +34,28 @@ cd wireflow
 
 Install dependencies:
 
-For Unix/Linux:
+Install yarn and node-gyp globally (on your meteor)
+```
+meteor npm install -g yarn node-gyp
+```
 
+### For Unix/Linux:
+
+Run the following command:
 ```
 sudo apt-get install libcairo2-dev libjpeg-dev libgif-dev libjpeg8-dev libpango1.0-dev build-essential g++
 ```
 
-(Optional but recommended) Install yarn
+### For Windows:
+1. Install [Chocolatay](https://chocolatey.org/)
+2. Open a command prompt with **Administrator** access, and run the following command,
 ```
-meteor npm install -g yarn
+choco install -y python2 gtk-runtime microsoft-build-tools libjpeg-turbo
 ```
+3. You will need the cairo library which is bundled in GTK. Download the GTK 2 bundle for [Win32](http://ftp.gnome.org/pub/GNOME/binaries/win32/gtk+/2.24/gtk+-bundle_2.24.10-20120208_win32.zip) or [Win64](http://ftp.gnome.org/pub/GNOME/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip). Unzip the contents in `C:\GTK`.
 
-Install node dependencies using npm
-```
-meteor npm install
-```
-or with yarn
+
+Install node dependencies
 ```
 meteor yarn
 ```
@@ -57,5 +63,5 @@ meteor yarn
 Start wireflow
 
 ```
-meteor npm start
+meteor yarn start
 ```
