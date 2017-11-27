@@ -1,4 +1,3 @@
-
 # Wireflow - flow chart collaboration app
 
 [![dependencies Status](https://david-dm.org/vanila-io/wireflow/status.svg)](https://david-dm.org/vanila-io/wireflow)
@@ -21,45 +20,6 @@ Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io).
 
 # Install Locally
 
-## Install [Meteor.js](https://www.meteor.com)
-
-## Clone the repo:
-
-```
-git clone https://github.com/vanila-io/wireflow.git
-cd wireflow
-```
-
-## Install dependencies:
-
-Install yarn and node-gyp globally (on your meteor)
-```
-meteor npm install -g yarn node-gyp
-```
-
-### For Unix/Linux:
-
-Run the following command:
-```
-sudo apt-get install libcairo2-dev libjpeg-dev libgif-dev libjpeg8-dev libpango1.0-dev build-essential g++
-```
-
-### For Windows:
-1. Install [Chocolatay](https://chocolatey.org/)
-2. Open a command prompt with **Administrator** access, and run the following command,
-```
-choco install -y python2 gtk-runtime microsoft-build-tools libjpeg-turbo
-```
-3. You will need the cairo library which is bundled in GTK. Download the GTK 2 bundle for [Win32](http://ftp.gnome.org/pub/GNOME/binaries/win32/gtk+/2.24/gtk+-bundle_2.24.10-20120208_win32.zip) or [Win64](http://ftp.gnome.org/pub/GNOME/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip). Unzip the contents in `C:\GTK`.
-
-
-## Install node dependencies
-```
-meteor yarn
-```
-
-## Start wireflow
-
-```
-meteor yarn start
-```
+Follow instructions based on your operating system.
+- [Windows](https://github.com/vanila-io/wireflow/wiki/Installation-Windows)
+- [Linux](https://github.com/vanila-io/wireflow/wiki/Installation-Linux)
