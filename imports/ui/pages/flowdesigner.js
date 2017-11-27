@@ -9,8 +9,9 @@ import { Graphics } from "../../../imports/api/graphics/graphics";
 import { Categories } from "../../../imports/api/categories/categories";
 
 import $ from "jquery";
+import 'hammerjs';
 import "materialize-css/dist/css/materialize.css";
-import 'hammerjs';import "materialize-css/dist/js/materialize.js";
+import "materialize-css/dist/js/materialize.js";
 import "../../../imports/lib/css/style.css";
 import "jquery-mousewheel";
 import "../../../imports/lib/contextMenu.js";
