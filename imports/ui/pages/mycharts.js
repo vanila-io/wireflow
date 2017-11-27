@@ -7,8 +7,8 @@ import { composeWithTracker } from 'react-komposer';
 import { Loading } from '../components/loading.js';
 import { Bert } from 'meteor/themeteorchef:bert';
 import $ from 'jquery';
-import 'materialize-css/bin/materialize.css';
-import 'materialize-css/bin/materialize.js';
+import 'materialize-css/dist/css/materialize.css';
+import 'hammerjs';import 'materialize-css/dist/js/materialize.js';
 import '../../../imports/lib/css/style.css';
 import 'jquery-mousewheel';
 import '../../../imports/lib/contextMenu.js';
@@ -57,7 +57,7 @@ export class MyCharts extends React.Component {
                       <td className="lhUp">{wire.createdAt.toISOString().substring(0, 10).split("-").reverse().join("-")}</td>
 
                       <td>
-                      <button className="btn btn-danger" onClick={self.deletewire.bind(self,wire._id)}>Delete</button> 
+                      <button className="btn btn-danger" onClick={self.deletewire.bind(self,wire._id)}>Delete</button>
                       </td>
                 </tr>
                  )
@@ -88,7 +88,7 @@ export class MyCharts extends React.Component {
                       <td className="lhUp"><a href={`/wire/${wire._id}`} target="_blank">{wire.description}</a></td>
                       <td className="lhUp">{wire.createdAt.toISOString().substring(0, 10).split("-").reverse().join("-")}</td>
 
-                     
+
                 </tr>
                  )
               })) : (
@@ -118,7 +118,7 @@ export class MyCharts extends React.Component {
                       <td className="lhUp"><a href={`/wire/${wire._id}`} target="_blank">{wire.description}</a></td>
                       <td className="lhUp">{wire.createdAt.toISOString().substring(0, 10).split("-").reverse().join("-")}</td>
 
-                     
+
                 </tr>
                  )
               })) : (
@@ -160,5 +160,3 @@ export const composer = (props, onData) => {
 };
 
 export default composeWithTracker(composer, Loading)(MyCharts);
-
-
