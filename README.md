@@ -2,6 +2,8 @@
 
 [![dependencies Status](https://david-dm.org/vanila-io/wireflow/status.svg)](https://david-dm.org/vanila-io/wireflow)
 [![devDependencies Status](https://david-dm.org/vanila-io/wireflow/dev-status.svg)](https://david-dm.org/vanila-io/wireflow?type=dev)
+[![OpenCollective](https://opencollective.com/wireflow/backers/badge.svg)](#backers) 
+[![OpenCollective](https://opencollective.com/wireflow/sponsors/badge.svg)](#sponsors)
 
 Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io).
 
