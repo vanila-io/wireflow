@@ -25,15 +25,14 @@
     "meteor-node-stubs": "^0.3.2",
     "numeral": "^2.0.6",
     "react": "^15.6.2",
-    "react-addons-pure-render-mixin": "^15.6.2",
-    "react-bootstrap": "^0.30.3",
+    "react-bootstrap": "^0.31.5",
     "react-custom-scrollbars": "^4.0.0",
-    "react-dom": "^15.3.2",
-    "react-edit-inline": "^1.0.7",
+    "react-dom": "^15.6.2",
+    "react-edit-inline": "^1.0.8",
     "react-komposer": "^1.13.1",
-    "react-router": "^2.6.1",
+    "react-router": "^3.2.0",
     "react-router-bootstrap": "^0.23.1",
-    "react-select": "^0.9.1"
+    "react-select": "^1.1.0"
   },
   "devDependencies": {
     "@meteorjs/eslint-config-meteor": "^1.0.5",
@@ -45,5 +44,9 @@
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-meteor": "^4.1.4",
     "eslint-plugin-react": "^7.5.1"
+  },
+  "license": "MIT",
+  "repository": {
+    "url": "git@github.com:vanila-io/wireflow.git"
   }
 }
