@@ -1,8 +1,9 @@
 import React from 'react';
 import { Meteor } from 'meteor/meteor';
-import { composeWithTracker } from 'react-komposer';
+import { withTracker } from 'meteor/react-meteor-data';
 import { LinkContainer } from 'react-router-bootstrap';
 import { Alert } from 'react-bootstrap';
+
 import { Loading } from '../../components/loading.js';
 import { removeUser } from '../../../api/users/methods.js';
 import { Bert } from 'meteor/themeteorchef:bert';
@@ -78,12 +79,10 @@ AdminUsers.propTypes = {
   limit: React.PropTypes.number,
 };
 
-const composer = (params, onData) => {
-  const subscription = Meteor.subscribe('usersList');
-  if (subscription.ready()) {
-    const users = Meteor.users.find({}).fetch();
-    onData(null, { users });
-  }
-};
+export default withTracker(() => {
+  Meteor.subscribe('usersList');
 
-export default composeWithTracker(composer, Loading)(AdminUsers);
+  return { 
+    users: Meteor.users.find({}).fetch()
+  };
+})(AdminUsers);

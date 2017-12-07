@@ -1,6 +1,7 @@
 import React from 'react';
 import { Meteor } from 'meteor/meteor';
-import { composeWithTracker } from 'react-komposer';
+import { withTracker } from 'meteor/react-meteor-data';
+
 import { Alert } from 'react-bootstrap';
 import { Bert } from 'meteor/themeteorchef:bert';
 import { Loading } from '../loading.js';
@@ -56,7 +57,7 @@ UserDesigns.propTypes = {
   designs: React.PropTypes.array,
 };
 
-export const composer = (props, onData) => {
+export default withTracker((props) => {
   const options = {
     limit: props.all ? 1000 : 5,
     sort: { createdAt: -1 },
@@ -65,12 +66,10 @@ export const composer = (props, onData) => {
   const filter = {
     userId: Meteor.userId(),
   };
+  
+  Meteor.subscribe('userDesigns', { filter, options });
 
-  const subscription = Meteor.subscribe('userDesigns', { filter, options });
-  if (subscription.ready()) {
-    const designs = Designs.find(filter, { sort: { createdAt: -1 } }).fetch();
-    onData(null, { designs });
-  }
-};
-
-export default composeWithTracker(composer, Loading)(UserDesigns);
+  return { 
+    designs: Designs.find(filter, { sort: { createdAt: -1 } }).fetch()
+  };
+})(UserDesigns);
