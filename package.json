@@ -3,51 +3,12 @@
   "version": "0.0.1",
   "description": "Flowchart collaboration App",
   "scripts": {
-    "postinstall": "cp node_modules/materialize-css/js/date_picker/picker.js node_modules/materialize-css/bin",
-    "start": "meteor --settings settings.json"
-  },
-  "devDependencies": {
-    "eslint": "^4.11.0",
-    "eslint-config-airbnb": "^16.1.0",
-    "eslint-plugin-jsx-a11y": "^6.0.2",
-    "eslint-plugin-meteor": "^4.1.4",
-    "eslint-plugin-react": "^7.5.1"
+    "start": "meteor --settings settings.json",
+    "lint": "eslint .",
+    "postinstall": "cp node_modules/materialize-css/js/date_picker/picker.js node_modules/materialize-css/bin"
   },
   "eslintConfig": {
-    "parserOptions": {
-      "ecmaFeatures": {
-        "jsx": true
-      }
-    },
-    "plugins": [
-      "meteor",
-      "react"
-    ],
-    "extends": [
-      "airbnb/base",
-      "plugin:meteor/guide",
-      "plugin:react/recommended"
-    ],
-    "globals": {
-      "server": false,
-      "browser": false,
-      "expect": false
-    },
-    "rules": {
-      "import/no-unresolved": 0,
-      "no-underscore-dangle": [
-        "error",
-        {
-          "allow": [
-            "_id",
-            "_ensureIndex",
-            "_verifyEmailToken",
-            "_resetPasswordToken",
-            "_name"
-          ]
-        }
-      ]
-    }
+    "extends": "@meteorjs/eslint-config-meteor"
   },
   "dependencies": {
     "bcrypt": "^1.0.3",
@@ -64,14 +25,28 @@
     "meteor-node-stubs": "^0.3.2",
     "numeral": "^2.0.6",
     "react": "^15.6.2",
-    "react-addons-pure-render-mixin": "^15.6.2",
-    "react-bootstrap": "^0.30.3",
+    "react-bootstrap": "^0.31.5",
     "react-custom-scrollbars": "^4.0.0",
-    "react-dom": "^15.3.2",
-    "react-edit-inline": "^1.0.7",
+    "react-dom": "^15.6.2",
+    "react-edit-inline": "^1.0.8",
     "react-komposer": "^1.13.1",
-    "react-router": "^2.6.1",
+    "react-router": "^3.2.0",
     "react-router-bootstrap": "^0.23.1",
-    "react-select": "^0.9.1"
+    "react-select": "^1.1.0"
+  },
+  "devDependencies": {
+    "@meteorjs/eslint-config-meteor": "^1.0.5",
+    "babel-eslint": "^8.0.3",
+    "eslint": "^4.12.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-import-resolver-meteor": "^0.4.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.2",
+    "eslint-plugin-meteor": "^4.1.4",
+    "eslint-plugin-react": "^7.5.1"
+  },
+  "license": "MIT",
+  "repository": {
+    "url": "git@github.com:vanila-io/wireflow.git"
   }
 }
