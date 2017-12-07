@@ -77,7 +77,7 @@ Meteor.methods({
     }
     let user=Meteor.users.findOne(id);
 
-    readonlyUsers.push({userId:id,userfullname:user.profile.name.first+" "+user.profile.name.last,email:user.emails[0].address});
+    readonlyUsers.push({userId:id,userfullname:user.profile.name.first+' '+user.profile.name.last,email:user.emails[0].address});
     return Wires.update(wireId, {
       $set: {
         editUsers: editUsers,
@@ -106,7 +106,7 @@ Meteor.methods({
     }
     let user=Meteor.users.findOne(id);
 
-    editUsers.push({userId:id,userfullname:user.profile.name.first+" "+user.profile.name.last,email:user.emails[0].address});
+    editUsers.push({userId:id,userfullname:user.profile.name.first+' '+user.profile.name.last,email:user.emails[0].address});
     return Wires.update(wireId, {
       $set: {
         editUsers: editUsers,
@@ -181,12 +181,12 @@ Meteor.methods({
           }
         });
       } else {
-        readonlyUsers = []
+        readonlyUsers = [];
       }
     }
     let user=Meteor.users.findOne(id);
 
-    editUsers.push({userId:id,userfullname:user.profile.name.first+" "+user.profile.name.last,email:user.emails[0].address});
+    editUsers.push({userId:id,userfullname:user.profile.name.first+' '+user.profile.name.last,email:user.emails[0].address});
     if (exist === 0) {
       return Wires.update(wireId, {
         $set: {
@@ -195,13 +195,13 @@ Meteor.methods({
         }
       });
     } else {
-      return "user exist"
+      return 'user exist';
     }
   },
   checkUserMode(id,wireId) {
     check(id, String);
     check(wireId, String);
-    let userMode="readonly";
+    let userMode='readonly';
     let wire = Wires.findOne({
       _id: wireId
     });
@@ -216,7 +216,7 @@ Meteor.methods({
       editUsers.forEach((currentValue, index, arr) => {
         if (currentValue.userId === id) {
           exist = 1;
-          userMode="edit";
+          userMode='edit';
         }
       });
     }
@@ -225,14 +225,14 @@ Meteor.methods({
         readonlyUsers.forEach((currentValue, index, arr) => {
           if (currentValue.userId === id) {
             exist = 1;
-             userMode="readonly";
+            userMode='readonly';
           }
         });
       }
     }
     return userMode;
   },
-   DeleteWire(wireId) {
+  DeleteWire(wireId) {
     check(wireId, String);
 
     return Wires.remove(wireId);
@@ -243,7 +243,7 @@ Meteor.methods({
     Wires.update(wireId,{$set:{
       name:newname
     }});
-    return "succes"
+    return 'succes';
   } ,
 
   changeWiredescription(newdesc,wireId){
@@ -252,6 +252,6 @@ Meteor.methods({
     Wires.update(wireId,{$set:{
       description:newdesc
     }});
-    return "succes"
+    return 'succes';
   }
 });

@@ -10,6 +10,6 @@ Meteor.publish('wireInfo', (_id) => {
 });
 Meteor.publish('myWire', (_id) => {
   check(_id, String);
-  return Wires.find({$or: [{userId: _id },{"editUsers.userId": _id},{"readonlyUsers.userId": _id}]});
+  return Wires.find({$or: [{userId: _id },{'editUsers.userId': _id},{'readonlyUsers.userId': _id}]});
 //
 });

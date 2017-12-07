@@ -28,26 +28,26 @@ class UserDesigns extends React.Component {
 
   render() {
     return (<div>
-    {this.props.designs.length ?
-      <div>
-      {this.props.designs.map((design) =>
-        <div className="row" key={design._id} style={style.padding5}>
-          <div className="col-md-8">
-            <img src={design.design_url} className="img-responsive" />
-          </div>
-          <div className="col-md-4 text-center">
-            <LinkContainer to={`/me/designs/${design._id}/edit`}>
-              <button className="btn btn-primary">Edit</button>
-            </LinkContainer>
-            <button className="btn btn-primary"
-              onClick={this.handleDelete.bind(this, design._id)}>Delete</button>
-          </div>
+      {this.props.designs.length ?
+        <div>
+          {this.props.designs.map((design) =>
+            <div className="row" key={design._id} style={style.padding5}>
+              <div className="col-md-8">
+                <img src={design.design_url} className="img-responsive" />
+              </div>
+              <div className="col-md-4 text-center">
+                <LinkContainer to={`/me/designs/${design._id}/edit`}>
+                  <button className="btn btn-primary">Edit</button>
+                </LinkContainer>
+                <button className="btn btn-primary"
+                  onClick={this.handleDelete.bind(this, design._id)}>Delete</button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-      </div>
-    :
-      <Alert bsStyle="warning">No designs yet.</Alert>
-    }
+        :
+        <Alert bsStyle="warning">No designs yet.</Alert>
+      }
     </div>);
   }
 }
