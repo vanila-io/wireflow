@@ -66,7 +66,7 @@ class AdminUsers extends React.Component {
             )}
           </tbody>
         </table>
-      :
+        :
         <Alert bsStyle="warning">No users yet.</Alert>
       }
     </div>);

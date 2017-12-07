@@ -32,7 +32,7 @@ module.exports = {
             "single"
         ],
         "semi": [
-            "warn",
+            "error",
             "always"
         ],
         "mocha/no-exclusive-tests": "error",

@@ -43,20 +43,20 @@ class AdminWires extends React.Component {
     });
   }
  
-wireOwner(id){
+  wireOwner(id){
 
     const subscription = Meteor.subscribe('userInfo',id);
-  if (subscription.ready()) {
-        let user=Meteor.users.findOne({_id:id});
-        if(user){
-                return user.profile.name.first+" "+user.profile.name.last;
+    if (subscription.ready()) {
+      let user=Meteor.users.findOne({_id:id});
+      if(user){
+        return user.profile.name.first+' '+user.profile.name.last;
 
-        }else{
-            return id;
-        }
-  }
+      }else{
+        return id;
+      }
+    }
       
-}
+  }
   render() {
     return (<div>
       {this.props.wires ?
@@ -66,7 +66,7 @@ wireOwner(id){
               <tr key={wire._id}>
                 <td><a href={`/wire/${wire._id}`} target="_blank">{wire.name}</a></td>
                 <td><a href={`/wire/${wire._id}`} target="_blank">{wire.description}</a></td>
-                <td>{wire.createdAt.toISOString().substring(0, 10).split("-").reverse().join("-")}</td>
+                <td>{wire.createdAt.toISOString().substring(0, 10).split('-').reverse().join('-')}</td>
                 <td>{this.wireOwner(wire.userId)}</td>
                 <td>
                   <button className="btn btn-danger"
@@ -76,7 +76,7 @@ wireOwner(id){
             )}
           </tbody>
         </table>
-      :
+        :
         <Alert bsStyle="warning">No wires yet.</Alert>
       }
     </div>);

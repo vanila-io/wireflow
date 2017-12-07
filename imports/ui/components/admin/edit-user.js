@@ -14,9 +14,9 @@ class EditUser extends React.Component {
   componentWillMount() {
     const user = this.props.user;
     const showResetPassword = typeof(this.props.showResetPassword) === 'undefined' ? true
-                              : this.props.showResetPassword;
+      : this.props.showResetPassword;
     const showCancelButton = typeof(this.props.showCancelButton) === 'undefined' ? true
-                                                        : this.props.showCancelButton;
+      : this.props.showCancelButton;
     this.state = {
       _id: user._id,
       firstname: user.profile.name.first,
@@ -101,117 +101,117 @@ class EditUser extends React.Component {
 
   render() {
     return (
-    <div className="row">
-      {this.state.showResetPassword ?
-      <div className="col-md-12">
-        <button
-          className="pull-right btn btn-primary"
-          onClick={this.handleResetPassword.bind(this)}>Reset Password</button>
-      </div>
-      : ''}
-      <div className="col-md-12">
-        <form>
-          <div className="form-group">
-            <label className="control-label">First Name</label>
-            <input
-              type="text"
-              name="firstname"
-              className="form-control"
-              value={this.state.firstname}
-              onChange={this.handleChange.bind(this)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="control-label">Last Name</label>
-            <input
-              type="text"
-              name="lastname"
-              className="form-control"
-              value={this.state.lastname}
-              onChange={this.handleChange.bind(this)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="control-label">Email</label>
-            <input
-              type="text"
-              name="email_address"
-              className="form-control"
-              value={this.state.email_address}
-              onChange={this.handleChange.bind(this)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="control-label">Address</label>
-            <textarea
-              name="address"
-              className="form-control"
-              value={this.state.address}
-              onChange={this.handleChange.bind(this)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="control-label">Country</label>
-            <select className="selectpicker form-control"
-              name="country"
-              onChange={this.handleCountryChange.bind(this)}
-              value={this.state.country}>
-              <option value="">Select Country</option>
-              {Countries.map((country, index) => (<option key={index}
-                value={country}>{country}</option>))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="control-label">City</label>
-            <select className="selectpicker form-control"
-              name="city"
-              onChange={this.handleChange.bind(this)}
-              value={this.state.city}>
-              {this.state.cities.map((city, index) => (
-                <option key={index} value={city}>{city}</option>))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="control-label">Postal Code</label>
-            <input
-              type="text"
-              name="postal_code"
-              className="form-control"
-              value={this.state.postal_code}
-              onChange={this.handleChange.bind(this)}
-            />
-          </div>
-          <div className="form-group"><hr/></div>
-          <div className="form-group">
-            <label className="control-label">Facebook Profile</label>
-            <input
-              type="text"
-              name="facebook"
-              className="form-control"
-              value={this.state.facebook}
-              onChange={this.handleChange.bind(this)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="control-label">Twitter</label>
-            <input
-              type="text"
-              name="twitter"
-              className="form-control"
-              value={this.state.twitter}
-              onChange={this.handleChange.bind(this)}
-            />
-          </div>
-          <div className="form-group">
+      <div className="row">
+        {this.state.showResetPassword ?
+          <div className="col-md-12">
             <button
-              className="btn btn-primary"
-              onClick={this.handleSubmit.bind(this)}
-            >Update</button>
-            {this.renderCancelButton()}
+              className="pull-right btn btn-primary"
+              onClick={this.handleResetPassword.bind(this)}>Reset Password</button>
           </div>
-        </form>
+          : ''}
+        <div className="col-md-12">
+          <form>
+            <div className="form-group">
+              <label className="control-label">First Name</label>
+              <input
+                type="text"
+                name="firstname"
+                className="form-control"
+                value={this.state.firstname}
+                onChange={this.handleChange.bind(this)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="control-label">Last Name</label>
+              <input
+                type="text"
+                name="lastname"
+                className="form-control"
+                value={this.state.lastname}
+                onChange={this.handleChange.bind(this)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="control-label">Email</label>
+              <input
+                type="text"
+                name="email_address"
+                className="form-control"
+                value={this.state.email_address}
+                onChange={this.handleChange.bind(this)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="control-label">Address</label>
+              <textarea
+                name="address"
+                className="form-control"
+                value={this.state.address}
+                onChange={this.handleChange.bind(this)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="control-label">Country</label>
+              <select className="selectpicker form-control"
+                name="country"
+                onChange={this.handleCountryChange.bind(this)}
+                value={this.state.country}>
+                <option value="">Select Country</option>
+                {Countries.map((country, index) => (<option key={index}
+                  value={country}>{country}</option>))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="control-label">City</label>
+              <select className="selectpicker form-control"
+                name="city"
+                onChange={this.handleChange.bind(this)}
+                value={this.state.city}>
+                {this.state.cities.map((city, index) => (
+                  <option key={index} value={city}>{city}</option>))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="control-label">Postal Code</label>
+              <input
+                type="text"
+                name="postal_code"
+                className="form-control"
+                value={this.state.postal_code}
+                onChange={this.handleChange.bind(this)}
+              />
+            </div>
+            <div className="form-group"><hr/></div>
+            <div className="form-group">
+              <label className="control-label">Facebook Profile</label>
+              <input
+                type="text"
+                name="facebook"
+                className="form-control"
+                value={this.state.facebook}
+                onChange={this.handleChange.bind(this)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="control-label">Twitter</label>
+              <input
+                type="text"
+                name="twitter"
+                className="form-control"
+                value={this.state.twitter}
+                onChange={this.handleChange.bind(this)}
+              />
+            </div>
+            <div className="form-group">
+              <button
+                className="btn btn-primary"
+                onClick={this.handleSubmit.bind(this)}
+              >Update</button>
+              {this.renderCancelButton()}
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
     );
   }
 

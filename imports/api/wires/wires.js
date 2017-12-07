@@ -81,7 +81,7 @@ Wires.schema = new SimpleSchema({
   room_mode: {
     type: String,
     optional: true,
-    defaultValue: "edit"
+    defaultValue: 'edit'
   },
   readonlyUsers: {
     type: [usersList],

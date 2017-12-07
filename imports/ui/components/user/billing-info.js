@@ -25,7 +25,7 @@ export class BillingInfo extends React.Component {
       country: !theSameWithProfile ? billingInfo.country : user.profile.country || '',
       city: !theSameWithProfile ? billingInfo.city : user.profile.city || '',
       postal_code: !theSameWithProfile ? billingInfo.postal_code :
-                                       user.profile.postal_code || '',
+        user.profile.postal_code || '',
       cities,
       is_same_with_user: billingInfo.use_profile_address,
       edit: false,

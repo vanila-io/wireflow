@@ -1,27 +1,27 @@
-import { Meteor } from "meteor/meteor";
-import { Wires } from "../../../imports/api/wires/wires";
-import React from "react";
-import ReactDOM from "react-dom";
-import { Chats } from "../../../imports/api/chat/chat";
-import { composeWithTracker } from "react-komposer";
-import { Loading } from "../components/loading.js";
-import { Graphics } from "../../../imports/api/graphics/graphics";
-import { Categories } from "../../../imports/api/categories/categories";
+import { Meteor } from 'meteor/meteor';
+import { Wires } from '../../../imports/api/wires/wires';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Chats } from '../../../imports/api/chat/chat';
+import { composeWithTracker } from 'react-komposer';
+import { Loading } from '../components/loading.js';
+import { Graphics } from '../../../imports/api/graphics/graphics';
+import { Categories } from '../../../imports/api/categories/categories';
 
-import $ from "jquery";
+import $ from 'jquery';
 import 'hammerjs';
-import "materialize-css/dist/css/materialize.css";
-import "materialize-css/dist/js/materialize.js";
-import "../../../imports/lib/css/style.css";
-import "jquery-mousewheel";
-import "../../../imports/lib/contextMenu.js";
+import 'materialize-css/dist/css/materialize.css';
+import 'materialize-css/dist/js/materialize.js';
+import '../../../imports/lib/css/style.css';
+import 'jquery-mousewheel';
+import '../../../imports/lib/contextMenu.js';
 
-import { handleMount } from "../../../imports/lib/main.js";
-import ChatBox from "../components/chat-box.js";
+import { handleMount } from '../../../imports/lib/main.js';
+import ChatBox from '../components/chat-box.js';
 
-import { openChat } from "../../../imports/lib/sidebars.js";
+import { openChat } from '../../../imports/lib/sidebars.js';
 
-import { googleAnalytics } from "../../modules/ganalytics.js";
+import { googleAnalytics } from '../../modules/ganalytics.js';
 import {
   Grid,
   Row,
@@ -30,8 +30,8 @@ import {
   ControlLabel,
   FormControl,
   Button
-} from "react-bootstrap";
-import InlineEdit from "react-edit-inline";
+} from 'react-bootstrap';
+import InlineEdit from 'react-edit-inline';
 
 export class FlowDesigner extends React.Component {
   constructor(props) {
@@ -45,39 +45,39 @@ export class FlowDesigner extends React.Component {
   componentDidMount() {
     const props = this.props;
     handleMount({ c: this, wire: props.wire });
-    $("ul.tabs").tabs();
-    $(".collapsible").collapsible({
+    $('ul.tabs').tabs();
+    $('.collapsible').collapsible({
       accordion: false // A setting that changes the collapsible behavior to expandable instead of the default accordion style
     });
-    $(".tooltipped").tooltip({ delay: 50 });
+    $('.tooltipped').tooltip({ delay: 50 });
     openChat();
 
-    $(".dropdown-button").dropdown({
+    $('.dropdown-button').dropdown({
       inDuration: 300,
       outDuration: 225,
       constrain_width: false, // Does not change width of dropdown to that of the activator
       hover: true, // Activate on hover
       gutter: 0, // Spacing from edge
       belowOrigin: false, // Displays dropdown below the button
-      alignment: "left" // Displays dropdown with edge aligned to the left of button
+      alignment: 'left' // Displays dropdown with edge aligned to the left of button
     });
 
-    document.title = props.wire.name + " | " + props.wire.description;
+    document.title = props.wire.name + ' | ' + props.wire.description;
     googleAnalytics(document.location.pathname);
 
-    Streamy.emit("getwire", { id: props.wire._id });
+    Streamy.emit('getwire', { id: props.wire._id });
   }
 
   editMode(id) {
     let mode = ReactDOM.findDOMNode(this.refs.edit).value;
-    Meteor.call("changeWireMode", id, mode, (err, res) => {
+    Meteor.call('changeWireMode', id, mode, (err, res) => {
       //console.log(res);
       //console.log(err);
     });
   }
   readonlyMode(id) {
     let mode = ReactDOM.findDOMNode(this.refs.readonly).value;
-    Meteor.call("changeWireMode", id, mode, (err, res) => {
+    Meteor.call('changeWireMode', id, mode, (err, res) => {
       //console.log(res);
       //console.log(err);
     });
@@ -85,7 +85,7 @@ export class FlowDesigner extends React.Component {
 
   changeUsertoReadonly(id, wireId) {
     //console.log(this);
-    Meteor.call("changeusertoreadonly", id, wireId, (err, res) => {
+    Meteor.call('changeusertoreadonly', id, wireId, (err, res) => {
       //console.log(res);
       //console.log(err);
     });
@@ -93,33 +93,33 @@ export class FlowDesigner extends React.Component {
   addUsertoEdit(wireId) {
     //console.log("added");
     let userid = ReactDOM.findDOMNode(this.refs.selectUser).value;
-    Meteor.call("addUsertoEdit", userid, wireId, (err, res) => {
+    Meteor.call('addUsertoEdit', userid, wireId, (err, res) => {
       //console.log(res);
       //console.log(err);
     });
   }
   changeUsertoEdit(id, wireId) {
-    Meteor.call("changeusertoedit", id, wireId, (err, res) => {
+    Meteor.call('changeusertoedit', id, wireId, (err, res) => {
       //console.log(res);
       //console.log(err);
     });
   }
   deleteUser(id, wireId) {
-    Meteor.call("removeUser", id, wireId, (err, res) => {
+    Meteor.call('removeUser', id, wireId, (err, res) => {
       //console.log(res);
       //console.log(err);
     });
   }
   openChat() {
     /* Open/close right sidebar room chat */
-    if ($("#rsmRoomChat").hasClass("rsmRoomChat-open")) {
-      $("#rsmRoomChat").removeClass("rsmRoomChat-open");
+    if ($('#rsmRoomChat').hasClass('rsmRoomChat-open')) {
+      $('#rsmRoomChat').removeClass('rsmRoomChat-open');
       this.setState({
         chatOpen: false,
         laststate: true
       });
     } else {
-      $("#rsmRoomChat").addClass("rsmRoomChat-open");
+      $('#rsmRoomChat').addClass('rsmRoomChat-open');
       this.setState({
         chatOpen: true,
         laststate: false
@@ -129,19 +129,19 @@ export class FlowDesigner extends React.Component {
 
   openUsers() {
     /* Open/close right sidebar room Users */
-    if ($("#rsmRoomUsers").hasClass("rsmRoomUsers-open")) {
-      $("#rsmRoomUsers").removeClass("rsmRoomUsers-open");
+    if ($('#rsmRoomUsers').hasClass('rsmRoomUsers-open')) {
+      $('#rsmRoomUsers').removeClass('rsmRoomUsers-open');
     } else {
-      $("#rsmRoomUsers").addClass("rsmRoomUsers-open");
+      $('#rsmRoomUsers').addClass('rsmRoomUsers-open');
     }
   }
 
   openInfo() {
     /* Open/close right sidebar room info */
-    if ($("#rsmRoomInfo").hasClass("rsmRoomInfo-open")) {
-      $("#rsmRoomInfo").removeClass("rsmRoomInfo-open");
+    if ($('#rsmRoomInfo').hasClass('rsmRoomInfo-open')) {
+      $('#rsmRoomInfo').removeClass('rsmRoomInfo-open');
     } else {
-      $("#rsmRoomInfo").addClass("rsmRoomInfo-open");
+      $('#rsmRoomInfo').addClass('rsmRoomInfo-open');
     }
   }
   openPermission() {
@@ -150,9 +150,9 @@ export class FlowDesigner extends React.Component {
   ChangeLastState() {
     //console.log( "Im here2222");
     let lastState = this.state.laststate;
-    let j = Number(Meteor._localStorage.getItem("counter"));
+    let j = Number(Meteor._localStorage.getItem('counter'));
     j = j - 1;
-    Meteor._localStorage.setItem("counter", j);
+    Meteor._localStorage.setItem('counter', j);
     if (lastState) {
       this.setState({
         chatOpen: false,
@@ -164,9 +164,9 @@ export class FlowDesigner extends React.Component {
     let lastState = this.state.laststate;
     if (lastState) {
       setTimeout(function() {
-        $("#changeState")
+        $('#changeState')
           .eq(0)
-          .trigger("click");
+          .trigger('click');
       }, 50);
     }
   }
@@ -175,12 +175,12 @@ export class FlowDesigner extends React.Component {
     let name = ReactDOM.findDOMNode(this.refs.searchByName).value;
     let categories = ReactDOM.findDOMNode(this.refs.Selectcate).value;
 
-    if (!name || name === "") {
-      name = "none";
+    if (!name || name === '') {
+      name = 'none';
     }
-    if (!categories || categories === "") categories = "none";
+    if (!categories || categories === '') categories = 'none';
 
-    Meteor.call("getGraphics", name, categories, (err, res) => {
+    Meteor.call('getGraphics', name, categories, (err, res) => {
       //console.log(err);
       //console.log(res);
       if (!err) {
@@ -194,29 +194,29 @@ export class FlowDesigner extends React.Component {
   }
   changeWirename(data) {
     //console.log(document.this)
-    Meteor.call("changeWirename", data.message, this.wireId, function(
+    Meteor.call('changeWirename', data.message, this.wireId, function(
       error,
       result
     ) {
       //console.log(arguments)
       if (!error) {
-        let pageTitle = document.title.split(" | ");
+        let pageTitle = document.title.split(' | ');
         pageTitle[0] = data.message;
-        document.title = pageTitle.join(" | ");
+        document.title = pageTitle.join(' | ');
       }
     });
   }
 
   changeWiredescription(data) {
-    Meteor.call("changeWiredescription", data.message, this.wireId, function(
+    Meteor.call('changeWiredescription', data.message, this.wireId, function(
       error,
       result
     ) {
       //console.log(arguments)
       if (!error) {
-        let pageTitle = document.title.split(" | ");
+        let pageTitle = document.title.split(' | ');
         pageTitle[1] = data.message;
-        document.title = pageTitle.join(" | ");
+        document.title = pageTitle.join(' | ');
       }
     });
   }
@@ -236,7 +236,7 @@ export class FlowDesigner extends React.Component {
       graphics = this.props.graphics;
     }
 
-    let c = Number(Meteor._localStorage.getItem("counter"));
+    let c = Number(Meteor._localStorage.getItem('counter'));
 
     if (!this.props.oldChat) {
       oldChat = chats;
@@ -308,7 +308,7 @@ export class FlowDesigner extends React.Component {
                           src={graphic.link}
                           id={graphic._id}
                           ref={graphic._id}
-                        />{" "}
+                        />{' '}
                         <span>{graphic.name}</span>
                       </div>
                     );
@@ -541,12 +541,12 @@ export class FlowDesigner extends React.Component {
                 <div id="rsmRoomUsers" className="rsmRoomUsers">
                   <h2>Users</h2>
                   <p className="rsmDesc">
-                    Number of users in this room:{" "}
+                    Number of users in this room:{' '}
                     {self.props.wire.guestsUsers ? (
                       self.props.wire.guestsUsers.length
                     ) : (
                       <div>loading</div>
-                    )}{" "}
+                    )}{' '}
                   </p>
                   <hr />
                   {self.props.wire.guestsUsers ? (
@@ -788,16 +788,16 @@ FlowDesigner.propTypes = {
 let oldChat,
   i = 0;
 export const composer = (props, onData) => {
-  const subscription = Meteor.subscribe("wireInfo", props.routeParams.id);
-  const subscriptionUsers = Meteor.subscribe("usersInfo");
-  const subscriptionGraphics = Meteor.subscribe("allGraphics");
-  const subscriptionCategories = Meteor.subscribe("allCategories");
-  let userMode = "readonly";
+  const subscription = Meteor.subscribe('wireInfo', props.routeParams.id);
+  const subscriptionUsers = Meteor.subscribe('usersInfo');
+  const subscriptionGraphics = Meteor.subscribe('allGraphics');
+  const subscriptionCategories = Meteor.subscribe('allCategories');
+  let userMode = 'readonly';
   let isAdmin = false;
   let username;
 
   const subscriptionChat = Meteor.subscribe(
-    "wireMessages",
+    'wireMessages',
     props.routeParams.id
   );
   i = i + 1;
@@ -810,12 +810,12 @@ export const composer = (props, onData) => {
               _id: props.routeParams.id
             });
 
-            const subscriptionUser = Meteor.subscribe("userInfo", wire.userId);
+            const subscriptionUser = Meteor.subscribe('userInfo', wire.userId);
             if (subscriptionUser.ready()) {
               let user = Meteor.users.findOne({ _id: wire.userId });
               if (user) {
                 username =
-                  user.profile.name.first + " " + user.profile.name.last;
+                  user.profile.name.first + ' ' + user.profile.name.last;
               } else {
                 username = wire.userId;
               }
@@ -832,24 +832,24 @@ export const composer = (props, onData) => {
               }
             ).fetch();
             let graphics = Graphics.find().fetch();
-            Meteor._localStorage.setItem("counter", i);
+            Meteor._localStorage.setItem('counter', i);
             let categories = Categories.find().fetch();
-            userId = Meteor._localStorage.getItem("wfg");
+            userId = Meteor._localStorage.getItem('wfg');
             const users = Meteor.users.find();
             let userId = Meteor.userId();
             if (!userId || userId === undefined) {
-              if (!Meteor._localStorage.getItem("wfg")) {
-                Meteor._localStorage.setItem("wfg", `guest${Random.id(4)}`);
+              if (!Meteor._localStorage.getItem('wfg')) {
+                Meteor._localStorage.setItem('wfg', `guest${Random.id(4)}`);
               }
 
-              userId = Meteor._localStorage.getItem("wfg");
+              userId = Meteor._localStorage.getItem('wfg');
             }
 
-            if (Roles.userIsInRole(userId, ["admin"])) {
+            if (Roles.userIsInRole(userId, ['admin'])) {
               isAdmin = true;
             }
             Meteor.call(
-              "checkUserMode",
+              'checkUserMode',
               userId,
               props.routeParams.id,
               (err, res) => {

@@ -12,20 +12,20 @@ let user = null;
 
 class ChatBox extends React.Component {
   componentDidMount() {
-   let user2;
+    let user2;
 
-      if (!Meteor.user()) {
+    if (!Meteor.user()) {
       if (!Meteor._localStorage.getItem('wfg')) {
         Meteor._localStorage.setItem('wfg', `guest${Random.id(4)}`);
         user = Meteor._localStorage.getItem('wfg');
         Meteor._localStorage.setItem('wfg2', user);
       }else{
-      user = Meteor._localStorage.getItem('wfg');
-    }
+        user = Meteor._localStorage.getItem('wfg');
+      }
     }else{
       user=Meteor.user()
     }
-      user2 = Meteor._localStorage.getItem('wfg2');
+    user2 = Meteor._localStorage.getItem('wfg2');
     if (Meteor.user()) {
       Meteor._localStorage.setItem('wfg2', Meteor.user().profile.name.first + " " + Meteor.user().profile.name.last);
     }else{
@@ -66,13 +66,13 @@ class ChatBox extends React.Component {
       return (
 
         <div className="row chatMessages">
-        {chats.map((chat) => (
-          <div className="col s12" key={chat._id}>
-            <span className="chatUser">{chat.user}:</span>  <span className="chatMsg">{chat.message}</span>
-          </div>
-        ))}
-      </div>
-  );
+          {chats.map((chat) => (
+            <div className="col s12" key={chat._id}>
+              <span className="chatUser">{chat.user}:</span>  <span className="chatMsg">{chat.message}</span>
+            </div>
+          ))}
+        </div>
+      );
     }
     return (
       <div className="row rowNoMsgs">
@@ -87,22 +87,22 @@ class ChatBox extends React.Component {
     return (
       <div>
 
-      {this.renderMessages()}
-      <div className="row rowChatInput">
-        <div className="col s9">
-          <input
-            type="text"
-            ref="message"
-            placeholder="Enter message"
-            onKeyUp={this.handleReturn.bind(this)}
-          />
+        {this.renderMessages()}
+        <div className="row rowChatInput">
+          <div className="col s9">
+            <input
+              type="text"
+              ref="message"
+              placeholder="Enter message"
+              onKeyUp={this.handleReturn.bind(this)}
+            />
+          </div>
+          <div className="col s3">
+            <button className="white msgSend waves-effect waves-light" onClick={this.send.bind(this)}><i className="fa fa-check"></i></button>
+          </div>
         </div>
-        <div className="col s3">
-          <button className="white msgSend waves-effect waves-light" onClick={this.send.bind(this)}><i className="fa fa-check"></i></button>
-        </div>
-      </div>
 
-    </div>);
+      </div>);
   }
 }
 
