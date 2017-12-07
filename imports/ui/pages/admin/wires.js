@@ -1,6 +1,7 @@
 import React from 'react';
 import { Meteor } from 'meteor/meteor';
-import { composeWithTracker } from 'react-komposer';
+import { withTracker } from 'meteor/react-meteor-data';
+
 import { LinkContainer } from 'react-router-bootstrap';
 import { Alert } from 'react-bootstrap';
 import { Loading } from '../../components/loading.js';
@@ -88,12 +89,10 @@ AdminWires.propTypes = {
   limit: React.PropTypes.number,
 };
 
-const composer = (params, onData) => {
-  const subscription = Meteor.subscribe('wires');
-  if (subscription.ready()) {
-    const wires = Wires.find({}).fetch();
-    onData(null, { wires });
-  }
-};
+export default withTracker(() => {
+  Meteor.subscribe('wires');
 
-export default composeWithTracker(composer, Loading)(AdminWires);
+  return { 
+    wires: Wires.find({}).fetch()
+  };
+})(AdminWires);

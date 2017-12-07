@@ -1,12 +1,13 @@
 import React from 'react';
 import $ from 'jquery';
 import { Meteor } from 'meteor/meteor';
+import { Random } from 'meteor/random';
+import { Bert } from 'meteor/themeteorchef:bert';
+import { withTracker } from 'meteor/react-meteor-data';
+
+import { Loading } from '../components/loading.js';
 import { Chats } from '../../../imports/api/chat/chat';
 import { insertChat } from '../../../imports/api/chat/methods';
-import { Bert } from 'meteor/themeteorchef:bert';
-import { composeWithTracker } from 'react-komposer';
-import { Random } from 'meteor/random';
-import { Loading } from '../components/loading.js';
 
 let user = null;
 
@@ -112,12 +113,11 @@ ChatBox.propTypes = {
   wireid: React.PropTypes.string,
 };
 
-export const composer = (props, onData) => {
-  const subscription = Meteor.subscribe('wireMessages', props.wireid);
-  if (subscription.ready()) {
-    const chats = Chats.find({ wireId: props.wireid }, { sort: { createdAt: -1 } }).fetch();
-    onData(null, { chats });
-  }
-};
 
-export default composeWithTracker(composer, Loading)(ChatBox);
+export default withTracker((props) => {
+  Meteor.subscribe('wireMessages', props.wireid);
+
+  return { 
+    chats: Chats.find({ wireId: props.wireid }, { sort: { createdAt: -1 } }).fetch()
+  };
+})(ChatBox);
