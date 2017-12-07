@@ -28,7 +28,7 @@ alanning:roles
 themeteorchef:bert
 static-html@1.1.12
 xolvio:cleaner
-practicalmeteor:mocha
+practicalmeteor:mocha@2.4.5_6
 xolvio:backdoor
 mdg:validated-method
 dburles:factory
@@ -40,3 +40,6 @@ ryanswapp:fabricjs
 shell-server@0.3.0
 yuukan:streamy
 dynamic-import
+practicalmeteor:chai
+practicalmeteor:sinon
+coffeescript@1.12.7_3

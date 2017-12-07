@@ -24,7 +24,8 @@ caching-compiler@1.1.9
 caching-html-compiler@1.1.2
 callback-hook@1.0.10
 check@1.2.5
-coffeescript@1.11.1_4
+coffeescript@1.12.7_3
+coffeescript-compiler@1.12.7_3
 dburles:factory@1.1.0
 ddp@1.4.0
 ddp-client@2.2.0
