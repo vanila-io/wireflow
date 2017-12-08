@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';import PropTypes from 'prop-types';
 import { Grid, Row, Col, FormGroup, ControlLabel, FormControl, Button } from 'react-bootstrap';
 import { handleSignup } from '../../../modules/create-user-admin';
 
@@ -91,7 +91,7 @@ export default class CreateUser extends React.Component {
                 name="country"
                 onChange={this.handleCountryChange.bind(this)}>
                 <option value="">Select Country</option>
-                {Countries.map((country, index) => (<option key={index}
+                {Countries.map((country, index) => (<option key={country}
                   value={country}>{country}</option>))}
               </select>
             </FormGroup>
@@ -102,7 +102,7 @@ export default class CreateUser extends React.Component {
                 name="city">
                 <option value="">Select City</option>
                 {this.state.cities.map((city, index) => (
-                  <option key={index} value={city}>{city}</option>))}
+                  <option key={city} value={city}>{city}</option>))}
               </select>
             </FormGroup>
             <FormGroup>

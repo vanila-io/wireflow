@@ -1,6 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import { Wires } from '../../../imports/api/wires/wires';
-import React from 'react';
+import React from 'react';import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import { Chats } from '../../../imports/api/chat/chat';
 import { composeWithTracker } from 'react-komposer';
@@ -272,7 +272,7 @@ export class FlowDesigner extends React.Component {
           </div>
           <div id="test1" className="col s12 mainCont">
             <div id="chartsSide" className="col s1 chartsSidebar">
-              <div className="itemsList" id="svgList">
+              <div key="svgList" className="itemsList" id="svgList">
                 <input
                   type="text"
                   ref="searchByName"
@@ -287,9 +287,9 @@ export class FlowDesigner extends React.Component {
                     Please select a category
                   </option>
                   {categories ? (
-                    categories.map(function(category) {
+                    categories.map(function(category, index) {
                       return (
-                        <option value={category._id}>{category.name}</option>
+                        <option value={category._id} key={category._id}>{category.name}</option>
                       );
                     })
                   ) : (
@@ -300,7 +300,7 @@ export class FlowDesigner extends React.Component {
                 </select>
 
                 {graphics ? (
-                  graphics.map(function(graphic) {
+                  graphics.map(function(graphic, index) {
                     return (
                       <div>
                         <img
@@ -308,6 +308,7 @@ export class FlowDesigner extends React.Component {
                           src={graphic.link}
                           id={graphic._id}
                           ref={graphic._id}
+                          key={graphic._id}
                         />{' '}
                         <span>{graphic.name}</span>
                       </div>
@@ -783,7 +784,7 @@ export class FlowDesigner extends React.Component {
 }
 
 FlowDesigner.propTypes = {
-  wire: React.PropTypes.object
+  wire: PropTypes.object
 };
 let oldChat,
   i = 0;

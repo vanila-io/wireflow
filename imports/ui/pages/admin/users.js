@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 import { LinkContainer } from 'react-router-bootstrap';
@@ -75,8 +75,8 @@ class AdminUsers extends React.Component {
 }
 
 AdminUsers.propTypes = {
-  users: React.PropTypes.array,
-  limit: React.PropTypes.number,
+  users: PropTypes.array,
+  limit: PropTypes.number,
 };
 
 export default withTracker(() => {

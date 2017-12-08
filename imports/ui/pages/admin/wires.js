@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 
@@ -85,8 +85,8 @@ class AdminWires extends React.Component {
 }
 
 AdminWires.propTypes = {
-  wires: React.PropTypes.array,
-  limit: React.PropTypes.number,
+  wires: PropTypes.array,
+  limit: PropTypes.number,
 };
 
 export default withTracker(() => {

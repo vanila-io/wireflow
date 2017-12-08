@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
 import { Grid } from 'react-bootstrap';
@@ -91,6 +91,6 @@ export class Index extends React.Component {
 }
 
 Index.propTypes = {
-  location: React.PropTypes.object,
-  route: React.PropTypes.object,
+  location: PropTypes.object,
+  route: PropTypes.object,
 };

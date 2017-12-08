@@ -1,11 +1,13 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+import createClass from 'create-react-class';
 import { AppBootstrap } from './app-bootstrap.js';
 import { AppMaterialize } from './app-materialize.js';
 
-export const App = React.createClass({
+export const App = createClass({
   propTypes: {
-    children: React.PropTypes.element.isRequired,
-    location: React.PropTypes.object,
+    children: PropTypes.element.isRequired,
+    location: PropTypes.object,
   },
   render() {
     if (this.props.location.pathname.includes('/wire/')) {

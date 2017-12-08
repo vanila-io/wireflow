@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { chai } from 'meteor/practicalmeteor:chai';
 import Enzyme, { mount } from 'enzyme';

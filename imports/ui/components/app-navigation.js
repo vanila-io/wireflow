@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';import PropTypes from 'prop-types';
 import { Navbar } from 'react-bootstrap';
 import { Link } from 'react-router';
 import { PublicNavigation } from './public-navigation';
@@ -25,5 +25,5 @@ export class AppNavigation extends React.Component {
 }
 
 AppNavigation.propTypes = {
-  hasUser: React.PropTypes.object,
+  hasUser: PropTypes.object,
 };

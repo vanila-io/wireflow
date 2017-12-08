@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';import PropTypes from 'prop-types';
 import { Grid, Row, Col, Alert, FormGroup, FormControl, Button } from 'react-bootstrap';
 import { handleRecoverPassword } from '../../modules/recover-password';
 import { googleAnalytics } from '../../modules/ganalytics.js';

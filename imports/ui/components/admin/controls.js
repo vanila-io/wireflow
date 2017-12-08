@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';import PropTypes from 'prop-types';
 
 export class Controls extends React.Component {
   constructor() {
@@ -110,7 +110,7 @@ export class Controls extends React.Component {
 }
 
 Controls.propTypes = {
-  onLoadMore: React.PropTypes.func,
-  onTriggerSearch: React.PropTypes.func,
-  onTriggerStatusSearch: React.PropTypes.func,
+  onLoadMore: PropTypes.func,
+  onTriggerSearch: PropTypes.func,
+  onTriggerStatusSearch: PropTypes.func,
 };
