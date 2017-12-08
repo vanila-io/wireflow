@@ -99,7 +99,7 @@ Meteor.onConnection(connection => {
       _id: wireid
     });
     let wireguestsUsers = [];
-    if (wire.guestsUsers !== undefined) {
+    if (wire && wire.guestsUsers !== undefined) {
       wireguestsUsers = wire.guestsUsers;
       //console.log("wireguestsUsers");
       //console.log(wireguestsUsers);
