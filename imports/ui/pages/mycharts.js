@@ -3,7 +3,7 @@ import { Wires } from '../../../imports/api/wires/wires';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Router, Route, IndexRoute, browserHistory } from 'react-router';
-import { composeWithTracker } from 'react-komposer';
+import { withTracker } from 'meteor/react-meteor-data';
 import { Loading } from '../components/loading.js';
 import { Bert } from 'meteor/themeteorchef:bert';
 import $ from 'jquery';
@@ -137,26 +137,17 @@ MyCharts.propTypes = {
   minewires: React.PropTypes.object
 };
 
-export const composer = (props, onData) => {
+export default withTracker(() => {
   let userId=Meteor.userId();
   if(!userId){
     userId='guest';
   }
-  //console.log("userId");
-  //console.log(userId);
-  const subscription = Meteor.subscribe('myWire', userId);
-  if (subscription.ready()) {
-    const minewires = Wires.find({userId:userId}).fetch();
-    const wiresreadonly = Wires.find({'readonlyUsers.userId':userId}).fetch();
-    const wireseditable = Wires.find({'editUsers.userId':userId}).fetch();
-    //console.log(wiresreadonly);
-    //console.log(wireseditable);
-    onData(null, {
-      minewires,
-      wiresreadonly,
-      wireseditable
-    });
-  }
-};
 
-export default composeWithTracker(composer, Loading)(MyCharts);
+  Meteor.subscribe('myWire', userId);
+
+  return { 
+    minewires: Wires.find({userId:userId}).fetch(),
+    wiresreadonly: Wires.find({'readonlyUsers.userId':userId}).fetch(),
+    wireseditable: Wires.find({'editUsers.userId':userId}).fetch()
+  };
+})(MyCharts);

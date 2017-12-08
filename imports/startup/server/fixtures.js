@@ -33,565 +33,565 @@ users.forEach(({ email, password, profile, roles }) => {
 /*categories*/
 
 let Article=insertCategory.call({
-  name:"Article"
+  name:'Article'
 });
 let Blog=insertCategory.call({
-  name:"Blog"
+  name:'Blog'
 });
 let ECommerce=insertCategory.call({
-  name:"ECommerce"
+  name:'ECommerce'
 });
 let Features=insertCategory.call({
-  name:"Features"
+  name:'Features'
 });
 let Gallery=insertCategory.call({
-  name:"Gallery"
+  name:'Gallery'
 });
 let Header=insertCategory.call({
-  name:"Header"
+  name:'Header'
 });
 let Misc=insertCategory.call({
-  name:"Misc"
+  name:'Misc'
 });
 let Multimedia=insertCategory.call({
-  name:"Multimedia"
+  name:'Multimedia'
 });
 let SignIn=insertCategory.call({
-  name:"SignIn"
+  name:'SignIn'
 });
 let Socials=insertCategory.call({
-  name:"Socials"
+  name:'Socials'
 });
 
 /*graphics*/
 
 insertGraphic.call({
-  name:"Chat",
+  name:'Chat',
   cat:Socials,
-  link:"/images/graphics/Socials/Chat.svg"
+  link:'/images/graphics/Socials/Chat.svg'
 });
 insertGraphic.call({
-  name:"Comments",
+  name:'Comments',
   cat:Socials,
-  link:"/images/graphics/Socials/Comments.svg"
+  link:'/images/graphics/Socials/Comments.svg'
 });
 insertGraphic.call({
-  name:"Connection",
+  name:'Connection',
   cat:Socials,
-  link:"/images/graphics/Socials/Connection.svg"
+  link:'/images/graphics/Socials/Connection.svg'
 });
 insertGraphic.call({
-  name:"Feeds",
+  name:'Feeds',
   cat:Socials,
-  link:"/images/graphics/Socials/Feeds.svg"
+  link:'/images/graphics/Socials/Feeds.svg'
 });
 insertGraphic.call({
-  name:"Profile",
+  name:'Profile',
   cat:Socials,
-  link:"/images/graphics/Socials/Profile.svg"
+  link:'/images/graphics/Socials/Profile.svg'
 });
 insertGraphic.call({
-  name:"Profile2",
+  name:'Profile2',
   cat:Socials,
-  link:"/images/graphics/Socials/Profile2.svg"
+  link:'/images/graphics/Socials/Profile2.svg'
 });
 insertGraphic.call({
-  name:"Profile3",
+  name:'Profile3',
   cat:Socials,
-  link:"/images/graphics/Socials/Profile3.svg"
+  link:'/images/graphics/Socials/Profile3.svg'
 });
 insertGraphic.call({
-  name:"Profile4",
+  name:'Profile4',
   cat:Socials,
-  link:"/images/graphics/Socials/Profile4.svg"
+  link:'/images/graphics/Socials/Profile4.svg'
 });
 insertGraphic.call({
-  name:"Users1",
+  name:'Users1',
   cat:Socials,
-  link:"/images/graphics/Socials/Users1.svg"
+  link:'/images/graphics/Socials/Users1.svg'
 });
 insertGraphic.call({
-  name:"Users2",
+  name:'Users2',
   cat:Socials,
-  link:"/images/graphics/Socials/Users2.svg"
+  link:'/images/graphics/Socials/Users2.svg'
 });
 insertGraphic.call({
-  name:"UserSettings",
+  name:'UserSettings',
   cat:Socials,
-  link:"/images/graphics/Socials/UserSettings.svg"
+  link:'/images/graphics/Socials/UserSettings.svg'
 });
 insertGraphic.call({
-  name:"UserSettings2",
+  name:'UserSettings2',
   cat:Socials,
-  link:"/images/graphics/Socials/UserSettings2.svg"
+  link:'/images/graphics/Socials/UserSettings2.svg'
 });
 
 
 insertGraphic.call({
-  name:"ForgotPassword",
+  name:'ForgotPassword',
   cat:SignIn,
-  link:"/images/graphics/SignIn/ForgotPassword.svg"
+  link:'/images/graphics/SignIn/ForgotPassword.svg'
 });
 insertGraphic.call({
-  name:"ForgotPassword2",
+  name:'ForgotPassword2',
   cat:SignIn,
-  link:"/images/graphics/SignIn/ForgotPassword2.svg"
+  link:'/images/graphics/SignIn/ForgotPassword2.svg'
 });
 insertGraphic.call({
-  name:"SignIn",
+  name:'SignIn',
   cat:SignIn,
-  link:"/images/graphics/SignIn/SignIn.svg"
+  link:'/images/graphics/SignIn/SignIn.svg'
 });
 insertGraphic.call({
-  name:"SignIn2",
+  name:'SignIn2',
   cat:SignIn,
-  link:"/images/graphics/SignIn/SignIn2.svg"
+  link:'/images/graphics/SignIn/SignIn2.svg'
 });
 insertGraphic.call({
-  name:"SignUp",
+  name:'SignUp',
   cat:SignIn,
-  link:"/images/graphics/SignIn/SignUp.svg"
+  link:'/images/graphics/SignIn/SignUp.svg'
 });
 insertGraphic.call({
-  name:"SignUp2",
+  name:'SignUp2',
   cat:SignIn,
-  link:"/images/graphics/SignIn/SignUp2.svg"
+  link:'/images/graphics/SignIn/SignUp2.svg'
 });
 
 
 insertGraphic.call({
-  name:"Files",
+  name:'Files',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/Files.svg"
+  link:'/images/graphics/Multimedia/Files.svg'
 });
 insertGraphic.call({
-  name:"Songs1",
+  name:'Songs1',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/Songs1.svg"
+  link:'/images/graphics/Multimedia/Songs1.svg'
 });
 insertGraphic.call({
-  name:"Songs2",
+  name:'Songs2',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/Songs2.svg"
+  link:'/images/graphics/Multimedia/Songs2.svg'
 });
 insertGraphic.call({
-  name:"Songs3",
+  name:'Songs3',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/Songs3.svg"
+  link:'/images/graphics/Multimedia/Songs3.svg'
 });
 insertGraphic.call({
-  name:"UploadFiles",
+  name:'UploadFiles',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/UploadFiles.svg"
+  link:'/images/graphics/Multimedia/UploadFiles.svg'
 });
 insertGraphic.call({
-  name:"UploadImage",
+  name:'UploadImage',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/UploadImage.svg"
+  link:'/images/graphics/Multimedia/UploadImage.svg'
 });
 insertGraphic.call({
-  name:"Videos1",
+  name:'Videos1',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/Videos1.svg"
+  link:'/images/graphics/Multimedia/Videos1.svg'
 });
 insertGraphic.call({
-  name:"Videos2",
+  name:'Videos2',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/Videos2.svg"
+  link:'/images/graphics/Multimedia/Videos2.svg'
 });
 insertGraphic.call({
-  name:"Videos3",
+  name:'Videos3',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/Videos3.svg"
+  link:'/images/graphics/Multimedia/Videos3.svg'
 });
 insertGraphic.call({
-  name:"Videos4",
+  name:'Videos4',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/Videos4.svg"
+  link:'/images/graphics/Multimedia/Videos4.svg'
 });
 insertGraphic.call({
-  name:"VideosPlayer",
+  name:'VideosPlayer',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/VideosPlayer.svg"
+  link:'/images/graphics/Multimedia/VideosPlayer.svg'
 });
 insertGraphic.call({
-  name:"VideosPlayer2",
+  name:'VideosPlayer2',
   cat:Multimedia,
-  link:"/images/graphics/Multimedia/VideosPlayer2.svg"
+  link:'/images/graphics/Multimedia/VideosPlayer2.svg'
 });
 
 
 insertGraphic.call({
-  name:"404",
+  name:'404',
   cat:Misc,
-  link:"/images/graphics/Misc/404.svg"
+  link:'/images/graphics/Misc/404.svg'
 });
 insertGraphic.call({
-  name:"About",
+  name:'About',
   cat:Misc,
-  link:"/images/graphics/Misc/About.svg"
+  link:'/images/graphics/Misc/About.svg'
 });
 insertGraphic.call({
-  name:"Analitycs",
+  name:'Analitycs',
   cat:Misc,
-  link:"/images/graphics/Misc/Analitycs.svg"
+  link:'/images/graphics/Misc/Analitycs.svg'
 });
 insertGraphic.call({
-  name:"Calender",
+  name:'Calender',
   cat:Misc,
-  link:"/images/graphics/Misc/Calender.svg"
+  link:'/images/graphics/Misc/Calender.svg'
 });
 insertGraphic.call({
-  name:"Cards",
+  name:'Cards',
   cat:Misc,
-  link:"/images/graphics/Misc/Cards.svg"
+  link:'/images/graphics/Misc/Cards.svg'
 });
 insertGraphic.call({
-  name:"Contact",
+  name:'Contact',
   cat:Misc,
-  link:"/images/graphics/Misc/Contact.svg"
+  link:'/images/graphics/Misc/Contact.svg'
 });
 insertGraphic.call({
-  name:"Counter",
+  name:'Counter',
   cat:Misc,
-  link:"/images/graphics/Misc/Counter.svg"
+  link:'/images/graphics/Misc/Counter.svg'
 });
 insertGraphic.call({
-  name:"Error",
+  name:'Error',
   cat:Misc,
-  link:"/images/graphics/Misc/Error.svg"
+  link:'/images/graphics/Misc/Error.svg'
 });
 insertGraphic.call({
-  name:"Faqs",
+  name:'Faqs',
   cat:Misc,
-  link:"/images/graphics/Misc/Faqs.svg"
+  link:'/images/graphics/Misc/Faqs.svg'
 });
 insertGraphic.call({
-  name:"Forum",
+  name:'Forum',
   cat:Misc,
-  link:"/images/graphics/Misc/Forum.svg"
+  link:'/images/graphics/Misc/Forum.svg'
 });
 insertGraphic.call({
-  name:"Loading",
+  name:'Loading',
   cat:Misc,
-  link:"/images/graphics/Misc/Loading.svg"
+  link:'/images/graphics/Misc/Loading.svg'
 });
 insertGraphic.call({
-  name:"Price",
+  name:'Price',
   cat:Misc,
-  link:"/images/graphics/Misc/Price.svg"
+  link:'/images/graphics/Misc/Price.svg'
 });
 insertGraphic.call({
-  name:"Price2",
+  name:'Price2',
   cat:Misc,
-  link:"/images/graphics/Misc/Price2.svg"
+  link:'/images/graphics/Misc/Price2.svg'
 });
 insertGraphic.call({
-  name:"Progress",
+  name:'Progress',
   cat:Misc,
-  link:"/images/graphics/Misc/Progress.svg"
+  link:'/images/graphics/Misc/Progress.svg'
 });
 insertGraphic.call({
-  name:"Search",
+  name:'Search',
   cat:Misc,
-  link:"/images/graphics/Misc/Search.svg"
+  link:'/images/graphics/Misc/Search.svg'
 });
 insertGraphic.call({
-  name:"SearchResults",
+  name:'SearchResults',
   cat:Misc,
-  link:"/images/graphics/Misc/SearchResults.svg"
+  link:'/images/graphics/Misc/SearchResults.svg'
 });
 insertGraphic.call({
-  name:"Settings",
+  name:'Settings',
   cat:Misc,
-  link:"/images/graphics/Misc/Settings.svg"
+  link:'/images/graphics/Misc/Settings.svg'
 });
 insertGraphic.call({
-  name:"Sitemap",
+  name:'Sitemap',
   cat:Misc,
-  link:"/images/graphics/Misc/Sitemap.svg"
+  link:'/images/graphics/Misc/Sitemap.svg'
 });
 insertGraphic.call({
-  name:"Socials",
+  name:'Socials',
   cat:Misc,
-  link:"/images/graphics/Misc/Socials.svg"
+  link:'/images/graphics/Misc/Socials.svg'
 });
 insertGraphic.call({
-  name:"Steps",
+  name:'Steps',
   cat:Misc,
-  link:"/images/graphics/Misc/Steps.svg"
+  link:'/images/graphics/Misc/Steps.svg'
 });
 insertGraphic.call({
-  name:"Subscribde",
+  name:'Subscribde',
   cat:Misc,
-  link:"/images/graphics/Misc/Subscribde.svg"
+  link:'/images/graphics/Misc/Subscribde.svg'
 });
 insertGraphic.call({
-  name:"Tags",
+  name:'Tags',
   cat:Misc,
-  link:"/images/graphics/Misc/Tags.svg"
+  link:'/images/graphics/Misc/Tags.svg'
 });
 insertGraphic.call({
-  name:"team",
+  name:'team',
   cat:Misc,
-  link:"/images/graphics/Misc/team.svg"
+  link:'/images/graphics/Misc/team.svg'
 });
 insertGraphic.call({
-  name:"UnderContruction",
+  name:'UnderContruction',
   cat:Misc,
-  link:"/images/graphics/Misc/UnderContruction.svg"
+  link:'/images/graphics/Misc/UnderContruction.svg'
 });
 
 
 insertGraphic.call({
-  name:"Header1",
+  name:'Header1',
   cat:Header,
-  link:"/images/graphics/Header/Header1.svg"
+  link:'/images/graphics/Header/Header1.svg'
 });
 insertGraphic.call({
-  name:"Header2",
+  name:'Header2',
   cat:Header,
-  link:"/images/graphics/Header/Header2.svg"
+  link:'/images/graphics/Header/Header2.svg'
 });
 insertGraphic.call({
-  name:"Header3",
+  name:'Header3',
   cat:Header,
-  link:"/images/graphics/Header/Header3.svg"
+  link:'/images/graphics/Header/Header3.svg'
 });
 insertGraphic.call({
-  name:"Header4",
+  name:'Header4',
   cat:Header,
-  link:"/images/graphics/Header/Header4.svg"
+  link:'/images/graphics/Header/Header4.svg'
 });
 insertGraphic.call({
-  name:"Header5",
+  name:'Header5',
   cat:Header,
-  link:"/images/graphics/Header/Header5.svg"
+  link:'/images/graphics/Header/Header5.svg'
 });
 insertGraphic.call({
-  name:"Header6",
+  name:'Header6',
   cat:Header,
-  link:"/images/graphics/Header/Header6.svg"
+  link:'/images/graphics/Header/Header6.svg'
 });
 
 
 insertGraphic.call({
-  name:"Gallery1",
+  name:'Gallery1',
   cat:Gallery,
-  link:"/images/graphics/Gallery/Gallery1.svg"
+  link:'/images/graphics/Gallery/Gallery1.svg'
 });
 insertGraphic.call({
-  name:"Gallery2",
+  name:'Gallery2',
   cat:Gallery,
-  link:"/images/graphics/Gallery/Gallery2.svg"
+  link:'/images/graphics/Gallery/Gallery2.svg'
 });
 insertGraphic.call({
-  name:"Gallery3",
+  name:'Gallery3',
   cat:Gallery,
-  link:"/images/graphics/Gallery/Gallery3.svg"
+  link:'/images/graphics/Gallery/Gallery3.svg'
 });
 insertGraphic.call({
-  name:"Gallery4",
+  name:'Gallery4',
   cat:Gallery,
-  link:"/images/graphics/Gallery/Gallery4.svg"
+  link:'/images/graphics/Gallery/Gallery4.svg'
 });
 insertGraphic.call({
-  name:"Gallery5",
+  name:'Gallery5',
   cat:Gallery,
-  link:"/images/graphics/Gallery/Gallery5.svg"
+  link:'/images/graphics/Gallery/Gallery5.svg'
 });
 insertGraphic.call({
-  name:"Gallery6",
+  name:'Gallery6',
   cat:Gallery,
-  link:"/images/graphics/Gallery/Gallery6.svg"
+  link:'/images/graphics/Gallery/Gallery6.svg'
 });
 
 
 
 insertGraphic.call({
-  name:"Features1",
+  name:'Features1',
   cat:Features,
-  link:"/images/graphics/Features/Features1.svg"
+  link:'/images/graphics/Features/Features1.svg'
 });
 insertGraphic.call({
-  name:"Features2",
+  name:'Features2',
   cat:Features,
-  link:"/images/graphics/Features/Features2.svg"
+  link:'/images/graphics/Features/Features2.svg'
 });
 insertGraphic.call({
-  name:"Features3",
+  name:'Features3',
   cat:Features,
-  link:"/images/graphics/Features/Features3.svg"
+  link:'/images/graphics/Features/Features3.svg'
 });
 insertGraphic.call({
-  name:"Features4",
+  name:'Features4',
   cat:Features,
-  link:"/images/graphics/Features/Features4.svg"
+  link:'/images/graphics/Features/Features4.svg'
 });
 insertGraphic.call({
-  name:"Features5",
+  name:'Features5',
   cat:Features,
-  link:"/images/graphics/Features/Features5.svg"
+  link:'/images/graphics/Features/Features5.svg'
 });
 insertGraphic.call({
-  name:"Features6",
+  name:'Features6',
   cat:Features,
-  link:"/images/graphics/Features/Features6.svg"
+  link:'/images/graphics/Features/Features6.svg'
 });
 
 
 
 insertGraphic.call({
-  name:"Cart",
+  name:'Cart',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Cart.svg"
+  link:'/images/graphics/ECommerce/Cart.svg'
 });
 insertGraphic.call({
-  name:"Cart-PopUp",
+  name:'Cart-PopUp',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Cart-PopUp.svg"
+  link:'/images/graphics/ECommerce/Cart-PopUp.svg'
 });
 insertGraphic.call({
-  name:"Checkout",
+  name:'Checkout',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Checkout.svg"
+  link:'/images/graphics/ECommerce/Checkout.svg'
 });
 insertGraphic.call({
-  name:"Completed",
+  name:'Completed',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Completed.svg"
+  link:'/images/graphics/ECommerce/Completed.svg'
 });
 insertGraphic.call({
-  name:"Delivery",
+  name:'Delivery',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Delivery.svg"
+  link:'/images/graphics/ECommerce/Delivery.svg'
 });
 insertGraphic.call({
-  name:"Item",
+  name:'Item',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Item.svg"
+  link:'/images/graphics/ECommerce/Item.svg'
 });
 insertGraphic.call({
-  name:"Item2",
+  name:'Item2',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Item2.svg"
+  link:'/images/graphics/ECommerce/Item2.svg'
 });
 insertGraphic.call({
-  name:"Paypal",
+  name:'Paypal',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Paypal.svg"
+  link:'/images/graphics/ECommerce/Paypal.svg'
 });
 insertGraphic.call({
-  name:"Products1",
+  name:'Products1',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Products1.svg"
+  link:'/images/graphics/ECommerce/Products1.svg'
 });
 insertGraphic.call({
-  name:"Products2",
+  name:'Products2',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Products2.svg"
+  link:'/images/graphics/ECommerce/Products2.svg'
 });
 insertGraphic.call({
-  name:"Products3",
+  name:'Products3',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Products3.svg"
+  link:'/images/graphics/ECommerce/Products3.svg'
 });
 insertGraphic.call({
-  name:"Rate",
+  name:'Rate',
   cat:ECommerce,
-  link:"/images/graphics/ECommerce/Rate.svg"
+  link:'/images/graphics/ECommerce/Rate.svg'
 });
 
 
 insertGraphic.call({
-  name:"Blog1",
+  name:'Blog1',
   cat:Blog,
-  link:"/images/graphics/Blog/1.svg"
+  link:'/images/graphics/Blog/1.svg'
 });
 insertGraphic.call({
-  name:"Blog2",
+  name:'Blog2',
   cat:Blog,
-  link:"/images/graphics/Blog/2.svg"
+  link:'/images/graphics/Blog/2.svg'
 });
 insertGraphic.call({
-  name:"Blog3",
+  name:'Blog3',
   cat:Blog,
-  link:"/images/graphics/Blog/3.svg"
+  link:'/images/graphics/Blog/3.svg'
 });
 insertGraphic.call({
-  name:"Blog4",
+  name:'Blog4',
   cat:Blog,
-  link:"/images/graphics/Blog/4.svg"
+  link:'/images/graphics/Blog/4.svg'
 });
 insertGraphic.call({
-  name:"Blog5",
+  name:'Blog5',
   cat:Blog,
-  link:"/images/graphics/Blog/5.svg"
+  link:'/images/graphics/Blog/5.svg'
 });
 insertGraphic.call({
-  name:"Blog6",
+  name:'Blog6',
   cat:Blog,
-  link:"/images/graphics/Blog/6.svg"
+  link:'/images/graphics/Blog/6.svg'
 });
 insertGraphic.call({
-  name:"Blog7",
+  name:'Blog7',
   cat:Blog,
-  link:"/images/graphics/Blog/7.svg"
+  link:'/images/graphics/Blog/7.svg'
 });
 insertGraphic.call({
-  name:"Blog8",
+  name:'Blog8',
   cat:Blog,
-  link:"/images/graphics/Blog/8.svg"
+  link:'/images/graphics/Blog/8.svg'
 });
 insertGraphic.call({
-  name:"Blog9",
+  name:'Blog9',
   cat:Blog,
-  link:"/images/graphics/Blog/9.svg"
+  link:'/images/graphics/Blog/9.svg'
 });
 insertGraphic.call({
-  name:"Blog10",
+  name:'Blog10',
   cat:Blog,
-  link:"/images/graphics/Blog/10.svg"
+  link:'/images/graphics/Blog/10.svg'
 });
 insertGraphic.call({
-  name:"Blog11",
+  name:'Blog11',
   cat:Blog,
-  link:"/images/graphics/Blog/11.svg"
+  link:'/images/graphics/Blog/11.svg'
 });
 insertGraphic.call({
-  name:"Blog12",
+  name:'Blog12',
   cat:Blog,
-  link:"/images/graphics/Blog/12.svg"
+  link:'/images/graphics/Blog/12.svg'
 });
 
 
 insertGraphic.call({
-  name:"Article1",
+  name:'Article1',
   cat:Article,
-  link:"/images/graphics/Article/1.svg"
+  link:'/images/graphics/Article/1.svg'
 });
 insertGraphic.call({
-  name:"Article2",
+  name:'Article2',
   cat:Article,
-  link:"/images/graphics/Article/2.svg"
+  link:'/images/graphics/Article/2.svg'
 });
 insertGraphic.call({
-  name:"Article3",
+  name:'Article3',
   cat:Article,
-  link:"/images/graphics/Article/3.svg"
+  link:'/images/graphics/Article/3.svg'
 });
 insertGraphic.call({
-  name:"Article4",
+  name:'Article4',
   cat:Article,
-  link:"/images/graphics/Article/4.svg"
+  link:'/images/graphics/Article/4.svg'
 });
 insertGraphic.call({
-  name:"Article5",
+  name:'Article5',
   cat:Article,
-  link:"/images/graphics/Article/5.svg"
+  link:'/images/graphics/Article/5.svg'
 });
 insertGraphic.call({
-  name:"Article6",
+  name:'Article6',
   cat:Article,
-  link:"/images/graphics/Article/6.svg"
+  link:'/images/graphics/Article/6.svg'
 });

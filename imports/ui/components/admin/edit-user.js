@@ -1,7 +1,8 @@
 import React from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Bert } from 'meteor/themeteorchef:bert';
-import { composeWithTracker } from 'react-komposer';
+import { withTracker } from 'meteor/react-meteor-data';
+
 import { Loading } from '../loading.js';
 import { updateUser } from '../../../api/users/methods.js';
 import { browserHistory } from 'react-router';
@@ -236,12 +237,10 @@ EditUser.propTypes = {
   onSubmitted: React.PropTypes.func,
 };
 
-const composer = (props, onData) => {
-  const subscription = Meteor.subscribe('usersList');
-  if (subscription.ready()) {
-    const user = Meteor.users.findOne(props.routeParams.id);
-    onData(null, { user });
-  }
-};
+export default withTracker((props) => {
+  Meteor.subscribe('usersList');
 
-export default composeWithTracker(composer, Loading)(EditUser);
+  return { 
+    user: Meteor.users.findOne(props.routeParams.id)
+  };
+})(EditUser);

@@ -19,5 +19,5 @@ Meteor.startup(() => {
   BrowserPolicy.content.allowEval();
   BrowserPolicy.content.allowImageOrigin('blob:');
   const constructedCsp = BrowserPolicy.content._constructCsp();
-  BrowserPolicy.content.setPolicy(constructedCsp +" media-src blob:;");
+  BrowserPolicy.content.setPolicy(constructedCsp +' media-src blob:;');
 });
