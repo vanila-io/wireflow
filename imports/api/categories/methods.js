@@ -1,4 +1,3 @@
-import { Meteor } from 'meteor/meteor';
 import { Categories } from './categories';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import { ValidatedMethod } from 'meteor/mdg:validated-method';
