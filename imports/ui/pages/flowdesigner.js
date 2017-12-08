@@ -1,15 +1,19 @@
 import { Meteor } from 'meteor/meteor';
 import { Wires } from '../../../imports/api/wires/wires';
-import React from 'react';import PropTypes from 'prop-types';
+import React from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import { Chats } from '../../../imports/api/chat/chat';
-import { composeWithTracker } from 'react-komposer';
 import { Loading } from '../components/loading.js';
 import { Graphics } from '../../../imports/api/graphics/graphics';
 import { Categories } from '../../../imports/api/categories/categories';
 
 import $ from 'jquery';
 import 'hammerjs';
+
+// Drop in replacement for composeWithTracker
+import composeWithTracker from '../../../imports/lib/composeWithTracker.js';
+
 import 'materialize-css/dist/css/materialize.css';
 import 'materialize-css/dist/js/materialize.js';
 import '../../../imports/lib/css/style.css';

@@ -1,4 +1,5 @@
-import React from 'react';import PropTypes from 'prop-types';
+import React from 'react';
+import PropTypes from 'prop-types';
 
 export class Controls extends React.Component {
   constructor() {

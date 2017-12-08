@@ -1,4 +1,5 @@
-import React from 'react';import PropTypes from 'prop-types';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { updateUserBillingInfo } from '../../../api/users/methods.js';
 import { Bert } from 'meteor/themeteorchef:bert';
 

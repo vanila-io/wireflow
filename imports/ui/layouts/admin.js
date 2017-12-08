@@ -1,4 +1,5 @@
-import React from 'react';import PropTypes from 'prop-types';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { LinkContainer } from 'react-router-bootstrap';
 import { browserHistory } from 'react-router';
 import AppNavigation from '../containers/app-navigation';
