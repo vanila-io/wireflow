@@ -3,7 +3,11 @@ import { Wires } from '../../../imports/api/wires/wires';
 import React from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
+
+import { Streamy } from 'meteor/yuukan:streamy';
+
 import { Chats } from '../../../imports/api/chat/chat';
+import { withTracker } from 'meteor/react-meteor-data';
 import { Loading } from '../components/loading.js';
 import { Graphics } from '../../../imports/api/graphics/graphics';
 import { Categories } from '../../../imports/api/categories/categories';
@@ -66,10 +70,10 @@ export class FlowDesigner extends React.Component {
       alignment: 'left' // Displays dropdown with edge aligned to the left of button
     });
 
-    document.title = props.wire.name + ' | ' + props.wire.description;
+    if (props.wire) document.title = props.wire.name + ' | ' + props.wire.description;
     googleAnalytics(document.location.pathname);
 
-    Streamy.emit('getwire', { id: props.wire._id });
+    if (props.wire) Streamy.emit('getwire', { id: props.wire._id });
   }
 
   editMode(id) {
@@ -283,30 +287,40 @@ export class FlowDesigner extends React.Component {
                   onChange={self.LoadGraphics.bind(self)}
                   placeholder="Search"
                 />
-                <select
-                  ref="Selectcate"
-                  onChange={self.LoadGraphics.bind(self)}
-                >
-                  <option disabled value="" selected>
-                    Please select a category
-                  </option>
-                  {categories ? (
-                    categories.map(function(category, index) {
-                      return (
-                        <option value={category._id} key={category._id}>{category.name}</option>
-                      );
-                    })
-                  ) : (
-                    <option disabled value="" selected>
+                {
+                  categories ? (
+                    <select
+                      ref="Selectcate"
+                      onChange={self.LoadGraphics.bind(self)}
+                      value="Please select a category"
+                    >
+                      <option disabled value="Please select a category">
+                      Please select a category
+                      </option>
+                      { categories.map(function(category) {
+                        return (
+                          <option key={category._id} value={category._id}>{category.name}</option>
+                        );
+                      })}
+                    </select>
+                  ): (
+                    <select
+                      ref="Selectcate"
+                      onChange={self.LoadGraphics.bind(self)}
+                      value="No Category" >
+                      
+                      <option disabled value="No Category">
                       No Category
-                    </option>
-                  )}
-                </select>
+                      </option>
+                    </select>
+                  )
+                }
+                
 
                 {graphics ? (
                   graphics.map(function(graphic, index) {
                     return (
-                      <div>
+                      <div key={graphic._id}>
                         <img
                           className="graphicItem"
                           src={graphic.link}
@@ -521,7 +535,7 @@ export class FlowDesigner extends React.Component {
                       isAdmin
                     )}
                   </h2>
-                  <p className="rsmDesc">
+                  <div className="rsmDesc">
                     {self.props.me && self.props.wire ? (
                       self.props.me === self.props.wire.userId || isAdmin ? (
                         <InlineEdit
@@ -538,7 +552,7 @@ export class FlowDesigner extends React.Component {
                     ) : (
                       <div />
                     )}
-                  </p>
+                  </div>
                   <p className="rsmDesc">
                     <b>{self.props.username}</b>
                   </p>
@@ -547,15 +561,15 @@ export class FlowDesigner extends React.Component {
                   <h2>Users</h2>
                   <p className="rsmDesc">
                     Number of users in this room:{' '}
-                    {self.props.wire.guestsUsers ? (
+                    {self.props.wire && self.props.wire.guestsUsers ? (
                       self.props.wire.guestsUsers.length
                     ) : (
                       <span>loading</span>
                     )}{' '}
                   </p>
                   <hr />
-                  {self.props.wire.guestsUsers ? (
-                    self.props.wire.guestsUsers.map(function(user) {
+                  { self.props.wire && self.props.wire.guestsUsers ? (
+                    self.props.wire.guestsUsers.map(function(user, index) {
                       return (
                         <div key={user.userfullname}>
                           <p>
@@ -574,7 +588,7 @@ export class FlowDesigner extends React.Component {
                   <div />
                 </div>
                 <div id="rsmRoomChat" className="rsmRoomChat">
-                  <ChatBox wireid={self.props.wire._id} />
+                  { self.props.wire ? <ChatBox wireid={self.props.wire._id} />: undefined }
                 </div>
               </div>
               <div className="rightSidebarMenu">
@@ -790,100 +804,76 @@ export class FlowDesigner extends React.Component {
 FlowDesigner.propTypes = {
   wire: PropTypes.object
 };
-let oldChat,
-  i = 0;
-export const composer = (props, onData) => {
-  const subscription = Meteor.subscribe('wireInfo', props.routeParams.id);
-  const subscriptionUsers = Meteor.subscribe('usersInfo');
-  const subscriptionGraphics = Meteor.subscribe('allGraphics');
-  const subscriptionCategories = Meteor.subscribe('allCategories');
+
+let oldChat,  i = 0;
+
+export default withTracker((props) => {
+  Meteor.subscribe('wireInfo', props.routeParams.id);
+  Meteor.subscribe('usersInfo');
+  Meteor.subscribe('allGraphics');
+  Meteor.subscribe('allCategories');
+  Meteor.subscribe('wireMessages', props.routeParams.id);
+
+  const wire = Wires.findOne({ _id: props.routeParams.id });
+  const users = Meteor.users.find();
+  let userId = Meteor.userId();
+  
+  if (!userId || userId === undefined) {
+    if (!Meteor._localStorage.getItem('wfg')) {
+      Meteor._localStorage.setItem('wfg', `guest${Random.id(4)}`);
+    }
+    userId = Meteor._localStorage.getItem('wfg');
+  }
+  
   let userMode = 'readonly';
+  let chats = Chats.find({ wireId: props.routeParams.id }, { sort: { createdAt: -1  }}).fetch();
+  Meteor.call('checkUserMode', userId, props.routeParams.id, (err, res) => {
+    if (!err) {
+      userMode = res;
+    }
+    setTimeout(function() {
+      oldChat = chats;
+    }, 300);
+  });
+
+  let graphics = Graphics.find().fetch();
+  let categories = Categories.find().fetch();
+
   let isAdmin = false;
+  if (Roles.userIsInRole(userId, ['admin'])) {
+    isAdmin = true;
+  }
+
   let username;
-
-  const subscriptionChat = Meteor.subscribe(
-    'wireMessages',
-    props.routeParams.id
-  );
-  i = i + 1;
-  if (subscriptionCategories.ready()) {
-    if (subscriptionGraphics.ready()) {
-      if (subscription.ready()) {
-        if (subscriptionUsers.ready()) {
-          if (subscriptionChat.ready()) {
-            const wire = Wires.findOne({
-              _id: props.routeParams.id
-            });
-
-            const subscriptionUser = Meteor.subscribe('userInfo', wire.userId);
-            if (subscriptionUser.ready()) {
-              let user = Meteor.users.findOne({ _id: wire.userId });
-              if (user) {
-                username =
-                  user.profile.name.first + ' ' + user.profile.name.last;
-              } else {
-                username = wire.userId;
-              }
-            }
-
-            let chats = Chats.find(
-              {
-                wireId: props.routeParams.id
-              },
-              {
-                sort: {
-                  createdAt: -1
-                }
-              }
-            ).fetch();
-            let graphics = Graphics.find().fetch();
-            Meteor._localStorage.setItem('counter', i);
-            let categories = Categories.find().fetch();
-            userId = Meteor._localStorage.getItem('wfg');
-            const users = Meteor.users.find();
-            let userId = Meteor.userId();
-            if (!userId || userId === undefined) {
-              if (!Meteor._localStorage.getItem('wfg')) {
-                Meteor._localStorage.setItem('wfg', `guest${Random.id(4)}`);
-              }
-
-              userId = Meteor._localStorage.getItem('wfg');
-            }
-
-            if (Roles.userIsInRole(userId, ['admin'])) {
-              isAdmin = true;
-            }
-            Meteor.call(
-              'checkUserMode',
-              userId,
-              props.routeParams.id,
-              (err, res) => {
-                if (!err) {
-                  userMode = res;
-                  onData(null, {
-                    wire,
-                    users,
-                    me: userId,
-                    userMode,
-                    chats,
-                    oldChat,
-                    i,
-                    graphics,
-                    categories,
-                    isAdmin,
-                    username
-                  });
-                }
-                setTimeout(function() {
-                  oldChat = chats;
-                }, 300);
-              }
-            );
-          }
-        }
-      }
+  if (wire && wire.userId ) {
+    Meteor.subscribe('userInfo', wire.userId);
+    let user = Meteor.users.findOne({ _id: wire.userId });
+  
+    if (user) {
+      username = user.profile.name.first + ' ' + user.profile.name.last;
+    } else { 
+      username = wire.userId; 
     }
   }
-};
 
-export default composeWithTracker(composer, Loading)(FlowDesigner);
+
+  i = i + 1;
+  Meteor._localStorage.setItem('counter', i);
+  userId = Meteor._localStorage.getItem('wfg');
+  
+
+  return {
+    wire,
+    users,
+    me: userId,
+    userMode,
+    chats,
+    oldChat,
+    i,
+    graphics,
+    categories,
+    isAdmin,
+    username
+  };
+  
+})(FlowDesigner);

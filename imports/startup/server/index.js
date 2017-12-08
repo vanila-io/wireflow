@@ -101,7 +101,7 @@ Meteor.onConnection(connection => {
     });
 
     let wireguestsUsers = [];
-    if (wire.guestsUsers !== undefined) {
+    if (wire && wire.guestsUsers !== undefined) {
       wireguestsUsers = wire.guestsUsers;
     }
     exist = 0;

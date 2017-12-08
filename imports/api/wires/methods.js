@@ -14,7 +14,11 @@ export const insertDesign = new ValidatedMethod({
     wire_settings: { type: String },
   }).validator(),
   run(design) {
-    return Wires.insert(design);
+    let wire = Wires.findOne({
+      _id: design._id
+    });
+
+    if (!wire)  return Wires.insert(design);
   },
 });
 
