@@ -1,6 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Wires } from '../../../imports/api/wires/wires';
 import React from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import { Router, Route, IndexRoute, browserHistory } from 'react-router';
 import { withTracker } from 'meteor/react-meteor-data';
@@ -134,7 +135,7 @@ export class MyCharts extends React.Component {
 
 
 MyCharts.propTypes = {
-  minewires: React.PropTypes.object
+  minewires: PropTypes.object
 };
 
 export default withTracker(() => {

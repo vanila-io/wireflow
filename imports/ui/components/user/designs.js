@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 
@@ -54,7 +55,7 @@ class UserDesigns extends React.Component {
 }
 
 UserDesigns.propTypes = {
-  designs: React.PropTypes.array,
+  designs: PropTypes.array,
 };
 
 export default withTracker((props) => {

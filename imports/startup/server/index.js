@@ -78,11 +78,14 @@ Meteor.onConnection(connection => {
     wireid = data.id;
   });
 
-  Streamy.on('getusername', (data, from) => {
-    //console.log("getusername");
+  Streamy.on('getusername', async(data, from) => {
     getusername = data.user;
     user = data.conuser;
     lastUser = data.lastuser;
+
+    // If wire.id is not defined yet, then don't proceed.
+    //
+    if(!wireid) return;
 
     if (!user || user === undefined) {
       //console.log("here");
@@ -93,23 +96,15 @@ Meteor.onConnection(connection => {
       currentuserId = data.conuser._id;
       userfullname = user.profile.name.first + ' ' + user.profile.name.last;
     }
-    //console.log("lastUser");
-    //console.log(lastUser);
     wire = Wires.findOne({
       _id: wireid
     });
+
     let wireguestsUsers = [];
     if (wire && wire.guestsUsers !== undefined) {
       wireguestsUsers = wire.guestsUsers;
-      //console.log("wireguestsUsers");
-      //console.log(wireguestsUsers);
     }
-
-    //console.log("getusername");
     exist = 0;
-
-    //console.log("wireguestsUsers");
-    //console.log(wireguestsUsers);
     wireguestsUsers.forEach((currentValue, index, arr) => {
       if (
         currentValue.userId === currentuserId &&
@@ -120,22 +115,14 @@ Meteor.onConnection(connection => {
     });
     let clientAddress = connection.clientAddress;
     let clientAgent = connection.httpHeaders['user-agent'];
-    //console.log("**********************");
-    //console.log("clientAddress");
-    //console.log(clientAddress);
-    //console.log("clientAgent");
-    //console.log(clientAgent);
 
     wireguestsUsers.forEach((currentValue, index, arr) => {
       if (
         currentValue.clientAddress === clientAddress &&
       currentValue.clientAgent === clientAgent
       ) {
-      //console.log("clientAgent");
-      //console.log(currentValue.userfullname);
         if (lastUser === currentValue.userfullname) {
           wireguestsUsers.splice(index, 1);
-        //console.log("here");
         }
       }
     });
@@ -160,7 +147,6 @@ Meteor.onConnection(connection => {
     }
 
     if (exist === 0) {
-    //console.log("updated");
       wireguestsUsers.push({
         userId: currentuserId,
         userfullname: userfullname,
@@ -187,7 +173,6 @@ Meteor.onConnection(connection => {
   });
 
   connection.onClose(function() {
-  //console.log("close");
     cuurentConnectionId = connection.id;
     let clientAddress = connection.clientAddress;
     let clientAgent = connection.httpHeaders['user-agent'];
@@ -201,32 +186,25 @@ Meteor.onConnection(connection => {
       }
     });
     let userexist = 0;
+
     usersList.forEach(function(currentValue, index, arr) {
-      if (currentValue.wireId === wireid2) {
-        if (currentValue.userId === currentuserId) {
-          if (currentValue.userfullname === userfullname) {
-            if (currentValue.connection !== cuurentConnectionId) {
-              userexist = 1;
-            }
-          }
-        }
+      const matchesWireID = currentValue.wireId === wireid2;
+      const matchesUserID = currentValue.userId === currentuserId;
+      const matchesFullName = currentValue.userfullname === userfullname;
+      const matchesConnectionID = currentValue.connection !== cuurentConnectionId;
+      if(matchesWireID && matchesUserID && matchesFullName && matchesConnectionID){
+        userexist = 1;
       }
     });
-    //console.log("usersList");
-    //console.log(usersList);
+
     usersList.forEach(function(currentValue, index, arr) {
-      if (currentValue.wireId === wireid2) {
-      //console.log("wireid2");
-      //console.log("currentValue.clientAddress === clientAddress && currentValue.clientAgent === clientAgent");
-      //console.log(currentValue.clientAddress , clientAddress , currentValue.clientAgent , clientAgent);
-        if (
-          currentValue.clientAddress === clientAddress &&
-        currentValue.clientAgent === clientAgent
-        ) {
-          if (lastUser !== currentValue.userfullname) {
-            userexist = 1;
-          }
-        }
+      const sameWireID = currentValue.wireId === wireid2;
+      const sameClientAddress = currentValue.clientAddress === clientAddress;
+      const sameClientAgent = currentValue.clientAgent === clientAgent;
+      const lastUserMatch = lastUser !== currentValue.userfullname;
+
+      if (sameWireID && sameClientAddress && sameClientAgent && lastUserMatch) {
+        userexist = 1;
       }
     });
 

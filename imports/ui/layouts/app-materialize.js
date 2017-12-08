@@ -1,18 +1,11 @@
 import React from 'react';
-// import 'meteor/ryanswapp:fabricjs';
-// import 'materialize-css/dist/css/materialize.css';
-// import 'materialize-css/dist/js/materialize.js';
-// import '../../../imports/lib/css/style.css';
-// // import '../../../imports/lib/jquery.mousewheel.min.js';
-// import '../../../imports/lib/fabric.min.js';
-// import '../../../imports/lib/contextMenu.js';
-// import '../../../imports/lib/fabric_api.js';
-// import '../../../imports/lib/main.js';
+import PropTypes from 'prop-types';
+import createClass from 'create-react-class';
 
-export const AppMaterialize = React.createClass({
+export const AppMaterialize = createClass({
   propTypes: {
-    children: React.PropTypes.element.isRequired,
-    location: React.PropTypes.object,
+    children: PropTypes.element.isRequired,
+    location: PropTypes.object,
   },
   render() {
     return <div>

@@ -1,6 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Wires } from '../../../imports/api/wires/wires';
 import React from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 
 import { Streamy } from 'meteor/yuukan:streamy';
@@ -13,6 +14,10 @@ import { Categories } from '../../../imports/api/categories/categories';
 
 import $ from 'jquery';
 import 'hammerjs';
+
+// Drop in replacement for composeWithTracker
+import composeWithTracker from '../../../imports/lib/composeWithTracker.js';
+
 import 'materialize-css/dist/css/materialize.css';
 import 'materialize-css/dist/js/materialize.js';
 import '../../../imports/lib/css/style.css';
@@ -264,10 +269,10 @@ export class FlowDesigner extends React.Component {
                 </a>
               </li>
               <li className="tab col s2">
-                <a href="http://wireflow.co/mycharts">My charts</a>
+                <a href="/mycharts">My charts</a>
               </li>
               <li className="tab col s2">
-                <a target="_self" href="http://wireflow.co/">
+                <a target="_self" href="/">
                   Homepage
                 </a>
               </li>
@@ -275,14 +280,13 @@ export class FlowDesigner extends React.Component {
           </div>
           <div id="test1" className="col s12 mainCont">
             <div id="chartsSide" className="col s1 chartsSidebar">
-              <div className="itemsList" id="svgList">
+              <div key="svgList" className="itemsList" id="svgList">
                 <input
                   type="text"
                   ref="searchByName"
                   onChange={self.LoadGraphics.bind(self)}
                   placeholder="Search"
                 />
-
                 {
                   categories ? (
                     <select
@@ -314,7 +318,7 @@ export class FlowDesigner extends React.Component {
                 
 
                 {graphics ? (
-                  graphics.map(function(graphic) {
+                  graphics.map(function(graphic, index) {
                     return (
                       <div key={graphic._id}>
                         <img
@@ -322,6 +326,7 @@ export class FlowDesigner extends React.Component {
                           src={graphic.link}
                           id={graphic._id}
                           ref={graphic._id}
+                          key={graphic._id}
                         />{' '}
                         <span>{graphic.name}</span>
                       </div>
@@ -566,7 +571,7 @@ export class FlowDesigner extends React.Component {
                   { self.props.wire && self.props.wire.guestsUsers ? (
                     self.props.wire.guestsUsers.map(function(user, index) {
                       return (
-                        <div key={ index }>
+                        <div key={user.userfullname}>
                           <p>
                             <span
                               className="roundedcolor"
@@ -797,7 +802,7 @@ export class FlowDesigner extends React.Component {
 }
 
 FlowDesigner.propTypes = {
-  wire: React.PropTypes.object
+  wire: PropTypes.object
 };
 
 let oldChat,  i = 0;

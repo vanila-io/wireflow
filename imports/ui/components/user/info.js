@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import EditUser from '../admin/edit-user.js';
 import { browserHistory } from 'react-router';
 
@@ -17,8 +18,8 @@ const Information = ({ state, update }) => (
 );
 
 Information.propTypes = {
-  state: React.PropTypes.object,
-  update: React.PropTypes.func,
+  state: PropTypes.object,
+  update: PropTypes.func,
 };
 
 export class UserInfo extends React.Component {
@@ -79,5 +80,5 @@ export class UserInfo extends React.Component {
 }
 
 UserInfo.propTypes = {
-  user: React.PropTypes.object,
+  user: PropTypes.object,
 };

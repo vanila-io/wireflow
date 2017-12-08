@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import $ from 'jquery';
 import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
@@ -108,9 +109,9 @@ class ChatBox extends React.Component {
 }
 
 ChatBox.propTypes = {
-  chats: React.PropTypes.array,
-  routeParams: React.PropTypes.string,
-  wireid: React.PropTypes.string,
+  chats: PropTypes.array,
+  routeParams: PropTypes.string,
+  wireid: PropTypes.string,
 };
 
 

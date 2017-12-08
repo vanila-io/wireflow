@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Bert } from 'meteor/themeteorchef:bert';
 import { Slingshot } from 'meteor/edgee:slingshot';
 import { updateAvatar } from '../../../api/users/methods.js';
@@ -119,5 +120,5 @@ export class UserAvatar extends React.Component {
 }
 
 UserAvatar.propTypes = {
-  user: React.PropTypes.object,
+  user: PropTypes.object,
 };

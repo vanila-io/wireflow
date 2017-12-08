@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { Bert } from 'meteor/themeteorchef:bert';
 import { withTracker } from 'meteor/react-meteor-data';
@@ -158,7 +159,7 @@ class EditUser extends React.Component {
                 onChange={this.handleCountryChange.bind(this)}
                 value={this.state.country}>
                 <option value="">Select Country</option>
-                {Countries.map((country, index) => (<option key={index}
+                {Countries.map((country, index) => (<option key={country}
                   value={country}>{country}</option>))}
               </select>
             </div>
@@ -169,7 +170,7 @@ class EditUser extends React.Component {
                 onChange={this.handleChange.bind(this)}
                 value={this.state.city}>
                 {this.state.cities.map((city, index) => (
-                  <option key={index} value={city}>{city}</option>))}
+                  <option key={city} value={city}>{city}</option>))}
               </select>
             </div>
             <div className="form-group">
@@ -229,18 +230,18 @@ class EditUser extends React.Component {
 }
 
 EditUser.propTypes = {
-  user: React.PropTypes.object,
-  countries: React.PropTypes.array,
-  showResetPassword: React.PropTypes.bool,
-  showCancelButton: React.PropTypes.bool,
-  onCancelled: React.PropTypes.func,
-  onSubmitted: React.PropTypes.func,
+  user: PropTypes.object,
+  countries: PropTypes.array,
+  showResetPassword: PropTypes.bool,
+  showCancelButton: PropTypes.bool,
+  onCancelled: PropTypes.func,
+  onSubmitted: PropTypes.func,
 };
 
 export default withTracker((props) => {
   Meteor.subscribe('usersList');
 
-  return { 
+  return {
     user: Meteor.users.findOne(props.routeParams.id)
   };
 })(EditUser);

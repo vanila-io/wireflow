@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Grid, Row, Col, Alert, FormGroup, ControlLabel, FormControl, Button } from 'react-bootstrap';
 import { handleResetPassword } from '../../modules/reset-password';
 import { googleAnalytics } from '../../modules/ganalytics.js';
@@ -51,5 +52,5 @@ with your new password.
 }
 
 ResetPassword.propTypes = {
-  params: React.PropTypes.object,
+  params: PropTypes.object,
 };
