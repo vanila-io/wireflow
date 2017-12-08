@@ -261,10 +261,10 @@ export class FlowDesigner extends React.Component {
                 </a>
               </li>
               <li className="tab col s2">
-                <a href="http://wireflow.co/mycharts">My charts</a>
+                <a href="/mycharts">My charts</a>
               </li>
               <li className="tab col s2">
-                <a target="_self" href="http://wireflow.co/">
+                <a target="_self" href="/">
                   Homepage
                 </a>
               </li>
@@ -546,14 +546,14 @@ export class FlowDesigner extends React.Component {
                     {self.props.wire.guestsUsers ? (
                       self.props.wire.guestsUsers.length
                     ) : (
-                      <div>loading</div>
+                      <span>loading</span>
                     )}{' '}
                   </p>
                   <hr />
                   {self.props.wire.guestsUsers ? (
                     self.props.wire.guestsUsers.map(function(user) {
                       return (
-                        <div>
+                        <div key={user.userfullname}>
                           <p>
                             <span
                               className="roundedcolor"
