@@ -15,9 +15,6 @@ import { Categories } from '../../../imports/api/categories/categories';
 import $ from 'jquery';
 import 'hammerjs';
 
-// Drop in replacement for composeWithTracker
-import composeWithTracker from '../../../imports/lib/composeWithTracker.js';
-
 import 'materialize-css/dist/css/materialize.css';
 import 'materialize-css/dist/js/materialize.js';
 import '../../../imports/lib/css/style.css';
