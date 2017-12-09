@@ -2,8 +2,6 @@ import { Meteor } from 'meteor/meteor';
 import { Wires } from '../../../imports/api/wires/wires';
 import React from 'react';
 import PropTypes from 'prop-types';
-import ReactDOM from 'react-dom';
-import { Router, Route, IndexRoute, browserHistory } from 'react-router';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Loading } from '../components/loading.js';
 import { Bert } from 'meteor/themeteorchef:bert';
@@ -123,7 +121,7 @@ export class MyCharts extends React.Component {
                   </tr>
                 );
               })) : (
-                <tr><td>loading</td></tr>
+                <tr><td><Loading /></td></tr>
               )
             }
           </tbody>

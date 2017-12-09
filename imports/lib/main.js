@@ -70,7 +70,7 @@ export const handleMount = (options) => {
   $(document).delegate('#exportCanvas', 'click', function(event) {
     var json = chartApp.exportJSON();
     var data = JSON.stringify(json),
-		    fileName = "exportjson.json";
+      fileName = 'exportjson.json';
     saveData(data, fileName);
   });
   $(document).delegate('#connectingStart', 'click', function(e) {
@@ -93,8 +93,8 @@ export const handleMount = (options) => {
     chartApp.stopConnecting();
     chartApp.stopCanvasMove();
     var base64 = chartApp.exportImage();
-    var a = document.createElement("a");
-	    a.style = "display: none";
+    var a = document.createElement('a');
+	    a.style = 'display: none';
 	    a.href = base64;
 	    a.download = 'wireflow.jpg';
     document.body.appendChild(a);
@@ -140,14 +140,14 @@ export const handleMount = (options) => {
   });
   $(document).delegate('li#addLabel,button#addLabel', 'click', function(e) {
     var id = $(this).attr('data-id');
-    var label = prompt("Please enter label for connector");
+    var label = prompt('Please enter label for connector');
     if (label != null && id) {
       chartApp.editLabel(id, label);
       contextMenu.hide();
     }
   });
   $(document).delegate('li#clearCanvas, button#clearCanvas', 'click', function(e) {
-    var result = confirm("Want to clear Canvas?");
+    var result = confirm('Want to clear Canvas?');
     if (result) {
   		chartApp.stopConnecting();
   		chartApp.stopCanvasMove();
@@ -201,7 +201,7 @@ export const handleMount = (options) => {
     contextMenu.hide();
   });
   $(document).delegate('li#editTitle,button#editTitle', 'click', function(e) {
-    var person = prompt("Please enter new Title for Header");
+    var person = prompt('Please enter new Title for Header');
     if (person != null) {
       chartApp.editTitle(person);
       contextMenu.hide();
@@ -306,7 +306,7 @@ export const handleMount = (options) => {
   $(document).delegate('#help', 'click', function(e) {
     $('#helpModal').openModal();
   });
-  $("canvas").on("contextmenu", function(e) {
+  $('canvas').on('contextmenu', function(e) {
     e.preventDefault();
     contextMenu.setPosition();
     contextMenu.hide();
@@ -360,10 +360,10 @@ canvasSize = function(id, w, h){
   chartApp.canvasDimension(id, w, h);
 };
 saveData = function(data, fileName){
-  var a = document.createElement("a");
-  a.style = "display: none";
+  var a = document.createElement('a');
+  a.style = 'display: none';
   var json = JSON.stringify(data),
-    blob = new Blob([json], {type: "octet/stream"}),
+    blob = new Blob([json], {type: 'octet/stream'}),
     url = window.URL.createObjectURL(blob);
   a.href = url;
   a.download = fileName;
