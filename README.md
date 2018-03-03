@@ -25,3 +25,25 @@ Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io).
 Follow instructions based on your operating system.
 - [Windows](https://github.com/vanila-io/wireflow/wiki/Installation-Windows)
 - [Linux](https://github.com/vanila-io/wireflow/wiki/Installation-Linux)
+
+## Credits
+### Contributors
+
+This project exists thanks to all the people who contribute. 
+<a href="graphs/contributors"><img src="https://opencollective.com/wireflow/contributors.svg?width=890&button=false" /></a>
+
+
+### Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/wireflow#backer)]
+
+<a href="https://opencollective.com/{{slug}}#backers" target="_blank"><img src="https://opencollective.com/wireflow/backers.svg?width=890"></a>
+
+
+### Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/wireflow#sponsor)]
+
+<a href="https://opencollective.com/wireflow/sponsor/0/website" target="_blank"><img src="https://opencollective.com/wireflow/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/wireflow/sponsor/1/website" target="_blank"><img src="https://opencollective.com/wireflow/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/wireflow/sponsor/2/website" target="_blank"><img src="https://opencollective.com/wireflow/sponsor/2/avatar.svg"></a>
