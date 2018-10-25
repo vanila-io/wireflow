@@ -16,9 +16,9 @@ export class AdminLayout extends React.Component {
         designer: false,
         mockups: false,
         users: false,
-        wires: false,
+        wires: false
       },
-      buttonClicked: false,
+      buttonClicked: false
     };
   }
 
@@ -34,8 +34,8 @@ export class AdminLayout extends React.Component {
         designer: pathname.includes('designer'),
         mockups: pathname.includes('mockups'),
         users: pathname.includes('users'),
-        wires: pathname.includes('wires'),
-      },
+        wires: pathname.includes('wires')
+      }
     });
   }
 
@@ -50,8 +50,8 @@ export class AdminLayout extends React.Component {
         designer: pathname.includes('designer'),
         mockups: pathname.includes('mockups'),
         users: pathname.includes('users'),
-        wires: pathname.includes('wires'),
-      },
+        wires: pathname.includes('wires')
+      }
     });
   }
 
@@ -91,41 +91,50 @@ export class AdminLayout extends React.Component {
   }
 
   render() {
-    return (<div className="container-fluid admin-ui">
-      <div className="mail-box">
-        <aside className="sm-side">
-          <div className="inbox-body">
-            <a href="#myModal"
-              data-toggle="modal"
-              title="Compose"
-              className="btn btn-compose"
-              onClick={this.handleClick.bind(this)}
-            >{ this.getButtonState() }</a>
-          </div>
-          <ul className="inbox-nav inbox-divider">
-            <li className={ this.getActiveClass('users') }>
-              <LinkContainer to="/admin/users">
-                <a href="#"><i className="fa fa-users"></i>Users</a>
-              </LinkContainer>
-            </li>
-            <li className={ this.getActiveClass('wires') }>
-              <LinkContainer to="/admin/wires">
-                <a href="#"><i className="fa fa-picture-o"></i>Wires</a>
-              </LinkContainer>
-            </li>
-          </ul>
-        </aside>
-        <aside className="lg-side">
-          <div className="inbox-body">
-            {this.props.children}
-          </div>
-        </aside>
+    return (
+      <div className="container-fluid admin-ui">
+        <div className="mail-box">
+          <aside className="sm-side">
+            <div className="inbox-body">
+              <a
+                href="#myModal"
+                data-toggle="modal"
+                title="Compose"
+                className="btn btn-compose"
+                onClick={this.handleClick.bind(this)}
+              >
+                {this.getButtonState()}
+              </a>
+            </div>
+            <ul className="inbox-nav inbox-divider">
+              <li className={this.getActiveClass('users')}>
+                <LinkContainer to="/admin/users">
+                  <a href="#">
+                    <i className="fa fa-users" />
+                    Users
+                  </a>
+                </LinkContainer>
+              </li>
+              <li className={this.getActiveClass('wires')}>
+                <LinkContainer to="/admin/wires">
+                  <a href="#">
+                    <i className="fa fa-picture-o" />
+                    Wires
+                  </a>
+                </LinkContainer>
+              </li>
+            </ul>
+          </aside>
+          <aside className="lg-side">
+            <div className="inbox-body">{this.props.children}</div>
+          </aside>
+        </div>
       </div>
-    </div>);
+    );
   }
 }
 
 AdminLayout.propTypes = {
   children: PropTypes.element,
-  location: PropTypes.object,
+  location: PropTypes.object
 };

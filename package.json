@@ -15,6 +15,8 @@
   "dependencies": {
     "bcrypt": "^1.0.3",
     "bootstrap": "^3.3.7",
+    "bufferutil": "^4.0.0",
+    "canvas": "^2.0.1",
     "country-city": "^1.0.0",
     "coupon-code": "^0.4.4",
     "create-react-class": "^15.6.2",
@@ -35,7 +37,9 @@
     "react-edit-inline": "git+https://github.com/entrptaher/ReactInlineEdit.git",
     "react-router": "^3.2.0",
     "react-router-bootstrap": "^0.23.1",
-    "react-select": "^1.1.0"
+    "react-select": "^1.1.0",
+    "utf-8-validate": "^5.0.1",
+    "xmldom": "^0.1.27"
   },
   "devDependencies": {
     "@meteorjs/eslint-config-meteor": "^1.0.5",
