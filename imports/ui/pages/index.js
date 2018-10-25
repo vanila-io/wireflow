@@ -33,8 +33,8 @@ export class Index extends React.Component {
   createDesign() {
     insertDesign.call({
       wire_settings: '{}',
-      name:"new Design",
-      description:"Description",
+      name:'new Design',
+      description:'Description',
       userId: Meteor.userId() || Meteor._localStorage.getItem('wfg'),
     }, (error, success) => {
       if (error) {
