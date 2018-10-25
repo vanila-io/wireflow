@@ -71,11 +71,11 @@ window.contextMenu = window.contextMenu || new Object || {};
     		options = {
     			left 	: _options.currentPosition.left,
     			top		: _options.currentPosition.top
-    		}
+    		};
     	}
     _options.container.css({
       top: options.top,
       left: options.left
     });
-  }
+  };
 })(jQuery, window.contextMenu);

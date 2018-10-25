@@ -25,11 +25,11 @@ class ChatBox extends React.Component {
         user = Meteor._localStorage.getItem('wfg');
       }
     }else{
-      user=Meteor.user()
+      user=Meteor.user();
     }
     user2 = Meteor._localStorage.getItem('wfg2');
     if (Meteor.user()) {
-      Meteor._localStorage.setItem('wfg2', Meteor.user().profile.name.first + " " + Meteor.user().profile.name.last);
+      Meteor._localStorage.setItem('wfg2', Meteor.user().profile.name.first + ' ' + Meteor.user().profile.name.last);
     }else{
       Meteor._localStorage.setItem('wfg2', user);
     }

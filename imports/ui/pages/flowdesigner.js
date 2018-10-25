@@ -806,7 +806,7 @@ let oldChat,  i = 0;
 
 export default withTracker((props) => {
   Meteor.subscribe('wireInfo', props.routeParams.id);
-  Meteor.subscribe('usersInfo');
+  // Meteor.subscribe('usersInfo');
   Meteor.subscribe('allGraphics');
   Meteor.subscribe('allCategories');
   Meteor.subscribe('wireMessages', props.routeParams.id);

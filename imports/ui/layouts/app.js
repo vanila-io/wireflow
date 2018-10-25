@@ -3,11 +3,11 @@ import PropTypes from 'prop-types';
 import createClass from 'create-react-class';
 import { AppBootstrap } from './app-bootstrap.js';
 import { AppMaterialize } from './app-materialize.js';
-
 export const App = createClass({
   propTypes: {
     children: PropTypes.element.isRequired,
     location: PropTypes.object,
+    user: PropTypes.object,
   },
   render() {
     if (this.props.location.pathname.includes('/wire/')) {
@@ -24,3 +24,5 @@ export const App = createClass({
     </div>;
   },
 });
+
+export default App;

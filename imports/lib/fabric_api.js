@@ -23,7 +23,7 @@ const THEME = {
   connectorCirleBackground: '#fff',
   selectedConnectorColor: '#ff1e1e',
   graphicTitleColor: '#333',
-}
+};
 
 var canvas_state = new Array(),
   current_state = 0;
@@ -89,7 +89,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
           'lineDifference': _t
         });
         _previousLine = object;
-        allStartLines = []
+        allStartLines = [];
         $.each(object.connectors, function(i, el) {
           if (el.type == 'start') {
             allStartLines.push(el.id);
@@ -128,7 +128,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         var canvasDATA = {
           json: object.line.toJSON(customeProperties),
           type: 'addConnector'
-        }
+        };
         Streamy.emit('add', {
           data: JSON.stringify(canvasDATA),
           wireid: wireid
@@ -231,7 +231,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       var canvasDATA = {
         json: object.toJSON(customeProperties),
         type: 'groupMoving'
-      }
+      };
       Streamy.emit('modified', {
         data: JSON.stringify(canvasDATA),
         wireid: wireid
@@ -277,7 +277,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       var canvasDATA = {
         json: object.toJSON(customeProperties),
         type: 'moving'
-      }
+      };
       Streamy.emit('modified', {
         data: JSON.stringify(canvasDATA),
         wireid: wireid
@@ -368,7 +368,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       var canvasDATA = {
         json: object.toJSON(customeProperties),
         type: 'scaling'
-      }
+      };
       Streamy.emit('modified', {
         data: JSON.stringify(canvasDATA),
         wireid: wireid
@@ -389,7 +389,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       var canvasDATA = {
         json: object.toJSON(customeProperties),
         type: 'moving'
-      }
+      };
       Streamy.emit('modified', {
         data: JSON.stringify(canvasDATA),
         wireid: wireid
@@ -556,7 +556,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       self.addObject(object, 0, 0, 1, 1);
       self.makeConnectorsAlign();
     }
-  }
+  };
   this.updateGroupObject = function(obj, _obj, group) {
     obj.set({
       left: (_obj.left + group.left),
@@ -568,7 +568,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
     }).setCoords();
     canvas.renderAll();
     self.makeConnectorsAlign();
-  }
+  };
   this.updateObject = function(obj, _obj) {
     //console.log("obj, _obj");
     //console.log(obj, _obj);
@@ -584,14 +584,14 @@ export const FabricAPI = function(mainCanvas, wireid) {
     }).setCoords();
     canvas.renderAll();
     self.makeConnectorsAlign();
-  }
+  };
 
   this._calculateConectorStart = function(obj, line) {
     return {
       top: (line.y1 - obj.top),
       left: (line.x1 - obj.left)
-    }
-  }
+    };
+  };
   this._calcArrowAngle = function(x1, y1, x2, y2) {
     var angle = 0,
       x, y;
@@ -678,7 +678,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       var canvasDATA = {
         json: obj.toJSON(customeProperties),
         type: 'sendBack'
-      }
+      };
       Streamy.emit('modified', {
         data: JSON.stringify(canvasDATA),
         wireid: wireid
@@ -698,7 +698,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         var canvasDATA = {
           json: objs.toJSON(customeProperties),
           type: 'groupSendBack'
-        }
+        };
         Streamy.emit('modified', {
           data: JSON.stringify(canvasDATA),
           wireid: wireid
@@ -717,7 +717,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       var canvasDATA = {
         json: obj.toJSON(customeProperties),
         type: 'bringFront'
-      }
+      };
       Streamy.emit('modified', {
         data: JSON.stringify(canvasDATA),
         wireid: wireid
@@ -736,7 +736,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         var canvasDATA = {
           json: objs.toJSON(customeProperties),
           type: 'groupBringFront'
-        }
+        };
         Streamy.emit('modified', {
           data: JSON.stringify(canvasDATA),
           wireid: wireid
@@ -833,7 +833,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       _previousLine.remove();
       $.each(_previousLine.connectors, function(i, v) {
         if (_previousLine.line.id == v.id) {
-          _previousLine.connectors.splice(i, 1)
+          _previousLine.connectors.splice(i, 1);
         }
       });
       canvas.fxRemove(tempLine.arrow);
@@ -915,7 +915,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       y1: _y1,
       x2: _x2,
       y2: _y2
-    }
+    };
   };
   this.makeConnectorsAlign = function() {
     canvas.forEachObject(function(line) {
@@ -973,7 +973,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
             originX: _startElement.originX,
             scaleY: _startElement.scaleY,
             scaleX: _startElement.scaleX
-          }
+          };
         }
         if (group._objects.filter(function(e) {
           return e.id == _endElement.id;
@@ -987,14 +987,14 @@ export const FabricAPI = function(mainCanvas, wireid) {
             originX: _endElement.originX,
             scaleY: _endElement.scaleY,
             scaleX: _endElement.scaleX
-          }
+          };
         }
         var returnPoints = self._findPointPosition(_startElement, _endElement);
         if (!returnPoints) return;
         self.lineAlignWithObject(returnPoints, line, _startElement, _lineDifference);
       }
     });
-  }
+  };
   this.lineAlignWithObject = function(returnPoints, line, _startElement, _lineDifference) {
     var oldCenterX = (line.x1 + line.x2) / 2,
       oldCenterY = (line.y1 + line.y2) / 2,
@@ -1078,7 +1078,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
           var canvasDATA = {
             json: obj.toJSON(customeProperties),
             type: 'delete'
-          }
+          };
           Streamy.emit('delete', {
             data: JSON.stringify(canvasDATA),
             wireid: wireid
@@ -1115,7 +1115,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       var canvasDATA = {
         json: obj.toJSON(customeProperties),
         type: 'headerToggle'
-      }
+      };
       Streamy.emit('modified', {
         data: JSON.stringify(canvasDATA),
         wireid: wireid
@@ -1138,7 +1138,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
           var canvasDATA = {
             json: obj.toJSON(customeProperties),
             type: 'editTitle'
-          }
+          };
           Streamy.emit('modified', {
             data: JSON.stringify(canvasDATA),
             wireid: wireid
@@ -1234,7 +1234,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       var canvasDATA = {
         json: group.toJSON(customeProperties),
         type: 'addSvg'
-      }
+      };
       Streamy.emit('add', {
         data: JSON.stringify(canvasDATA),
         wireid: wireid,
@@ -1266,7 +1266,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         var canvasDATA = {
           json: obj.toJSON(customeProperties),
           type: 'removeSVG'
-        }
+        };
         Streamy.emit('delete', {
           data: JSON.stringify(canvasDATA),
           wireid: wireid,
@@ -1282,7 +1282,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         self.discardCanvas();
         var newGroup = {
           _objects: []
-        }
+        };
         $.each(objs._objects, function(index, val) {
           if (val && val.class == 'svg') {
             newGroup._objects.push(val.toJSON(customeProperties));
@@ -1308,7 +1308,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
               var canvasDATA = {
                 json: val.toJSON(customeProperties),
                 type: 'removeSVG'
-              }
+              };
               Streamy.emit('delete', {
                 data: JSON.stringify(canvasDATA),
                 wireid: wireid,
@@ -1346,7 +1346,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
     canvas.fire('object:moving', {
       target: obj
     }).renderAll();
-  }
+  };
   this.zoomIn = function() {
     var newZoom = canvas.getZoom() + 1 / 40;
     canvas.zoomToPoint({
@@ -1355,7 +1355,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
     }, newZoom);
     self.renderVieportBorders();
     canvas.renderAll();
-  }
+  };
   this.zoomOut = function() {
     var newZoom = canvas.getZoom() - 1 / 40;
     canvas.zoomToPoint({
@@ -1364,7 +1364,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
     }, newZoom);
     self.renderVieportBorders();
     canvas.renderAll();
-  }
+  };
   this.zoomReset = function() {
     var newZoom = 1;
     canvas.zoomToPoint({
@@ -1375,7 +1375,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
     canvas.viewportTransform[5] = 0;
     self.renderVieportBorders();
     canvas.renderAll();
-  }
+  };
   this.deleteObjectByID = function(id) {
     canvas.forEachObject(function(element) {
       if (element.id) {
@@ -1402,7 +1402,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
               var canvasDATA = {
                 json: new fabric.Object(object).toJSON(customeProperties),
                 type: 'modified'
-              }
+              };
               Streamy.emit('modified', {
                 data: JSON.stringify(canvasDATA),
                 wireid: wireid
@@ -1424,7 +1424,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
             var canvasDATA = {
               json: temp.toJSON(customeProperties),
               type: 'delete'
-            }
+            };
             Streamy.emit('delete', {
               data: JSON.stringify(canvasDATA),
               wireid: wireid
@@ -1441,7 +1441,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         var canvasDATA = {
           json: new fabric.Object(object).toJSON(customeProperties),
           type: 'add'
-        }
+        };
         Streamy.emit('add', {
           data: JSON.stringify(canvasDATA),
           wireid: wireid
@@ -1458,7 +1458,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
           var canvasDATA = {
             json: new fabric.Object(object).toJSON(customeProperties),
             type: 'add'
-          }
+          };
           Streamy.emit('add', {
             data: JSON.stringify(canvasDATA),
             wireid: wireid
@@ -1475,7 +1475,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       current_state = 0;
     }
     //Streamy.emit('undoRedo', {data: JSON.stringify({canvasState:canvas_state, currentState:current_state}), wireid: wireid});
-  }
+  };
   this.redo = function() {
     this.discardCanvas();
     if ((current_state < canvas_state.length)) {
@@ -1494,7 +1494,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
               var canvasDATA = {
                 json: new fabric.Object(object).toJSON(customeProperties),
                 type: 'modified'
-              }
+              };
               Streamy.emit('modified', {
                 data: JSON.stringify(canvasDATA),
                 wireid: wireid
@@ -1512,7 +1512,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         var canvasDATA = {
           json: new fabric.Object(object).toJSON(customeProperties),
           type: 'add'
-        }
+        };
         Streamy.emit('add', {
           data: JSON.stringify(canvasDATA),
           wireid: wireid
@@ -1529,7 +1529,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
             var canvasDATA = {
               json: temp.toJSON(customeProperties),
               type: 'delete'
-            }
+            };
             Streamy.emit('delete', {
               data: JSON.stringify(canvasDATA),
               wireid: wireid
@@ -1548,7 +1548,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
           var canvasDATA = {
             json: new fabric.Object(object).toJSON(customeProperties),
             type: 'delete'
-          }
+          };
           Streamy.emit('delete', {
             data: JSON.stringify(canvasDATA),
             wireid: wireid
@@ -1563,7 +1563,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
       current_state++;
     }
     //Streamy.emit('undoRedo', {data: JSON.stringify({canvasState:canvas_state, currentState:current_state}), wireid: wireid});
-  }
+  };
   this.savestate = function(type, object, object1) {
     var obj = {
       action: type,
@@ -1573,7 +1573,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
     };
     canvas_state.splice(current_state, 0, obj);
     current_state++;
-  }
+  };
   this.addObject = function(obj, offsetLeft, offsetTop, scaleX, scaleY) {
     if (!obj) return;
     canvas.fire('before:selection:cleared');
@@ -1678,14 +1678,14 @@ export const FabricAPI = function(mainCanvas, wireid) {
                   var objct = {
                     id: obj.id,
                     type: v.type
-                  }
+                  };
                   if (v.type == 'start') {
                     objct.lineDifference = v.lineDifference;
                   }
                   t.connectors.push(objct);
                 }
               });
-            })
+            });
           }
           setTimeout(function() {
             canvas.forEachObject(function(t) {
@@ -1702,7 +1702,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         canvas.renderOnAddRemove = true;
       });
     }
-  }
+  };
   this.exportJSON = function() {
     self.alignIndex();
     return {

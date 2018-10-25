@@ -8,6 +8,13 @@ import './api';
 import { Wires } from '../../api/wires/wires';
 import { insertDesign, updateDesignSettings } from '../../api/wires/methods.js';
 
+Meteor.methods({
+  isAdmin: userId => {
+    check(userId, String);
+    return Roles.userIsInRole(userId, ['admin']);
+  }
+});
+
 Streamy.on('modified', (data, from) => {
   const wireid = data.wireid;
   Streamy.broadcast(`modified_${wireid}`, {
@@ -78,14 +85,14 @@ Meteor.onConnection(connection => {
     wireid = data.id;
   });
 
-  Streamy.on('getusername', async(data, from) => {
+  Streamy.on('getusername', async (data, from) => {
     getusername = data.user;
     user = data.conuser;
     lastUser = data.lastuser;
 
     // If wire.id is not defined yet, then don't proceed.
     //
-    if(!wireid) return;
+    if (!wireid) return;
 
     if (!user || user === undefined) {
       //console.log("here");
@@ -108,7 +115,7 @@ Meteor.onConnection(connection => {
     wireguestsUsers.forEach((currentValue, index, arr) => {
       if (
         currentValue.userId === currentuserId &&
-      currentValue.userfullname === userfullname
+        currentValue.userfullname === userfullname
       ) {
         exist = 1;
       }
@@ -119,7 +126,7 @@ Meteor.onConnection(connection => {
     wireguestsUsers.forEach((currentValue, index, arr) => {
       if (
         currentValue.clientAddress === clientAddress &&
-      currentValue.clientAgent === clientAgent
+        currentValue.clientAgent === clientAgent
       ) {
         if (lastUser === currentValue.userfullname) {
           wireguestsUsers.splice(index, 1);
@@ -191,8 +198,14 @@ Meteor.onConnection(connection => {
       const matchesWireID = currentValue.wireId === wireid2;
       const matchesUserID = currentValue.userId === currentuserId;
       const matchesFullName = currentValue.userfullname === userfullname;
-      const matchesConnectionID = currentValue.connection !== cuurentConnectionId;
-      if(matchesWireID && matchesUserID && matchesFullName && matchesConnectionID){
+      const matchesConnectionID =
+        currentValue.connection !== cuurentConnectionId;
+      if (
+        matchesWireID &&
+        matchesUserID &&
+        matchesFullName &&
+        matchesConnectionID
+      ) {
         userexist = 1;
       }
     });
@@ -225,11 +238,11 @@ Meteor.onConnection(connection => {
       }
       wireguestsUsers2.forEach(function(currentValue, index, arr) {
         if (currentValue.userId === currentuserId) {
-        //console.log("currentValue.userId === currentuserId");
-        //console.log(currentValue.userId === currentuserId);
+          //console.log("currentValue.userId === currentuserId");
+          //console.log(currentValue.userId === currentuserId);
           if (currentValue.userfullname === userfullname) {
-          //console.log("currentValue.userfullname === userfullname");
-          //console.log(currentValue.userfullname === userfullname);
+            //console.log("currentValue.userfullname === userfullname");
+            //console.log(currentValue.userfullname === userfullname);
             wireguestsUsers2.splice(index, 1);
           }
         }
@@ -241,5 +254,4 @@ Meteor.onConnection(connection => {
       });
     }
   });
-
 });

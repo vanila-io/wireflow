@@ -19,9 +19,18 @@ const users = [{
   roles: ['admin'],
 }];
 
+
+/**
+ * Add admin to roles
+ */
+const admin = Meteor.users.findOne({ 'emails.address': 'admin@example.com' });
+const addToAdmin = Roles.addUsersToRoles([admin._id], ['admin']);
+const hasRole = Roles.userIsInRole(admin._id, ['admin']);
+console.log({addToAdmin, hasRole});
+
+
 users.forEach(({ email, password, profile, roles }) => {
   const userExists = Meteor.users.findOne({ 'emails.address': email });
-
   if (!userExists) {
     const userId = Accounts.createUser({ email, password, profile });
     Roles.addUsersToRoles(userId, roles);
