@@ -1,13 +1,13 @@
 {
   "name": "WireFlow",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Flowchart collaboration App",
   "scripts": {
     "start": "meteor --settings settings.json",
     "lint": "eslint .",
     "pretest": "npm run lint --silent",
     "test": "meteor test --driver-package=practicalmeteor:mocha --port 3100",
-    "postinstall": "cp node_modules/materialize-css/js/date_picker/picker.js node_modules/materialize-css/bin && opencollective postinstall"
+    "postinstall": "cp node_modules/materialize-css/js/date_picker/picker.js node_modules/materialize-css/bin"
   },
   "eslintConfig": {
     "extends": "@meteorjs/eslint-config-meteor"
@@ -15,8 +15,6 @@
   "dependencies": {
     "bcrypt": "^1.0.3",
     "bootstrap": "^3.3.7",
-    "bufferutil": "^4.0.0",
-    "canvas": "^2.0.1",
     "country-city": "^1.0.0",
     "coupon-code": "^0.4.4",
     "create-react-class": "^15.6.2",
@@ -29,7 +27,6 @@
     "materialize-css": "^0.100.2",
     "meteor-node-stubs": "^0.3.2",
     "numeral": "^2.0.6",
-    "opencollective": "^1.0.3",
     "prop-types": "^15.6.0",
     "react": "^16.0.0",
     "react-bootstrap": "^0.31.5",
@@ -38,9 +35,7 @@
     "react-edit-inline": "git+https://github.com/entrptaher/ReactInlineEdit.git",
     "react-router": "^3.2.0",
     "react-router-bootstrap": "^0.23.1",
-    "react-select": "^1.1.0",
-    "utf-8-validate": "^5.0.1",
-    "xmldom": "^0.1.27"
+    "react-select": "^1.1.0"
   },
   "devDependencies": {
     "@meteorjs/eslint-config-meteor": "^1.0.5",
@@ -59,10 +54,5 @@
   "license": "MIT",
   "repository": {
     "url": "git@github.com:vanila-io/wireflow.git"
-  },
-  "collective": {
-    "type": "opencollective",
-    "url": "https://opencollective.com/wireflow",
-    "logo": "https://opencollective.com/wireflow/logo.txt"
   }
 }
