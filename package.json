@@ -7,7 +7,7 @@
     "lint": "eslint .",
     "pretest": "npm run lint --silent",
     "test": "meteor test --driver-package=practicalmeteor:mocha --port 3100",
-    "postinstall": "cp node_modules/materialize-css/js/date_picker/picker.js node_modules/materialize-css/bin"
+    "postinstall": "cp node_modules/materialize-css/js/date_picker/picker.js node_modules/materialize-css/bin && opencollective postinstall"
   },
   "eslintConfig": {
     "extends": "@meteorjs/eslint-config-meteor"
@@ -27,6 +27,7 @@
     "materialize-css": "^0.100.2",
     "meteor-node-stubs": "^0.3.2",
     "numeral": "^2.0.6",
+    "opencollective": "^1.0.3",
     "prop-types": "^15.6.0",
     "react": "^16.0.0",
     "react-bootstrap": "^0.31.5",
@@ -54,5 +55,10 @@
   "license": "MIT",
   "repository": {
     "url": "git@github.com:vanila-io/wireflow.git"
+  },
+  "collective": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/wireflow",
+    "logo": "https://opencollective.com/wireflow/logo.txt"
   }
 }
