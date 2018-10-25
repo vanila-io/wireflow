@@ -7,6 +7,6 @@ Meteor.publish('userInfo', (_id) => {
   check(_id, String);
   return Meteor.users.find({ _id });
 });
-Meteor.publish('usersInfo', () => {
-  return Meteor.users.find();
-});
+// Meteor.publish('usersInfo', () => {
+//   return Meteor.users.find();
+// });
