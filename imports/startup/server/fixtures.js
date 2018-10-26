@@ -23,7 +23,7 @@ const users = [{
 /**
  * Add admin to roles
  */
-const admin = Meteor.users.findOne({ 'emails.address': 'admin@example.com' });
+const admin = Meteor.users.findOne({ 'emails.address': 'admin@vanila.io' });
 const addToAdmin = Roles.addUsersToRoles([admin._id], ['admin']);
 const hasRole = Roles.userIsInRole(admin._id, ['admin']);
 console.log({addToAdmin, hasRole});

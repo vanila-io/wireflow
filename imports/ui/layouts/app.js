@@ -7,7 +7,7 @@ export const App = createClass({
   propTypes: {
     children: PropTypes.element.isRequired,
     location: PropTypes.object,
-    user: PropTypes.object,
+//    user: PropTypes.object,
   },
   render() {
     if (this.props.location.pathname.includes('/wire/')) {
