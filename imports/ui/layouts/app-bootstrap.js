@@ -10,12 +10,14 @@ import AppNavigation from '../containers/app-navigation';
 export const AppBootstrap = createClass({
   propTypes: {
     children: PropTypes.element.isRequired,
-    location: PropTypes.object,
+    location: PropTypes.object
   },
   render() {
-    return <div>
-      <AppNavigation />
-      {this.props.children}
-    </div>;
-  },
+    return (
+      <div>
+        <AppNavigation />
+        {this.props.children}
+      </div>
+    );
+  }
 });

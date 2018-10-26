@@ -5,10 +5,11 @@ import { Slingshot } from 'meteor/edgee:slingshot';
 import { updateAvatar } from '../../../api/users/methods.js';
 
 const Style = {
-  padding: '10px',
+  padding: '10px'
 };
 
-const DEFAULT_IMG = 'https://placeholdit.imgix.net/~text?txtsize=33&txt=350%C3%97250&w=350&h=250';
+const DEFAULT_IMG =
+  'https://placeholdit.imgix.net/~text?txtsize=33&txt=350%C3%97250&w=350&h=250';
 
 export class UserAvatar extends React.Component {
   componentWillMount() {
@@ -18,20 +19,20 @@ export class UserAvatar extends React.Component {
       uploading: false,
       uploadProgress: Math.round(this.uploader.progress() * 100) || 0,
       uploadedImage: false,
-      hasImageSelected: false,
+      hasImageSelected: false
     };
   }
 
   componentWillReceiveProps(nextProps) {
     this.setState({
-      user: nextProps.user,
+      user: nextProps.user
     });
   }
 
   handleInputFileChange() {
     const imageFiles = this.refs.uploadInput.files;
     this.setState({
-      hasImageSelected: imageFiles && imageFiles.length !== 0,
+      hasImageSelected: imageFiles && imageFiles.length !== 0
     });
   }
 
@@ -44,12 +45,12 @@ export class UserAvatar extends React.Component {
     }
 
     this.setState({
-      uploading: true,
+      uploading: true
     });
 
     const uploadStatusInterval = setInterval(() => {
       this.setState({
-        uploadProgress: Math.round(this.uploader.progress() * 100) || 0,
+        uploadProgress: Math.round(this.uploader.progress() * 100) || 0
       });
     }, 500);
 
@@ -61,10 +62,10 @@ export class UserAvatar extends React.Component {
 
       this.setState({
         uploading: false,
-        hasImageSelected: false,
+        hasImageSelected: false
       });
 
-      updateAvatar.call({ _id: this.state.user._id, url }, (err) => {
+      updateAvatar.call({ _id: this.state.user._id, url }, err => {
         if (err) {
           Bert.alert(error.reason, 'danger');
         }
@@ -75,14 +76,13 @@ export class UserAvatar extends React.Component {
   }
 
   renderUploading() {
-    return (<p>Uploading: {this.state.uploadProgress}%</p>);
+    return <p>Uploading: {this.state.uploadProgress}%</p>;
   }
 
   renderUploadButton() {
     if (this.state.hasImageSelected) {
       return (
-        <button className="btn btn-primary"
-          onClick={this.upload.bind(this)}>
+        <button className="btn btn-primary" onClick={this.upload.bind(this)}>
           Upload Avatar
         </button>
       );
@@ -97,7 +97,8 @@ export class UserAvatar extends React.Component {
           className="form-control"
           ref="uploadInput"
           type="file"
-          id="template-file" accept="image/*"
+          id="template-file"
+          accept="image/*"
           onChange={this.handleInputFileChange.bind(this)}
         />
         {this.renderUploadButton()}
@@ -111,14 +112,16 @@ export class UserAvatar extends React.Component {
     return (
       <div className="text-center">
         <div style={Style}>
-          <img src={src} className="img-responsive"/>
+          <img src={src} className="img-responsive" />
         </div>
-        {this.state.uploading ? this.renderUploading() : this.renderUploadInputControls()}
+        {this.state.uploading
+          ? this.renderUploading()
+          : this.renderUploadInputControls()}
       </div>
     );
   }
 }
 
 UserAvatar.propTypes = {
-  user: PropTypes.object,
+  user: PropTypes.object
 };

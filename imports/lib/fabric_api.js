@@ -1,15 +1,10 @@
+/* global fabric,$ */
 import 'fabric';
 import $ from 'jquery';
 import 'jquery-mousewheel';
-import {
-  Streamy
-} from 'meteor/yuukan:streamy';
-import {
-  initAligningGuidelines
-} from './aligning_guidelines.js';
-import {
-  Wires
-} from '../api/wires/wires';
+import { Streamy } from 'meteor/yuukan:streamy';
+import { initAligningGuidelines } from './aligning_guidelines.js';
+import { Wires } from '../api/wires/wires';
 
 fabric.util.object.extend(fabric.StaticCanvas.prototype, {
   FX_DURATION: 3
@@ -22,7 +17,7 @@ const THEME = {
   connectorWidth: 2,
   connectorCirleBackground: '#fff',
   selectedConnectorColor: '#ff1e1e',
-  graphicTitleColor: '#333',
+  graphicTitleColor: '#333'
 };
 
 var canvas_state = new Array(),
@@ -35,19 +30,46 @@ export const FabricAPI = function(mainCanvas, wireid) {
     }),
     self = this;
   var viewportLeft = 0,
-    lastObjectId, viewportTop = 0,
-    mouseLeft, mouseTop, _drawSelection = canvas._drawSelection,
+    lastObjectId,
+    viewportTop = 0,
+    mouseLeft,
+    mouseTop,
+    _drawSelection = canvas._drawSelection,
     isDown = false,
     inConnectingMode = false,
     connectingState = 'ended',
     isStroked = false,
-    tempLine, _previousLine, canvasMoveMode = false,
+    tempLine,
+    _previousLine,
+    canvasMoveMode = false,
     connectingStartMode = false,
-    connectingStartID, allStartLines, modifiedCheck = true,
+    connectingStartID,
+    allStartLines,
+    modifiedCheck = true,
     modifiedType = '',
-    prevObject, isGroupMoved = false,
+    prevObject,
+    isGroupMoved = false,
     isObjectMoving = false;
-  var customeProperties = ['_objects', 'src', 'id', 'strokeWidth', 'class', 'stroke', 'index', 'alignment', 'line', 'lineType', 'connectors', 'circle', 'arrow', 'start', 'end', 'lineDifference', 'lineID', 'clabel'];
+  var customeProperties = [
+    '_objects',
+    'src',
+    'id',
+    'strokeWidth',
+    'class',
+    'stroke',
+    'index',
+    'alignment',
+    'line',
+    'lineType',
+    'connectors',
+    'circle',
+    'arrow',
+    'start',
+    'end',
+    'lineDifference',
+    'lineID',
+    'clabel'
+  ];
 
   canvas.on('mouse:down', function(options) {
     isDown = true;
@@ -62,13 +84,15 @@ export const FabricAPI = function(mainCanvas, wireid) {
     _mouseDownPosition = canvas.getPointer(options.e);
     if (object && object.class == 'svg' && inConnectingMode) {
       if (connectingState == 'starting') {
-        tempLine.set({
-          'x1': _mouseDownPosition.x,
-          'y1': _mouseDownPosition.y,
-          'x2': _mouseDownPosition.x,
-          'y2': _mouseDownPosition.y,
-          'start': object.id
-        }).setCoords();
+        tempLine
+          .set({
+            x1: _mouseDownPosition.x,
+            y1: _mouseDownPosition.y,
+            x2: _mouseDownPosition.x,
+            y2: _mouseDownPosition.y,
+            start: object.id
+          })
+          .setCoords();
         var _t = self._calculateConectorStart(object, tempLine);
         tempLine.lineID.push({
           type: 'start',
@@ -86,7 +110,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         canvas.add(tempLine, tempLine.circle, tempLine.arrow).renderAll();
         tempLine.set({
           index: canvas.getObjects().indexOf(tempLine),
-          'lineDifference': _t
+          lineDifference: _t
         });
         _previousLine = object;
         allStartLines = [];
@@ -96,11 +120,13 @@ export const FabricAPI = function(mainCanvas, wireid) {
           }
         });
       } else if (connectingState == 'moving') {
-        _previousLine.line.set({
-          'x2': _mouseDownPosition.x,
-          'y2': _mouseDownPosition.y,
-          'end': object.id
-        }).setCoords();
+        _previousLine.line
+          .set({
+            x2: _mouseDownPosition.x,
+            y2: _mouseDownPosition.y,
+            end: object.id
+          })
+          .setCoords();
         var a = false;
         $.each(object.connectors, function(i, el) {
           if (allStartLines.indexOf(el.id) > -1) {
@@ -149,7 +175,9 @@ export const FabricAPI = function(mainCanvas, wireid) {
           });
           if (pont) {
             //console.log(obj);
-            $('#removeConnector, #connectingStart, #addLabel').attr('data-id', obj.id).show();
+            $('#removeConnector, #connectingStart, #addLabel')
+              .attr('data-id', obj.id)
+              .show();
             connectingStartID = obj.id;
             obj.set({
               stroke: THEME.selectedConnectorColor
@@ -189,10 +217,12 @@ export const FabricAPI = function(mainCanvas, wireid) {
       self.renderVieportBorders();
     }
     if (connectingState == 'moving') {
-      tempLine.set({
-        'x2': Math.abs(pointer.x) + 15,
-        'y2': Math.abs(pointer.y) + 15
-      }).setCoords();
+      tempLine
+        .set({
+          x2: Math.abs(pointer.x) + 15,
+          y2: Math.abs(pointer.y) + 15
+        })
+        .setCoords();
       canvas.renderAll();
     }
     if (canvasMoveMode && isDown) {
@@ -216,8 +246,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
     }
   });
   canvas.on('mouse:up', function(options) {
-    canvas._drawSelection = _drawSelection,
-    isDown = false;
+    (canvas._drawSelection = _drawSelection), (isDown = false);
     var object = options.target;
     if (object && modifiedType != '') {
       modifiedCheck = true;
@@ -286,7 +315,9 @@ export const FabricAPI = function(mainCanvas, wireid) {
   });
   canvas.on('before:selection:cleared', function(options) {
     var object = options.target;
-    $('#removeSvg, #bringFront, #sendBack, #editTitle, #headerToggle, #addLabel').hide();
+    $(
+      '#removeSvg, #bringFront, #sendBack, #editTitle, #headerToggle, #addLabel'
+    ).hide();
     isGroupMoved = false;
   });
   canvas.on('selection:created', function(options) {
@@ -295,8 +326,8 @@ export const FabricAPI = function(mainCanvas, wireid) {
     //console.log(objects._objects);
     if (objects._objects) {
       objects.set({
-        left: objects.left + (objects.width / 2),
-        top: objects.top + (objects.height / 2),
+        left: objects.left + objects.width / 2,
+        top: objects.top + objects.height / 2,
         originX: 'center',
         originY: 'center'
       });
@@ -325,7 +356,6 @@ export const FabricAPI = function(mainCanvas, wireid) {
     }
   });
 
-
   canvas.on('object:selected', function(options) {
     var object = options.target;
     if (object && object.class == 'svg') {
@@ -348,7 +378,6 @@ export const FabricAPI = function(mainCanvas, wireid) {
       }
     });
   });
-
 
   canvas.on('object:scaling', function(options) {
     var object = options.target;
@@ -401,23 +430,29 @@ export const FabricAPI = function(mainCanvas, wireid) {
   });
   $(canvas.getElement().parentNode).on('mousewheel', function(e) {
     if (e.originalEvent.wheelDelta > 0) {
-      var newZoom = canvas.getZoom() + (1 / 40);
+      var newZoom = canvas.getZoom() + 1 / 40;
     } else {
-      var newZoom = canvas.getZoom() - (1 / 40);
+      var newZoom = canvas.getZoom() - 1 / 40;
     }
-    canvas.zoomToPoint({
-      x: e.offsetX,
-      y: e.offsetY
-    }, newZoom);
+    canvas.zoomToPoint(
+      {
+        x: e.offsetX,
+        y: e.offsetY
+      },
+      newZoom
+    );
     self.renderVieportBorders();
     contextMenu.hide();
     return false;
   });
   //canvas.selection = false;
-  canvas.zoomToPoint({
-    x: 0,
-    y: 0
-  }, 1);
+  canvas.zoomToPoint(
+    {
+      x: 0,
+      y: 0
+    },
+    1
+  );
 
   this.receiveStreaming = function(action, data) {
     //Fabric actions on receiving data from stream.
@@ -435,7 +470,10 @@ export const FabricAPI = function(mainCanvas, wireid) {
           });
         });
         return;
-      } else if (data.type == 'groupSendBack' || data.type == 'groupBringFront') {
+      } else if (
+        data.type == 'groupSendBack' ||
+        data.type == 'groupBringFront'
+      ) {
         $.each(object.objects, function(i, e) {
           canvas.forEachObject(function(temp) {
             if (temp.id == e.id) {
@@ -558,56 +596,66 @@ export const FabricAPI = function(mainCanvas, wireid) {
     }
   };
   this.updateGroupObject = function(obj, _obj, group) {
-    obj.set({
-      left: (_obj.left + group.left),
-      top: (_obj.top + group.top),
-      width: _obj.width,
-      height: _obj.height,
-      scaleX: (_obj.scaleX * group.scaleX),
-      scaleY: (_obj.scaleY * group.scaleY)
-    }).setCoords();
+    obj
+      .set({
+        left: _obj.left + group.left,
+        top: _obj.top + group.top,
+        width: _obj.width,
+        height: _obj.height,
+        scaleX: _obj.scaleX * group.scaleX,
+        scaleY: _obj.scaleY * group.scaleY
+      })
+      .setCoords();
     canvas.renderAll();
     self.makeConnectorsAlign();
   };
   this.updateObject = function(obj, _obj) {
     //console.log("obj, _obj");
     //console.log(obj, _obj);
-    obj.set({
-      left: _obj.left,
-      top: _obj.top,
-      width: _obj.width,
-      height: _obj.height,
-      scaleX: _obj.scaleX,
-      scaleY: _obj.scaleY,
-      stroke: _obj.stroke,
-      strokeWidth: _obj.strokeWidth
-    }).setCoords();
+    obj
+      .set({
+        left: _obj.left,
+        top: _obj.top,
+        width: _obj.width,
+        height: _obj.height,
+        scaleX: _obj.scaleX,
+        scaleY: _obj.scaleY,
+        stroke: _obj.stroke,
+        strokeWidth: _obj.strokeWidth
+      })
+      .setCoords();
     canvas.renderAll();
     self.makeConnectorsAlign();
   };
 
   this._calculateConectorStart = function(obj, line) {
     return {
-      top: (line.y1 - obj.top),
-      left: (line.x1 - obj.left)
+      top: line.y1 - obj.top,
+      left: line.x1 - obj.left
     };
   };
   this._calcArrowAngle = function(x1, y1, x2, y2) {
     var angle = 0,
-      x, y;
+      x,
+      y;
 
-    x = (x2 - x1);
-    y = (y2 - y1);
+    x = x2 - x1;
+    y = y2 - y1;
 
     if (x === 0) {
-      angle = (y === 0) ? 0 : (y > 0) ? Math.PI / 2 : Math.PI * 3 / 2;
+      angle = y === 0 ? 0 : y > 0 ? Math.PI / 2 : (Math.PI * 3) / 2;
     } else if (y === 0) {
-      angle = (x > 0) ? 0 : Math.PI;
+      angle = x > 0 ? 0 : Math.PI;
     } else {
-      angle = (x < 0) ? Math.atan(y / x) + Math.PI : (y < 0) ? Math.atan(y / x) + (2 * Math.PI) : Math.atan(y / x);
+      angle =
+        x < 0
+          ? Math.atan(y / x) + Math.PI
+          : y < 0
+            ? Math.atan(y / x) + 2 * Math.PI
+            : Math.atan(y / x);
     }
 
-    return (angle * 180 / Math.PI);
+    return (angle * 180) / Math.PI;
   };
   this.renderVieportBorders = function() {
     var ctx = canvas.getContext();
@@ -625,7 +673,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         json: '',
         type: 'clearCanvas'
       }),
-      wireid: wireid,
+      wireid: wireid
     });
     Streamy.emit('savetodb', {
       data: JSON.stringify(self.exportJSON()),
@@ -656,7 +704,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
   };
   this.findTargetAt = function(o) {
     var obj = canvas.findTarget(o);
-    if(obj && obj.selectable){
+    if (obj && obj.selectable) {
       return obj;
     }
     return false;
@@ -671,9 +719,12 @@ export const FabricAPI = function(mainCanvas, wireid) {
   this.sendBackward = function() {
     var obj = canvas.getActiveObject();
     if (obj && obj.class == 'svg') {
-      canvas.sendBackwards(obj, true).renderAll().fire('object:modified', {
-        target: obj
-      });
+      canvas
+        .sendBackwards(obj, true)
+        .renderAll()
+        .fire('object:modified', {
+          target: obj
+        });
       self.alignIndex();
       var canvasDATA = {
         json: obj.toJSON(customeProperties),
@@ -710,9 +761,12 @@ export const FabricAPI = function(mainCanvas, wireid) {
   this.bringForward = function() {
     var obj = canvas.getActiveObject();
     if (obj && obj.class == 'svg') {
-      canvas.bringForward(obj, true).renderAll().fire('object:modified', {
-        target: obj
-      });
+      canvas
+        .bringForward(obj, true)
+        .renderAll()
+        .fire('object:modified', {
+          target: obj
+        });
       self.alignIndex();
       var canvasDATA = {
         json: obj.toJSON(customeProperties),
@@ -764,7 +818,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
     canvas.selection = true;
     canvas.hoverCursor = 'move';
     canvas.forEachObject(function(element) {
-      element.selectable = (element.class == 'connector' ? false : true);
+      element.selectable = element.class == 'connector' ? false : true;
       element.setCoords();
     });
     canvas.calcOffset();
@@ -847,7 +901,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
     canvas.selection = true;
     connectingState = 'ended';
     canvas.forEachObject(function(element) {
-      element.selectable = (element.class == 'connector' ? false : true);
+      element.selectable = element.class == 'connector' ? false : true;
     });
     canvas.renderAll();
     tempLine = null;
@@ -857,57 +911,153 @@ export const FabricAPI = function(mainCanvas, wireid) {
     var _x1, _y1, _x2, _y2;
     if (start.left >= end.left && start.top >= end.top) {
       //console.log("section a");
-      _x1 = (start.originX == 'center' ? start.left : (start.left + (start.width * start.scaleX) / 2));
-      _y1 = (start.originY == 'center' ? (start.top - ((start.height * start.scaleY) / 2)) : start.top) + 10;
-      _x2 = (end.originX == 'center' ? (end.left + ((end.width * end.scaleX) / 2)) : (end.left + (end.width * end.scaleX))) + 10;
-      _y2 = (end.originY == 'center' ? end.top : (end.top + ((end.height * end.scaleY) / 2)));
-      if (end.left > (start.left - (start.width * start.scaleX))) {
-        _x2 = (end.originX == 'center' ? end.left : (end.left + (end.width * end.scaleX) / 2));
-        _y2 = (end.originY == 'center' ? (end.top + ((end.height * end.scaleY) / 2)) : end.top) + 10;
-      } else if (end.top > (start.top - (start.height * start.scaleY))) {
-        _x1 = (start.originX == 'center' ? (start.left - ((start.width * start.scaleX) / 2)) : start.left) - 10;
-        _y1 = (start.originY == 'center' ? start.top : (start.top + ((start.height * start.scaleY) / 2)));
+      _x1 =
+        start.originX == 'center'
+          ? start.left
+          : start.left + (start.width * start.scaleX) / 2;
+      _y1 =
+        (start.originY == 'center'
+          ? start.top - (start.height * start.scaleY) / 2
+          : start.top) + 10;
+      _x2 =
+        (end.originX == 'center'
+          ? end.left + (end.width * end.scaleX) / 2
+          : end.left + end.width * end.scaleX) + 10;
+      _y2 =
+        end.originY == 'center'
+          ? end.top
+          : end.top + (end.height * end.scaleY) / 2;
+      if (end.left > start.left - start.width * start.scaleX) {
+        _x2 =
+          end.originX == 'center'
+            ? end.left
+            : end.left + (end.width * end.scaleX) / 2;
+        _y2 =
+          (end.originY == 'center'
+            ? end.top + (end.height * end.scaleY) / 2
+            : end.top) + 10;
+      } else if (end.top > start.top - start.height * start.scaleY) {
+        _x1 =
+          (start.originX == 'center'
+            ? start.left - (start.width * start.scaleX) / 2
+            : start.left) - 10;
+        _y1 =
+          start.originY == 'center'
+            ? start.top
+            : start.top + (start.height * start.scaleY) / 2;
       }
     } else if (start.left <= end.left && start.top <= end.top) {
       //console.log("section b");
-      _x1 = (start.originX == 'center' ? start.left : (start.left + (start.width * start.scaleX) / 2));
-      _y1 = (start.originY == 'center' ? (start.top + ((start.height * start.scaleY) / 2)) : start.top) - 10;
-      _x2 = (end.originX == 'center' ? (end.left - ((end.width * end.scaleX) / 2)) : end.left) - 10;
-      _y2 = (end.originY == 'center' ? end.top : (end.top + ((end.height * end.scaleY) / 2)));
-      if (end.left < (start.left + (start.width * start.scaleX))) {
-        _x2 = (end.originX == 'center' ? end.left : (end.left - (end.width * end.scaleX) / 2));
-        _y2 = (end.originY == 'center' ? (end.top - ((end.height * end.scaleY) / 2)) : end.top) - 10;
-      } else if (end.top < (start.top + (start.height * start.scaleY))) {
-        _x1 = (start.originX == 'center' ? (start.left + ((start.width * start.scaleX) / 2)) : start.left) - 10;
-        _y1 = (start.originY == 'center' ? start.top : (start.top + ((start.height * start.scaleY) / 2)));
+      _x1 =
+        start.originX == 'center'
+          ? start.left
+          : start.left + (start.width * start.scaleX) / 2;
+      _y1 =
+        (start.originY == 'center'
+          ? start.top + (start.height * start.scaleY) / 2
+          : start.top) - 10;
+      _x2 =
+        (end.originX == 'center'
+          ? end.left - (end.width * end.scaleX) / 2
+          : end.left) - 10;
+      _y2 =
+        end.originY == 'center'
+          ? end.top
+          : end.top + (end.height * end.scaleY) / 2;
+      if (end.left < start.left + start.width * start.scaleX) {
+        _x2 =
+          end.originX == 'center'
+            ? end.left
+            : end.left - (end.width * end.scaleX) / 2;
+        _y2 =
+          (end.originY == 'center'
+            ? end.top - (end.height * end.scaleY) / 2
+            : end.top) - 10;
+      } else if (end.top < start.top + start.height * start.scaleY) {
+        _x1 =
+          (start.originX == 'center'
+            ? start.left + (start.width * start.scaleX) / 2
+            : start.left) - 10;
+        _y1 =
+          start.originY == 'center'
+            ? start.top
+            : start.top + (start.height * start.scaleY) / 2;
       }
     } else if (start.left >= end.left && start.top <= end.top) {
       //console.log("section c");
-      _x1 = (start.originX == 'center' ? start.left : (start.left + (start.width * start.scaleX) / 2));
-      _y1 = (start.originY == 'center' ? (start.top + ((start.height * start.scaleY) / 2)) : start.top) - 10;
-      _x2 = (end.originX == 'center' ? (end.left + ((end.width * end.scaleX) / 2)) : end.left) + 10;
-      _y2 = (end.originY == 'center' ? end.top : (end.top + ((end.height * end.scaleY) / 2)));
-      if (end.left > (start.left - (start.width * start.scaleX))) {
-        _x2 = (end.originX == 'center' ? end.left : (end.left - (end.width * end.scaleX) / 2));
-        _y2 = (end.originY == 'center' ? (end.top - ((end.height * end.scaleY) / 2)) : end.top) - 10;
-      } else if (end.top < (start.top + (start.height * start.scaleY))) {
-        _x1 = (start.originX == 'center' ? (start.left - ((start.width * start.scaleX) / 2)) : start.left) + 10;
-        _y1 = (start.originY == 'center' ? start.top : (start.top + ((start.height * start.scaleY) / 2)));
+      _x1 =
+        start.originX == 'center'
+          ? start.left
+          : start.left + (start.width * start.scaleX) / 2;
+      _y1 =
+        (start.originY == 'center'
+          ? start.top + (start.height * start.scaleY) / 2
+          : start.top) - 10;
+      _x2 =
+        (end.originX == 'center'
+          ? end.left + (end.width * end.scaleX) / 2
+          : end.left) + 10;
+      _y2 =
+        end.originY == 'center'
+          ? end.top
+          : end.top + (end.height * end.scaleY) / 2;
+      if (end.left > start.left - start.width * start.scaleX) {
+        _x2 =
+          end.originX == 'center'
+            ? end.left
+            : end.left - (end.width * end.scaleX) / 2;
+        _y2 =
+          (end.originY == 'center'
+            ? end.top - (end.height * end.scaleY) / 2
+            : end.top) - 10;
+      } else if (end.top < start.top + start.height * start.scaleY) {
+        _x1 =
+          (start.originX == 'center'
+            ? start.left - (start.width * start.scaleX) / 2
+            : start.left) + 10;
+        _y1 =
+          start.originY == 'center'
+            ? start.top
+            : start.top + (start.height * start.scaleY) / 2;
       }
     } else if (start.left <= end.left && start.top >= end.top) {
       //console.log("section d");
-      _x1 = (start.originX == 'center' ? start.left : (start.left + (start.width * start.scaleX) / 2));
-      _y1 = (start.originY == 'center' ? (start.top - ((start.height * start.scaleY) / 2)) : start.top) + 10;
-      _x2 = (end.originX == 'center' ? (end.left - ((end.width * end.scaleX) / 2)) : end.left) - 10;
-      _y2 = (end.originY == 'center' ? end.top : (end.top + ((end.height * end.scaleY) / 2)));
-      if (end.left < (start.left + (start.width * start.scaleX))) {
+      _x1 =
+        start.originX == 'center'
+          ? start.left
+          : start.left + (start.width * start.scaleX) / 2;
+      _y1 =
+        (start.originY == 'center'
+          ? start.top - (start.height * start.scaleY) / 2
+          : start.top) + 10;
+      _x2 =
+        (end.originX == 'center'
+          ? end.left - (end.width * end.scaleX) / 2
+          : end.left) - 10;
+      _y2 =
+        end.originY == 'center'
+          ? end.top
+          : end.top + (end.height * end.scaleY) / 2;
+      if (end.left < start.left + start.width * start.scaleX) {
         //console.log('asdf');
-        _x2 = (end.originX == 'center' ? end.left : (end.left - (end.width * end.scaleX) / 2));
-        _y2 = (end.originY == 'center' ? (end.top + ((end.height * end.scaleY) / 2)) : end.top) + 10;
-      } else if (end.top > (start.top - (start.height * start.scaleY))) {
+        _x2 =
+          end.originX == 'center'
+            ? end.left
+            : end.left - (end.width * end.scaleX) / 2;
+        _y2 =
+          (end.originY == 'center'
+            ? end.top + (end.height * end.scaleY) / 2
+            : end.top) + 10;
+      } else if (end.top > start.top - start.height * start.scaleY) {
         //console.log('2343');
-        _x1 = (start.originX == 'center' ? (start.left + ((start.width * start.scaleX) / 2)) : start.left) - 10;
-        _y1 = (start.originY == 'center' ? start.top : (start.top + ((start.height * start.scaleY) / 2)));
+        _x1 =
+          (start.originX == 'center'
+            ? start.left + (start.width * start.scaleX) / 2
+            : start.left) - 10;
+        _y1 =
+          start.originY == 'center'
+            ? start.top
+            : start.top + (start.height * start.scaleY) / 2;
       }
     }
     return {
@@ -937,7 +1087,12 @@ export const FabricAPI = function(mainCanvas, wireid) {
         });
         var returnPoints = self._findPointPosition(_startElement, _endElement);
         if (!returnPoints) return;
-        self.lineAlignWithObject(returnPoints, line, _startElement, _lineDifference);
+        self.lineAlignWithObject(
+          returnPoints,
+          line,
+          _startElement,
+          _lineDifference
+        );
       }
     });
     canvas.renderAll();
@@ -961,9 +1116,11 @@ export const FabricAPI = function(mainCanvas, wireid) {
             });
           }
         });
-        if (group._objects.filter(function(e) {
-          return e.id == _startElement.id;
-        }).length > 0) {
+        if (
+          group._objects.filter(function(e) {
+            return e.id == _startElement.id;
+          }).length > 0
+        ) {
           _startElement = {
             left: _startElement.left + group.left,
             top: _startElement.top + group.top,
@@ -975,9 +1132,11 @@ export const FabricAPI = function(mainCanvas, wireid) {
             scaleX: _startElement.scaleX
           };
         }
-        if (group._objects.filter(function(e) {
-          return e.id == _endElement.id;
-        }).length > 0) {
+        if (
+          group._objects.filter(function(e) {
+            return e.id == _endElement.id;
+          }).length > 0
+        ) {
           _endElement = {
             left: _endElement.left + group.left,
             top: _endElement.top + group.top,
@@ -991,66 +1150,89 @@ export const FabricAPI = function(mainCanvas, wireid) {
         }
         var returnPoints = self._findPointPosition(_startElement, _endElement);
         if (!returnPoints) return;
-        self.lineAlignWithObject(returnPoints, line, _startElement, _lineDifference);
+        self.lineAlignWithObject(
+          returnPoints,
+          line,
+          _startElement,
+          _lineDifference
+        );
       }
     });
   };
-  this.lineAlignWithObject = function(returnPoints, line, _startElement, _lineDifference) {
+  this.lineAlignWithObject = function(
+    returnPoints,
+    line,
+    _startElement,
+    _lineDifference
+  ) {
     var oldCenterX = (line.x1 + line.x2) / 2,
       oldCenterY = (line.y1 + line.y2) / 2,
       deltaX = line.left - oldCenterX,
       deltaY = line.top - oldCenterY;
-    line.set({
-      'x1': (_startElement.left + _lineDifference.left),
-      'y1': (_startElement.top + _lineDifference.top),
-      'x2': returnPoints.x2,
-      'y2': returnPoints.y2
-    }).setCoords();
+    line
+      .set({
+        x1: _startElement.left + _lineDifference.left,
+        y1: _startElement.top + _lineDifference.top,
+        x2: returnPoints.x2,
+        y2: returnPoints.y2
+      })
+      .setCoords();
 
     _x1 = line.get('x1');
     _y1 = line.get('y1');
     _x2 = line.get('x2');
     _y2 = line.get('y2');
     var _angle = self._calcArrowAngle(_x1, _y1, _x2, _y2);
-    line.arrow.set({
-      left: returnPoints.x2 + deltaX,
-      top: returnPoints.y2 + deltaY,
-      angle: (_angle + 90)
-    }).setCoords();
-    line.circle.set({
-      left: _x1,
-      top: _y1
-    }).setCoords();
+    line.arrow
+      .set({
+        left: returnPoints.x2 + deltaX,
+        top: returnPoints.y2 + deltaY,
+        angle: _angle + 90
+      })
+      .setCoords();
+    line.circle
+      .set({
+        left: _x1,
+        top: _y1
+      })
+      .setCoords();
     if (line.clabel) {
-      var centerX = ((_x1 + _x2) / 2);
-      var centerY = ((_y1 + _y2) / 2) - (line.clabel.height / 2);
-      line.clabel.set({
-        left: centerX,
-        top: centerY,
-        textBackgroundColor: THEME.connectorLabelBackground,
-        padding: 5
-      }).setCoords();
+      var centerX = (_x1 + _x2) / 2;
+      var centerY = (_y1 + _y2) / 2 - line.clabel.height / 2;
+      line.clabel
+        .set({
+          left: centerX,
+          top: centerY,
+          textBackgroundColor: THEME.connectorLabelBackground,
+          padding: 5
+        })
+        .setCoords();
     }
   };
   this.bringConnectorsTop = function() {
-    canvas.forEachObject(function(connector) {
-      if (connector.class == 'connector') {
-        canvas.bringToFront(connector);
-        canvas.bringToFront(connector.arrow);
-        canvas.bringToFront(connector.circle);
-        if (connector.clabel) {
-          canvas.bringToFront(connector.clabel);
+    canvas
+      .forEachObject(function(connector) {
+        if (connector.class == 'connector') {
+          canvas.bringToFront(connector);
+          canvas.bringToFront(connector.arrow);
+          canvas.bringToFront(connector.circle);
+          if (connector.clabel) {
+            canvas.bringToFront(connector.clabel);
+          }
         }
-      }
-    }).renderAll();
+      })
+      .renderAll();
   };
   this.backgroundColor = function(option) {
-    canvas.setBackgroundColor({
-      source: option,
-      repeat: 'repeat'
-    }, function() {
-      canvas.renderAll();
-    });
+    canvas.setBackgroundColor(
+      {
+        source: option,
+        repeat: 'repeat'
+      },
+      function() {
+        canvas.renderAll();
+      }
+    );
     canvas.renderAll();
   };
   this.canvasDimension = function(id, w, h) {
@@ -1186,7 +1368,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
             json: obj.toJSON(customeProperties),
             type: 'editLabel'
           }),
-          wireid: wireid,
+          wireid: wireid
         });
         Streamy.emit('savetodb', {
           data: JSON.stringify(self.exportJSON()),
@@ -1200,55 +1382,62 @@ export const FabricAPI = function(mainCanvas, wireid) {
     var _header = new Array(),
       _body = new Array(),
       _footer = new Array();
-    fabric.loadSVGFromURL(src, function(objects, options) {
-      var group = new fabric.Group(objects, {
-        id: 'svg' + new Date().getTime(),
-        originX: 'center',
-        originY: 'center',
-        class: 'svg',
-        src: src,
-        top: 150,
-        left: 150,
-        hasRotatingPoint: false,
-        lockUniScaling: true,
-        selectable: true,
-        line: '',
-        lineType: '',
-        connectors: new Array()
-      });
-      h = group.height;
-      w = group.width;
-      var r = (h > w) ? (w / h) : (h / w);
-      nh = (h > w) ? 128 : (128 * r);
-      nw = (h > w) ? (128 * r) : 128;
-      group.set({
-        scaleX: nw / w,
-        scaleY: nh / h,
-      });
-      canvas.add(group).setActiveObject(group).renderAll();
-      group.set({
-        index: canvas.getObjects().indexOf(group)
-      });
-      self.bringConnectorsTop();
-      self.savestate('add', group.toJSON(customeProperties));
-      var canvasDATA = {
-        json: group.toJSON(customeProperties),
-        type: 'addSvg'
-      };
-      Streamy.emit('add', {
-        data: JSON.stringify(canvasDATA),
-        wireid: wireid,
-      });
-      Streamy.emit('savetodb', {
-        data: JSON.stringify(self.exportJSON()),
-        wireid: wireid
-      });
-    }, function(item, object) {
-      var dataMax = item.getAttribute('data-max');
-      if (object.text) {
-        object.set('maxWords', dataMax ? dataMax : 16);
+    fabric.loadSVGFromURL(
+      src,
+      function(objects, options) {
+        var group = new fabric.Group(objects, {
+          id: 'svg' + new Date().getTime(),
+          originX: 'center',
+          originY: 'center',
+          class: 'svg',
+          src: src,
+          top: 150,
+          left: 150,
+          hasRotatingPoint: false,
+          lockUniScaling: true,
+          selectable: true,
+          line: '',
+          lineType: '',
+          connectors: new Array()
+        });
+        h = group.height;
+        w = group.width;
+        var r = h > w ? w / h : h / w;
+        nh = h > w ? 128 : 128 * r;
+        nw = h > w ? 128 * r : 128;
+        group.set({
+          scaleX: nw / w,
+          scaleY: nh / h
+        });
+        canvas
+          .add(group)
+          .setActiveObject(group)
+          .renderAll();
+        group.set({
+          index: canvas.getObjects().indexOf(group)
+        });
+        self.bringConnectorsTop();
+        self.savestate('add', group.toJSON(customeProperties));
+        var canvasDATA = {
+          json: group.toJSON(customeProperties),
+          type: 'addSvg'
+        };
+        Streamy.emit('add', {
+          data: JSON.stringify(canvasDATA),
+          wireid: wireid
+        });
+        Streamy.emit('savetodb', {
+          data: JSON.stringify(self.exportJSON()),
+          wireid: wireid
+        });
+      },
+      function(item, object) {
+        var dataMax = item.getAttribute('data-max');
+        if (object.text) {
+          object.set('maxWords', dataMax ? dataMax : 16);
+        }
       }
-    });
+    );
   };
   this.removeSVG = function() {
     var obj = canvas.getActiveObject();
@@ -1259,7 +1448,10 @@ export const FabricAPI = function(mainCanvas, wireid) {
           self._removeAnotherEnd(val.id);
         }
       });
-      canvas.fxRemove(obj).calcOffset().renderAll();
+      canvas
+        .fxRemove(obj)
+        .calcOffset()
+        .renderAll();
       self.savestate('delete', obj.toJSON(customeProperties));
       setTimeout(function() {
         self.makeConnectorsAlign();
@@ -1269,7 +1461,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
         };
         Streamy.emit('delete', {
           data: JSON.stringify(canvasDATA),
-          wireid: wireid,
+          wireid: wireid
         });
         Streamy.emit('savetodb', {
           data: JSON.stringify(self.exportJSON()),
@@ -1289,7 +1481,11 @@ export const FabricAPI = function(mainCanvas, wireid) {
             $.each(val.connectors, function(i, v) {
               if (v) {
                 canvas.forEachObject(function(obj) {
-                  if (obj.id == v.id && obj.class == 'connector' && newGroup._objects.indexOf(obj) <= -1) {
+                  if (
+                    obj.id == v.id &&
+                    obj.class == 'connector' &&
+                    newGroup._objects.indexOf(obj) <= -1
+                  ) {
                     newGroup._objects.push(obj.toJSON(customeProperties));
                     canvas.fxRemove(obj.arrow);
                     canvas.fxRemove(obj.circle);
@@ -1302,7 +1498,10 @@ export const FabricAPI = function(mainCanvas, wireid) {
                 });
               }
             });
-            canvas.fxRemove(val).calcOffset().renderAll();
+            canvas
+              .fxRemove(val)
+              .calcOffset()
+              .renderAll();
             setTimeout(function() {
               self.makeConnectorsAlign();
               var canvasDATA = {
@@ -1311,7 +1510,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
               };
               Streamy.emit('delete', {
                 data: JSON.stringify(canvasDATA),
-                wireid: wireid,
+                wireid: wireid
               });
             }, 500);
           }
@@ -1324,53 +1523,71 @@ export const FabricAPI = function(mainCanvas, wireid) {
     var obj = canvas.getActiveObject() || canvas.getActiveGroup();
     if (!obj) return;
     var effect = 5;
-    if (crtl)
-      effect = effect * 3;
+    if (crtl) effect = effect * 3;
     if (keycode == 37) {
-      obj.set({
-        left: obj.left - effect
-      }).setCoords();
+      obj
+        .set({
+          left: obj.left - effect
+        })
+        .setCoords();
     } else if (keycode == 38) {
-      obj.set({
-        top: obj.top - effect
-      }).setCoords();
+      obj
+        .set({
+          top: obj.top - effect
+        })
+        .setCoords();
     } else if (keycode == 39) {
-      obj.set({
-        left: obj.left + effect
-      }).setCoords();
+      obj
+        .set({
+          left: obj.left + effect
+        })
+        .setCoords();
     } else if (keycode == 40) {
-      obj.set({
-        top: obj.top + effect
-      }).setCoords();
+      obj
+        .set({
+          top: obj.top + effect
+        })
+        .setCoords();
     }
-    canvas.fire('object:moving', {
-      target: obj
-    }).renderAll();
+    canvas
+      .fire('object:moving', {
+        target: obj
+      })
+      .renderAll();
   };
   this.zoomIn = function() {
     var newZoom = canvas.getZoom() + 1 / 40;
-    canvas.zoomToPoint({
-      x: canvas.getCenter().top,
-      y: canvas.getCenter().top
-    }, newZoom);
+    canvas.zoomToPoint(
+      {
+        x: canvas.getCenter().top,
+        y: canvas.getCenter().top
+      },
+      newZoom
+    );
     self.renderVieportBorders();
     canvas.renderAll();
   };
   this.zoomOut = function() {
     var newZoom = canvas.getZoom() - 1 / 40;
-    canvas.zoomToPoint({
-      x: canvas.getCenter().top,
-      y: canvas.getCenter().top
-    }, newZoom);
+    canvas.zoomToPoint(
+      {
+        x: canvas.getCenter().top,
+        y: canvas.getCenter().top
+      },
+      newZoom
+    );
     self.renderVieportBorders();
     canvas.renderAll();
   };
   this.zoomReset = function() {
     var newZoom = 1;
-    canvas.zoomToPoint({
-      x: 0,
-      y: 0
-    }, newZoom);
+    canvas.zoomToPoint(
+      {
+        x: 0,
+        y: 0
+      },
+      newZoom
+    );
     canvas.viewportTransform[4] = 0;
     canvas.viewportTransform[5] = 0;
     self.renderVieportBorders();
@@ -1478,7 +1695,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
   };
   this.redo = function() {
     this.discardCanvas();
-    if ((current_state < canvas_state.length)) {
+    if (current_state < canvas_state.length) {
       var state = canvas_state;
       var obj = state[current_state];
       var action = obj.action;
@@ -1580,32 +1797,40 @@ export const FabricAPI = function(mainCanvas, wireid) {
     //console.log('addObject', obj);
     if (obj.class == 'svg') {
       //console.log(obj);
-      fabric.loadSVGFromURL(obj.src, function(objects, options) {
-        var group = new fabric.Group(objects, {
-          src: obj.src,
-          id: obj.id,
-          originX: 'center',
-          originY: 'center',
-          class: 'svg',
-          top: obj.top,
-          left: obj.left,
-          scaleX: obj.scaleX,
-          scaleY: obj.scaleY,
-          hasRotatingPoint: false,
-          lockUniScaling: true,
-          line: obj.line,
-          lineType: obj.lineType,
-          connectors: obj.connectors,
-          index: obj.index,
-          selectable: true
-        });
-        canvas.add(group).moveTo(group, obj.index).renderAll().calcOffset();
-        setTimeout(self.makeConnectorsAlign, 400);
-      }, function(item, object) {
-        if (item.getAttribute('data-max')) {
-          object.set('maxWords', item.getAttribute('data-max'));
+      fabric.loadSVGFromURL(
+        obj.src,
+        function(objects, options) {
+          var group = new fabric.Group(objects, {
+            src: obj.src,
+            id: obj.id,
+            originX: 'center',
+            originY: 'center',
+            class: 'svg',
+            top: obj.top,
+            left: obj.left,
+            scaleX: obj.scaleX,
+            scaleY: obj.scaleY,
+            hasRotatingPoint: false,
+            lockUniScaling: true,
+            line: obj.line,
+            lineType: obj.lineType,
+            connectors: obj.connectors,
+            index: obj.index,
+            selectable: true
+          });
+          canvas
+            .add(group)
+            .moveTo(group, obj.index)
+            .renderAll()
+            .calcOffset();
+          setTimeout(self.makeConnectorsAlign, 400);
+        },
+        function(item, object) {
+          if (item.getAttribute('data-max')) {
+            object.set('maxWords', item.getAttribute('data-max'));
+          }
         }
-      });
+      );
     }
     if (obj.class == 'connector') {
       fabric.util.enlivenObjects([obj], function(objects) {
@@ -1670,7 +1895,11 @@ export const FabricAPI = function(mainCanvas, wireid) {
             class: 'connector',
             id: obj.id
           });
-          canvas.add(o, _circle, _arrow).moveTo(o, obj.index).renderAll().calcOffset();
+          canvas
+            .add(o, _circle, _arrow)
+            .moveTo(o, obj.index)
+            .renderAll()
+            .calcOffset();
           if (obj.lineID) {
             $.each(obj.lineID, function(i, v) {
               canvas.forEachObject(function(t) {
@@ -1706,7 +1935,19 @@ export const FabricAPI = function(mainCanvas, wireid) {
   this.exportJSON = function() {
     self.alignIndex();
     return {
-      json: canvas.toJSON(['src', 'id', 'class', 'index', 'line', 'lineType', 'connectors', 'circle', 'arrow', 'start', 'end']),
+      json: canvas.toJSON([
+        'src',
+        'id',
+        'class',
+        'index',
+        'line',
+        'lineType',
+        'connectors',
+        'circle',
+        'arrow',
+        'start',
+        'end'
+      ]),
       zoom: canvas.getZoom()
     };
   };
@@ -1727,14 +1968,20 @@ export const FabricAPI = function(mainCanvas, wireid) {
     canvas.forEachObject(function(object) {
       if (object.class == 'svg') {
         var bound = object.getBoundingRect();
-        objectLeft = (object.originX == 'center' ? (object.left - (bound.width / 2)) : object.left);
-        objectTop = (object.originY == 'center' ? (object.top - (bound.height / 2)) : object.top);
+        objectLeft =
+          object.originX == 'center'
+            ? object.left - bound.width / 2
+            : object.left;
+        objectTop =
+          object.originY == 'center'
+            ? object.top - bound.height / 2
+            : object.top;
         objectWdith = bound.width;
         objectHeight = bound.height;
         minLeft = Math.min(objectLeft, minLeft);
         minTop = Math.min(objectTop, minTop);
-        maxLeft = Math.max(objectLeft + (objectWdith), maxLeft);
-        maxTop = Math.max(objectTop + (objectHeight), maxTop);
+        maxLeft = Math.max(objectLeft + objectWdith, maxLeft);
+        maxTop = Math.max(objectTop + objectHeight, maxTop);
       }
     });
     var canvasHeight = maxTop - minTop;
@@ -1742,15 +1989,19 @@ export const FabricAPI = function(mainCanvas, wireid) {
     var offsetLeft = 0;
     var padding = 20;
     var zoom = (canvas.height - padding) / canvasHeight;
-    if (zoom > ((canvas.width - Math.abs(offsetLeft) - padding) / canvasWidth)) {
+    if (zoom > (canvas.width - Math.abs(offsetLeft) - padding) / canvasWidth) {
       zoom = (canvas.width - Math.abs(offsetLeft) - padding) / canvasWidth;
     }
-    var left = ((minLeft + (canvasWidth / 2)) * zoom) - ((canvas.width + offsetLeft) / 2);
-    var top = ((minTop + (canvasHeight / 2)) * zoom) - (canvas.height / 2);
-    canvas.zoomToPoint({
-      x: 0,
-      y: 0
-    }, zoom);
+    var left =
+      (minLeft + canvasWidth / 2) * zoom - (canvas.width + offsetLeft) / 2;
+    var top = (minTop + canvasHeight / 2) * zoom - canvas.height / 2;
+    canvas.zoomToPoint(
+      {
+        x: 0,
+        y: 0
+      },
+      zoom
+    );
     canvas.viewportTransform[4] = -left;
     canvas.viewportTransform[5] = -top;
     canvas.calcOffset();
@@ -1767,7 +2018,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
                 hasBorders: false,
                 hasControls: false,
                 selectable: false,
-                evented: false,
+                evented: false
               });
               obj.circle = o;
             }
@@ -1776,7 +2027,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
                 hasBorders: false,
                 hasControls: false,
                 selectable: false,
-                evented: false,
+                evented: false
               });
               obj.arrow = o;
             }
@@ -1785,7 +2036,7 @@ export const FabricAPI = function(mainCanvas, wireid) {
                 hasBorders: false,
                 hasControls: false,
                 selectable: false,
-                evented: false,
+                evented: false
               });
               obj.clabel = o;
             }
@@ -1794,13 +2045,13 @@ export const FabricAPI = function(mainCanvas, wireid) {
             hasBorders: false,
             hasControls: false,
             selectable: false,
-            evented: false,
+            evented: false
           });
         }
         if (obj.class == 'svg') {
           obj.set({
             hasRotatingPoint: false,
-            lockUniScaling: true,
+            lockUniScaling: true
           });
         }
       });

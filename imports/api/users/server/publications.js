@@ -3,7 +3,7 @@ import { check } from 'meteor/check';
 
 Meteor.publish('usersList', () => Meteor.users.find({}));
 
-Meteor.publish('userInfo', (_id) => {
+Meteor.publish('userInfo', _id => {
   check(_id, String);
   return Meteor.users.find({ _id });
 });

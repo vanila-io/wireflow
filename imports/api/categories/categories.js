@@ -6,18 +6,18 @@ export const Categories = new Mongo.Collection('categories');
 Categories.allow({
   insert: () => false,
   update: () => false,
-  remove: () => false,
+  remove: () => false
 });
 
 Categories.deny({
   insert: () => true,
   update: () => true,
-  remove: () => true,
+  remove: () => true
 });
 
 Categories.schema = new SimpleSchema({
   name: {
-    type: String,
+    type: String
   }
 });
 

@@ -4,62 +4,76 @@ import { Streamy } from 'meteor/yuukan:streamy';
 import { insertDesign } from '../api/wires/methods.js';
 import $ from 'jquery';
 
-Meteor._debug = (function (super_meteor_debug) {
-  return function (error, info) {
-    if (!(info && _.has(info, 'msg')))
-      super_meteor_debug(error, info);
+Meteor._debug = (function(super_meteor_debug) {
+  return function(error, info) {
+    if (!(info && _.has(info, 'msg'))) super_meteor_debug(error, info);
   };
 })(Meteor._debug);
 
 let chartApp;
 
-export const handleMount = (options) => {
+export const handleMount = options => {
   const wireid = options.c.props.routeParams.id;
   const wire = options.wire;
   chartApp = new FabricAPI(options.c.refs.mainCanvas, wireid);
-  canvasSize('mainCanvas', parseInt($('#rightSection').width()), parseInt($('#rightSection').height()));
+  canvasSize(
+    'mainCanvas',
+    parseInt($('#rightSection').width()),
+    parseInt($('#rightSection').height())
+  );
   contextMenu.init();
 
-  if(wire && wire.wire_settings){
+  if (wire && wire.wire_settings) {
     chartApp.importJSON(JSON.parse(wire.wire_settings));
-  }else{
+  } else {
     // create a new wire
     insertDesign.call({
       wire_settings: '',
       _id: wireid,
-      userId: Meteor.userId() || 'guest',
+      userId: Meteor.userId() || 'guest'
     });
   }
-  Streamy.on('modified_' + wireid, (data) => {
+  Streamy.on('modified_' + wireid, data => {
     if (data.sid === Streamy.id()) return;
     chartApp.receiveStreaming('modified', data);
   });
-  Streamy.on('delete_' + wireid, (data) => {
+  Streamy.on('delete_' + wireid, data => {
     if (data.sid === Streamy.id()) return;
     chartApp.receiveStreaming('delete', data);
   });
-  Streamy.on('add_' + wireid, (data) => {
+  Streamy.on('add_' + wireid, data => {
     if (data.sid === Streamy.id()) return;
     chartApp.receiveStreaming('add', data);
   });
   $(document).delegate('body', 'click', function(e) {
-    var clickedOn=$(e.target);
-    if(!clickedOn.parents().addBack().is('#moveCanvas, #connector, canvas')){
+    var clickedOn = $(e.target);
+    if (
+      !clickedOn
+        .parents()
+        .addBack()
+        .is('#moveCanvas, #connector, canvas')
+    ) {
       $('#connector, #moveCanvas').removeClass('active');
       chartApp.stopConnecting();
       chartApp.stopCanvasMove();
     }
-    if(!clickedOn.parents().addBack().is('#rightclick') && !chartApp.connectingStatus()){
+    if (
+      !clickedOn
+        .parents()
+        .addBack()
+        .is('#rightclick') &&
+      !chartApp.connectingStatus()
+    ) {
       contextMenu.hide();
     }
   });
   $(document).delegate('#importCanvas', 'change', function(e) {
     var file;
-    if ($(this).get(0).files){
+    if ($(this).get(0).files) {
       file = $(this).get(0).files[0];
       var _n = file.name.split('.');
-      ext = _n[_n.length-1];
-      if(ext == 'json'){
+      ext = _n[_n.length - 1];
+      if (ext == 'json') {
         $.getJSON(URL.createObjectURL(file), function(data) {
           data = JSON.parse(data);
           chartApp.importJSON(data);
@@ -75,10 +89,10 @@ export const handleMount = (options) => {
   });
   $(document).delegate('#connectingStart', 'click', function(e) {
     var id = $(this).attr('data-id');
-    if($(this).hasClass('active')){
+    if ($(this).hasClass('active')) {
       $(this).removeClass('active');
       chartApp.stopConnectingStart();
-    }else{
+    } else {
       chartApp.stopConnecting();
       chartApp.stopCanvasMove();
       $(this).addClass('active');
@@ -94,21 +108,21 @@ export const handleMount = (options) => {
     chartApp.stopCanvasMove();
     var base64 = chartApp.exportImage();
     var a = document.createElement('a');
-	    a.style = 'display: none';
-	    a.href = base64;
-	    a.download = 'wireflow.jpg';
+    a.style = 'display: none';
+    a.href = base64;
+    a.download = 'wireflow.jpg';
     document.body.appendChild(a);
     a.click();
-    setTimeout(function(){
-	        document.body.removeChild(a);
-	        window.URL.revokeObjectURL(base64);
-	    }, 150);
+    setTimeout(function() {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(base64);
+    }, 150);
   });
   $(document).delegate('#connector', 'click', function(e) {
-    if(chartApp.connectingStatus()){
+    if (chartApp.connectingStatus()) {
       $(this).removeClass('active');
       chartApp.stopConnecting();
-    }else{
+    } else {
       $('#moveCanvas').removeClass('active');
       $('#chartsSide').removeClass('chartsSidebar-open');
       $('#mainWrap').removeClass('mainPush');
@@ -119,11 +133,10 @@ export const handleMount = (options) => {
   });
   $(document).delegate('#moveCanvas', 'click', function(e) {
     //console.log('move called');
-    if($(this).hasClass('active')){
+    if ($(this).hasClass('active')) {
       $(this).removeClass('active');
       chartApp.stopCanvasMove();
-
-    }else{
+    } else {
       $('#connector').removeClass('active');
       $('#chartsSide').removeClass('chartsSidebar-open');
       $('#mainWrap').removeClass('mainPush');
@@ -135,7 +148,9 @@ export const handleMount = (options) => {
   $(document).delegate('#removeConnector', 'click', function(e) {
     if ($(this).attr('data-id')) {
       chartApp.removeConnector($(this).attr('data-id'));
-      $(this).attr('data-id', '').hide();
+      $(this)
+        .attr('data-id', '')
+        .hide();
     }
   });
   $(document).delegate('li#addLabel,button#addLabel', 'click', function(e) {
@@ -146,13 +161,15 @@ export const handleMount = (options) => {
       contextMenu.hide();
     }
   });
-  $(document).delegate('li#clearCanvas, button#clearCanvas', 'click', function(e) {
+  $(document).delegate('li#clearCanvas, button#clearCanvas', 'click', function(
+    e
+  ) {
     var result = confirm('Want to clear Canvas?');
     if (result) {
-  		chartApp.stopConnecting();
-  		chartApp.stopCanvasMove();
-  		chartApp.clearCanvas();
-  		contextMenu.hide();
+      chartApp.stopConnecting();
+      chartApp.stopCanvasMove();
+      chartApp.clearCanvas();
+      contextMenu.hide();
     }
   });
   $(document).delegate('li#undo, button#undo', 'click', function(e) {
@@ -196,7 +213,9 @@ export const handleMount = (options) => {
     $('#removeSvg').hide();
     contextMenu.hide();
   });
-  $(document).delegate('li#headerToggle,button#headerToggle', 'click', function(e) {
+  $(document).delegate('li#headerToggle,button#headerToggle', 'click', function(
+    e
+  ) {
     chartApp.headerToggle();
     contextMenu.hide();
   });
@@ -209,87 +228,88 @@ export const handleMount = (options) => {
   });
   $(document).delegate('#addsvg', 'change', function(e) {
     var file;
-    if ($(this).get(0).files){
+    if ($(this).get(0).files) {
       chartApp.stopConnecting();
       chartApp.stopCanvasMove();
       file = $(this).get(0).files[0];
       var _n = file.name.split('.');
-      ext = _n[_n.length-1];
-      if(ext == 'svg'){
+      ext = _n[_n.length - 1];
+      if (ext == 'svg') {
         chartApp.addSvg(URL.createObjectURL(file));
       }
     }
   });
   $(document).delegate('body', 'keydown', function(e) {
-    if(e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA'){
+    if (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA') {
       return;
     }
     var keycode = e.keyCode;
-    if(keycode == 37){//left arrow
+    if (keycode == 37) {
+      //left arrow
       e.preventDefault();
       chartApp.moveObject(keycode, e.ctrlKey);
-    }
-    else if(!e.shiftKey && keycode == 38){//up arrow
+    } else if (!e.shiftKey && keycode == 38) {
+      //up arrow
       e.preventDefault();
       chartApp.moveObject(keycode, e.ctrlKey);
-    }
-    else if(keycode == 39){//right arrow
+    } else if (keycode == 39) {
+      //right arrow
       e.preventDefault();
       chartApp.moveObject(keycode, e.ctrlKey);
-    }
-    else if(!e.shiftKey && keycode == 40){//down arrow
+    } else if (!e.shiftKey && keycode == 40) {
+      //down arrow
       e.preventDefault();
       chartApp.moveObject(keycode, e.ctrlKey);
-    }
-    else if(keycode == 46){//delete
+    } else if (keycode == 46) {
+      //delete
       e.preventDefault();
       chartApp.removeSVG();
-    }
-    else if(e.shiftKey && keycode == 38){//Crtl + up arrow
+    } else if (e.shiftKey && keycode == 38) {
+      //Crtl + up arrow
       e.preventDefault();
       chartApp.bringForward();
-    }
-    else if(e.shiftKey && keycode == 40){//Crtl + down arrow
+    } else if (e.shiftKey && keycode == 40) {
+      //Crtl + down arrow
       e.preventDefault();
       chartApp.sendBackward();
-    }
-    else if(e.ctrlKey && keycode == 90){//Crtl + z
+    } else if (e.ctrlKey && keycode == 90) {
+      //Crtl + z
       e.preventDefault();
       chartApp.undo();
-    }
-    else if(e.ctrlKey && keycode == 89){//Crtl + y
+    } else if (e.ctrlKey && keycode == 89) {
+      //Crtl + y
       e.preventDefault();
       chartApp.redo();
-    }
-    else if(e.ctrlKey && keycode == 107){//Crtl +
+    } else if (e.ctrlKey && keycode == 107) {
+      //Crtl +
       e.preventDefault();
       chartApp.zoomIn();
-    }
-    else if(e.ctrlKey && keycode == 109){//Crtl -
+    } else if (e.ctrlKey && keycode == 109) {
+      //Crtl -
       e.preventDefault();
       chartApp.zoomOut();
-    }
-    else if(e.ctrlKey && keycode == 96){//Crtl 0
+    } else if (e.ctrlKey && keycode == 96) {
+      //Crtl 0
       e.preventDefault();
       chartApp.zoomReset();
-    }
-    else if(keycode == 86){//v
+    } else if (keycode == 86) {
+      //v
       e.preventDefault();
       $('#moveCanvas').trigger('click');
-    }
-    else if(keycode == 67){//c
+    } else if (keycode == 67) {
+      //c
       e.preventDefault();
       $('#connector').trigger('click');
-    }
-    else if(keycode == 72){//h
+    } else if (keycode == 72) {
+      //h
       e.preventDefault();
       $('#headerToggle').trigger('click');
-    }
-    else if(keycode == 84){//t
+    } else if (keycode == 84) {
+      //t
       e.preventDefault();
       $('#editTitle').trigger('click');
-    }
-    else if(keycode == 83){//s
+    } else if (keycode == 83) {
+      //s
       e.preventDefault();
       $('#connector, #moveCanvas').removeClass('active');
       chartApp.stopConnecting();
@@ -311,18 +331,17 @@ export const handleMount = (options) => {
     contextMenu.setPosition();
     contextMenu.hide();
     object = chartApp.findTargetAt(e);
-    if(object && object.class == 'svg') {
+    if (object && object.class == 'svg') {
       chartApp.setObjectActive(object);
       contextMenu.data([
-        { text: 'Edit Title', id: 'editTitle'},
+        { text: 'Edit Title', id: 'editTitle' },
         { text: 'Header On/Off', id: 'headerToggle' },
         { text: 'Bring To Front', id: 'bringFront' },
         { text: 'Send To Back', id: 'sendBack' },
-        { text: 'Remove', id: 'removeSvg', divider: true}
+        { text: 'Remove', id: 'removeSvg', divider: true }
       ]);
       contextMenu.show();
-    }
-    else{
+    } else {
       chartApp.discardCanvas();
       chartApp.fireCanvasEvent('before:selection:cleared');
       contextMenu.data([
@@ -348,28 +367,30 @@ export const dataURItoBlob = (dataURI, filename) => {
     name: filename
   });
 };
-canvasSize = function(id, w, h){
-  var _marginLeft 	= (($('.rightSection').width()-w)/2),
-    _marginTop 		= (($('.rightSection').height()-h)/2);
-  $('#'+id).parents('.absoluteCenter').css({
-    width: w,
-    height: h,
-    marginLeft 	: (_marginLeft 	> 0 ? _marginLeft 	: 0),
-    marginTop 	: (_marginTop 	> 0 ? _marginTop 	: 0)
-  });
+canvasSize = function(id, w, h) {
+  var _marginLeft = ($('.rightSection').width() - w) / 2,
+    _marginTop = ($('.rightSection').height() - h) / 2;
+  $('#' + id)
+    .parents('.absoluteCenter')
+    .css({
+      width: w,
+      height: h,
+      marginLeft: _marginLeft > 0 ? _marginLeft : 0,
+      marginTop: _marginTop > 0 ? _marginTop : 0
+    });
   chartApp.canvasDimension(id, w, h);
 };
-saveData = function(data, fileName){
+saveData = function(data, fileName) {
   var a = document.createElement('a');
   a.style = 'display: none';
   var json = JSON.stringify(data),
-    blob = new Blob([json], {type: 'octet/stream'}),
+    blob = new Blob([json], { type: 'octet/stream' }),
     url = window.URL.createObjectURL(blob);
   a.href = url;
   a.download = fileName;
   document.body.appendChild(a);
   a.click();
-  setTimeout(function(){
+  setTimeout(function() {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }, 150);

@@ -67,7 +67,8 @@ export class FlowDesigner extends React.Component {
       alignment: 'left' // Displays dropdown with edge aligned to the left of button
     });
 
-    if (props.wire) document.title = props.wire.name + ' | ' + props.wire.description;
+    if (props.wire)
+      document.title = props.wire.name + ' | ' + props.wire.description;
     googleAnalytics(document.location.pathname);
 
     if (props.wire) Streamy.emit('getwire', { id: props.wire._id });
@@ -284,35 +285,34 @@ export class FlowDesigner extends React.Component {
                   onChange={self.LoadGraphics.bind(self)}
                   placeholder="Search"
                 />
-                {
-                  categories ? (
-                    <select
-                      ref="Selectcate"
-                      onChange={self.LoadGraphics.bind(self)}
-                      value="Please select a category"
-                    >
-                      <option disabled value="Please select a category">
+                {categories ? (
+                  <select
+                    ref="Selectcate"
+                    onChange={self.LoadGraphics.bind(self)}
+                    value="Please select a category"
+                  >
+                    <option disabled value="Please select a category">
                       Please select a category
-                      </option>
-                      { categories.map(function(category) {
-                        return (
-                          <option key={category._id} value={category._id}>{category.name}</option>
-                        );
-                      })}
-                    </select>
-                  ): (
-                    <select
-                      ref="Selectcate"
-                      onChange={self.LoadGraphics.bind(self)}
-                      value="No Category" >
-                      
-                      <option disabled value="No Category">
+                    </option>
+                    {categories.map(function(category) {
+                      return (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                ) : (
+                  <select
+                    ref="Selectcate"
+                    onChange={self.LoadGraphics.bind(self)}
+                    value="No Category"
+                  >
+                    <option disabled value="No Category">
                       No Category
-                      </option>
-                    </select>
-                  )
-                }
-                
+                    </option>
+                  </select>
+                )}
 
                 {graphics ? (
                   graphics.map(function(graphic, index) {
@@ -565,7 +565,7 @@ export class FlowDesigner extends React.Component {
                     )}{' '}
                   </p>
                   <hr />
-                  { self.props.wire && self.props.wire.guestsUsers ? (
+                  {self.props.wire && self.props.wire.guestsUsers ? (
                     self.props.wire.guestsUsers.map(function(user, index) {
                       return (
                         <div key={user.userfullname}>
@@ -585,7 +585,11 @@ export class FlowDesigner extends React.Component {
                   <div />
                 </div>
                 <div id="rsmRoomChat" className="rsmRoomChat">
-                  { self.props.wire ? <ChatBox wireid={self.props.wire._id} />: undefined }
+                  {self.props.wire ? (
+                    <ChatBox wireid={self.props.wire._id} />
+                  ) : (
+                    undefined
+                  )}
                 </div>
               </div>
               <div className="rightSidebarMenu">
@@ -802,9 +806,10 @@ FlowDesigner.propTypes = {
   wire: PropTypes.object
 };
 
-let oldChat,  i = 0;
+let oldChat,
+  i = 0;
 
-export default withTracker((props) => {
+export default withTracker(props => {
   Meteor.subscribe('wireInfo', props.routeParams.id);
   // Meteor.subscribe('usersInfo');
   Meteor.subscribe('allGraphics');
@@ -814,16 +819,19 @@ export default withTracker((props) => {
   const wire = Wires.findOne({ _id: props.routeParams.id });
   const users = Meteor.users.find();
   let userId = Meteor.userId();
-  
+
   if (!userId || userId === undefined) {
     if (!Meteor._localStorage.getItem('wfg')) {
       Meteor._localStorage.setItem('wfg', `guest${Random.id(4)}`);
     }
     userId = Meteor._localStorage.getItem('wfg');
   }
-  
+
   let userMode = 'readonly';
-  let chats = Chats.find({ wireId: props.routeParams.id }, { sort: { createdAt: -1  }}).fetch();
+  let chats = Chats.find(
+    { wireId: props.routeParams.id },
+    { sort: { createdAt: -1 } }
+  ).fetch();
   Meteor.call('checkUserMode', userId, props.routeParams.id, (err, res) => {
     if (!err) {
       userMode = res;
@@ -842,22 +850,20 @@ export default withTracker((props) => {
   }
 
   let username;
-  if (wire && wire.userId ) {
+  if (wire && wire.userId) {
     Meteor.subscribe('userInfo', wire.userId);
     let user = Meteor.users.findOne({ _id: wire.userId });
-  
+
     if (user) {
       username = user.profile.name.first + ' ' + user.profile.name.last;
-    } else { 
-      username = wire.userId; 
+    } else {
+      username = wire.userId;
     }
   }
-
 
   i = i + 1;
   Meteor._localStorage.setItem('counter', i);
   userId = Meteor._localStorage.getItem('wfg');
-  
 
   return {
     wire,
@@ -872,5 +878,4 @@ export default withTracker((props) => {
     isAdmin,
     username
   };
-  
 })(FlowDesigner);

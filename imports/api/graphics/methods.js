@@ -13,48 +13,42 @@ export const insertGraphic = new ValidatedMethod({
   }).validator(),
   run(graphic) {
     return Graphics.insert(graphic);
-  },
+  }
 });
 
 rateLimit({
-  methods: [
-    insertGraphic,
-  ],
+  methods: [insertGraphic],
   limit: 5,
-  timeRange: 1000,
+  timeRange: 1000
 });
 
 Meteor.methods({
   getGraphics: (name, categories) => {
     check(name, String);
-    
+
     check(categories, String);
-    
 
     // check(categories, [Object]);
-    if(name==='none' && categories==='none'){
+    if (name === 'none' && categories === 'none') {
       return Graphics.find().fetch();
-    // return Graphics.find({cat:{ $in: categories }}).fetch();
-    }else if(categories==='none'){
+      // return Graphics.find({cat:{ $in: categories }}).fetch();
+    } else if (categories === 'none') {
       return Graphics.find({
         name: {
           $regex: name,
           $options: 'i'
         }
       }).fetch();
-    }else if(name==='none'){
-    
-      return Graphics.find({cat:categories}).fetch();
-    }else{
+    } else if (name === 'none') {
+      return Graphics.find({ cat: categories }).fetch();
+    } else {
       return Graphics.find({
         name: {
           $regex: name,
           $options: 'i'
         },
-        cat:categories
+        cat: categories
       }).fetch();
     }
-    
-    
   }
 });

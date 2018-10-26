@@ -11,20 +11,24 @@ export class AppNavigation extends React.Component {
   }
 
   render() {
-    return <Navbar>
-      <Navbar.Header>
-        <Navbar.Brand>
-          <Link to="/"><img className="homeLogo" src="/images/icons/logo.svg"></img></Link>
-        </Navbar.Brand>
-        <Navbar.Toggle />
-      </Navbar.Header>
-      <Navbar.Collapse>
-        { this.renderNavigation(this.props.hasUser) }
-      </Navbar.Collapse>
-    </Navbar>;
+    return (
+      <Navbar>
+        <Navbar.Header>
+          <Navbar.Brand>
+            <Link to="/">
+              <img className="homeLogo" src="/images/icons/logo.svg" />
+            </Link>
+          </Navbar.Brand>
+          <Navbar.Toggle />
+        </Navbar.Header>
+        <Navbar.Collapse>
+          {this.renderNavigation(this.props.hasUser)}
+        </Navbar.Collapse>
+      </Navbar>
+    );
   }
 }
 
 AppNavigation.propTypes = {
-  hasUser: PropTypes.object,
+  hasUser: PropTypes.object
 };

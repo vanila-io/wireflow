@@ -16,16 +16,17 @@ export const updateUser = new ValidatedMethod({
     'update.profile.city': { type: String, optional: true },
     'update.profile.postal_code': { type: String, optional: true },
     'update.profile.facebook': { type: String, optional: true },
-    'update.profile.twitter': { type: String, optional: true },
+    'update.profile.twitter': { type: String, optional: true }
   }).validator(),
   run({ _id, update, email }) {
     const emailExists = Meteor.users.findOne({
       'emails.0.address': email,
-      _id: { $ne: _id },
+      _id: { $ne: _id }
     });
-    if (emailExists) throw new Meteor.Error('invalid-data', 'Email already used.');
+    if (emailExists)
+      throw new Meteor.Error('invalid-data', 'Email already used.');
     Meteor.users.update(_id, { $set: update });
-  },
+  }
 });
 
 export const updateUserBillingInfo = new ValidatedMethod({
@@ -36,22 +37,23 @@ export const updateUserBillingInfo = new ValidatedMethod({
     'update.billing_info.country': { type: String, optional: true },
     'update.billing_info.city': { type: String, optional: true },
     'update.billing_info.postal_code': { type: String, optional: true },
-    'update.billing_info.use_profile_address': { type: Boolean, optional: true },
+    'update.billing_info.use_profile_address': { type: Boolean, optional: true }
   }).validator(),
   run({ _id, update }) {
     Meteor.users.update(_id, { $set: update });
-  },
+  }
 });
 
 export const removeUser = new ValidatedMethod({
   name: 'users.remove',
   validate: new SimpleSchema({
-    _id: { type: String },
+    _id: { type: String }
   }).validator(),
   run({ _id }) {
-    if (_id === Meteor.userId()) throw new Meteor.Error('own-user', 'Can not delete current user.');
+    if (_id === Meteor.userId())
+      throw new Meteor.Error('own-user', 'Can not delete current user.');
     Meteor.users.remove(_id);
-  },
+  }
 });
 
 export const createUser = new ValidatedMethod({
@@ -59,7 +61,7 @@ export const createUser = new ValidatedMethod({
   validate: null,
   run(newUser) {
     return Accounts.createUser(newUser);
-  },
+  }
 });
 
 export const updateAvatar = new ValidatedMethod({
@@ -67,14 +69,11 @@ export const updateAvatar = new ValidatedMethod({
   validate: null,
   run({ _id, url }) {
     Meteor.users.update({ _id }, { $set: { 'profile.avatar': url } });
-  },
+  }
 });
 
 rateLimit({
-  methods: [
-    updateUser,
-    removeUser,
-  ],
+  methods: [updateUser, removeUser],
   limit: 1,
-  timeRange: 1000,
+  timeRange: 1000
 });

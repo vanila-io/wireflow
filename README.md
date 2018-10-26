@@ -26,6 +26,8 @@ Follow instructions based on your operating system.
 - [Windows](https://github.com/vanila-io/wireflow/wiki/Installation-Windows)
 - [Linux](https://github.com/vanila-io/wireflow/wiki/Installation-Linux)
 
+> Warning, set ADMIN_USER and ADMIN_PASS environment variable before deploying otherwise admin@example.com will be used.
+
 ## Credits
 ### Contributors
 

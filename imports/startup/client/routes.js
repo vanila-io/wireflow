@@ -51,7 +51,9 @@ const requireAuth = (nextState, replace, cb) => {
         pathname: '/me'
       });
       cb();
-    }else{cb()}
+    } else {
+      cb();
+    }
   });
 };
 
