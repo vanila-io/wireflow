@@ -3,7 +3,7 @@
     {
       "name": "wireflow",
       "script": "bundle/main.js",
-  		"exec_interpreter" : "/home/someone/.nvm/versions/node/v4.5.0/bin/node",
+  		"exec_interpreter" : "/home/someone/.nvm/versions/node/v8.9.1/bin/node",
       "log_date_format": "YYYY-MM-DD",
       "exec_mode": "fork_mode",
       "env": {
