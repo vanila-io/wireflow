@@ -9,17 +9,15 @@ export const insertChat = new ValidatedMethod({
     userId: { type: String },
     user: { type: String },
     wireId: { type: String },
-    message: { type: String },
+    message: { type: String }
   }).validator(),
   run(chat) {
     return Chats.insert(chat);
-  },
+  }
 });
 
 rateLimit({
-  methods: [
-    insertChat,
-  ],
+  methods: [insertChat],
   limit: 5,
-  timeRange: 1000,
+  timeRange: 1000
 });

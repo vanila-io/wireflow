@@ -21,7 +21,7 @@ Slingshot.createDirective('uploadTemplate', Slingshot.S3Storage, {
   key(file) {
     const fileName = file.name || 'noname';
     return `mockups/${Random.id()}${fileName}`;
-  },
+  }
 });
 
 Slingshot.createDirective('uploadJSON', Slingshot.S3Storage, {
@@ -43,5 +43,5 @@ Slingshot.createDirective('uploadJSON', Slingshot.S3Storage, {
   key(file) {
     const fileName = file.name || 'noname';
     return `mockups/${Random.id()}${fileName}`;
-  },
+  }
 });

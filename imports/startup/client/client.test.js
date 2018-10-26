@@ -15,8 +15,8 @@ const TestComponent = () => {
   );
 };
 
-describe('Client', function () {
-  it('should be able to run tests on client', function () {
+describe('Client', function() {
+  it('should be able to run tests on client', function() {
     const res = Meteor.isClient;
     expect(res).to.be.ok;
 

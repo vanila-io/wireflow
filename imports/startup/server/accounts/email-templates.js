@@ -22,12 +22,12 @@ emailTemplates.resetPassword = {
     \n\n${urlWithoutHash}\n\n If you did not request this reset, please ignore
     this email. If you feel something is wrong, please contact our support team:
     ${email}.`;
-  },
+  }
 };
 
 Accounts.onCreateUser((options, user) => {
   user.billing_info = {
-    use_profile_address: true,
+    use_profile_address: true
   };
   if (options.profile) {
     user.profile = options.profile;

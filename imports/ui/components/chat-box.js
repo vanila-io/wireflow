@@ -21,21 +21,28 @@ class ChatBox extends React.Component {
         Meteor._localStorage.setItem('wfg', `guest${Random.id(4)}`);
         user = Meteor._localStorage.getItem('wfg');
         Meteor._localStorage.setItem('wfg2', user);
-      }else{
+      } else {
         user = Meteor._localStorage.getItem('wfg');
       }
-    }else{
-      user=Meteor.user();
+    } else {
+      user = Meteor.user();
     }
     user2 = Meteor._localStorage.getItem('wfg2');
     if (Meteor.user()) {
-      Meteor._localStorage.setItem('wfg2', Meteor.user().profile.name.first + ' ' + Meteor.user().profile.name.last);
-    }else{
+      Meteor._localStorage.setItem(
+        'wfg2',
+        Meteor.user().profile.name.first + ' ' + Meteor.user().profile.name.last
+      );
+    } else {
       Meteor._localStorage.setItem('wfg2', user);
     }
     //console.log("user2");
     //console.log(user2);
-    Streamy.emit('getusername', {user: user,conuser:Meteor.user(),lastuser:user2});
+    Streamy.emit('getusername', {
+      user: user,
+      conuser: Meteor.user(),
+      lastuser: user2
+    });
   }
 
   send() {
@@ -45,9 +52,9 @@ class ChatBox extends React.Component {
       message: this.refs.message.value,
       userId: Meteor.userId() || user,
       user: Meteor.user() ? Meteor.user().profile.name.first : user,
-      wireId: this.props.wireid,
+      wireId: this.props.wireid
     };
-    insertChat.call(chat, (error) => {
+    insertChat.call(chat, error => {
       if (error) {
         Bert.alert(error.reason, 'danger');
       } else {
@@ -66,11 +73,11 @@ class ChatBox extends React.Component {
     const chats = this.props.chats;
     if (chats && chats.length) {
       return (
-
         <div className="row chatMessages">
-          {chats.map((chat) => (
+          {chats.map(chat => (
             <div className="col s12" key={chat._id}>
-              <span className="chatUser">{chat.user}:</span>  <span className="chatMsg">{chat.message}</span>
+              <span className="chatUser">{chat.user}:</span>{' '}
+              <span className="chatMsg">{chat.message}</span>
             </div>
           ))}
         </div>
@@ -88,7 +95,6 @@ class ChatBox extends React.Component {
   render() {
     return (
       <div>
-
         {this.renderMessages()}
         <div className="row rowChatInput">
           <div className="col s9">
@@ -100,25 +106,32 @@ class ChatBox extends React.Component {
             />
           </div>
           <div className="col s3">
-            <button className="white msgSend waves-effect waves-light" onClick={this.send.bind(this)}><i className="fa fa-check"></i></button>
+            <button
+              className="white msgSend waves-effect waves-light"
+              onClick={this.send.bind(this)}
+            >
+              <i className="fa fa-check" />
+            </button>
           </div>
         </div>
-
-      </div>);
+      </div>
+    );
   }
 }
 
 ChatBox.propTypes = {
   chats: PropTypes.array,
   routeParams: PropTypes.string,
-  wireid: PropTypes.string,
+  wireid: PropTypes.string
 };
 
-
-export default withTracker((props) => {
+export default withTracker(props => {
   Meteor.subscribe('wireMessages', props.wireid);
 
-  return { 
-    chats: Chats.find({ wireId: props.wireid }, { sort: { createdAt: -1 } }).fetch()
+  return {
+    chats: Chats.find(
+      { wireId: props.wireid },
+      { sort: { createdAt: -1 } }
+    ).fetch()
   };
 })(ChatBox);

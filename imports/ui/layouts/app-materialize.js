@@ -5,11 +5,9 @@ import createClass from 'create-react-class';
 export const AppMaterialize = createClass({
   propTypes: {
     children: PropTypes.element.isRequired,
-    location: PropTypes.object,
+    location: PropTypes.object
   },
   render() {
-    return <div>
-      {this.props.children}
-    </div>;
-  },
+    return <div>{this.props.children}</div>;
+  }
 });

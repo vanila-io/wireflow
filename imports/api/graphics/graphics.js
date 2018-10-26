@@ -6,24 +6,24 @@ export const Graphics = new Mongo.Collection('graphics');
 Graphics.allow({
   insert: () => false,
   update: () => false,
-  remove: () => false,
+  remove: () => false
 });
 
 Graphics.deny({
   insert: () => true,
   update: () => true,
-  remove: () => true,
+  remove: () => true
 });
 
 Graphics.schema = new SimpleSchema({
   name: {
-    type: String,
+    type: String
   },
   cat: {
-    type: String,
+    type: String
   },
   link: {
-    type: String,
+    type: String
   }
 });
 

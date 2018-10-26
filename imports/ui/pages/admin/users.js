@@ -15,75 +15,86 @@ class AdminUsers extends React.Component {
     this.state = {
       limit: 50,
       searchText: '',
-      searchStatus: 'all',
+      searchStatus: 'all'
     };
   }
 
   handleLoadMore() {
     this.setState({
-      limit: this.state.limit + 50,
+      limit: this.state.limit + 50
     });
   }
 
   handleSearch(text, status = 'all') {
     this.setState({
       searchText: text,
-      searchStatus: status,
+      searchStatus: status
     });
   }
 
   handleRemove(_id) {
-    removeUser.call({
-      _id,
-    }, (error) => {
-      if (error) {
-        Bert.alert(error.reason, 'danger');
-      } else {
-        Bert.alert('User removed!', 'success');
+    removeUser.call(
+      {
+        _id
+      },
+      error => {
+        if (error) {
+          Bert.alert(error.reason, 'danger');
+        } else {
+          Bert.alert('User removed!', 'success');
+        }
       }
-    });
+    );
   }
 
   render() {
-    return (<div>
-      {this.props.users.length ?
-        <table className="table table-inbox table-hover" ref="productsPage">
-          <tbody>
-            {this.props.users.map((user) =>
-              <tr key={user._id}>
-                <td>{user.profile.name.first} {user.profile.name.last}</td>
-                <td>{user.emails[0].address}</td>
-                <td>{user.profile.address}</td>
-                <td>{user.profile.city}</td>
-                <td>{user.profile.country}</td>
-                <td>{user.profile.postal_code}</td>
-                <td>
-                  <LinkContainer to={`/admin/users/${user._id}/edit`}>
-                    <button className="btn btn-primary">Edit</button>
-                  </LinkContainer>
-                  <button className="btn btn-danger"
-                    onClick={this.handleRemove.bind(this, user._id)}>Delete</button>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        :
-        <Alert bsStyle="warning">No users yet.</Alert>
-      }
-    </div>);
+    return (
+      <div>
+        {this.props.users.length ? (
+          <table className="table table-inbox table-hover" ref="productsPage">
+            <tbody>
+              {this.props.users.map(user => (
+                <tr key={user._id}>
+                  <td>
+                    {user.profile.name.first} {user.profile.name.last}
+                  </td>
+                  <td>{user.emails[0].address}</td>
+                  <td>{user.profile.address}</td>
+                  <td>{user.profile.city}</td>
+                  <td>{user.profile.country}</td>
+                  <td>{user.profile.postal_code}</td>
+                  <td>
+                    <LinkContainer to={`/admin/users/${user._id}/edit`}>
+                      <button className="btn btn-primary">Edit</button>
+                    </LinkContainer>
+                    <button
+                      className="btn btn-danger"
+                      onClick={this.handleRemove.bind(this, user._id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <Alert bsStyle="warning">No users yet.</Alert>
+        )}
+      </div>
+    );
   }
 }
 
 AdminUsers.propTypes = {
   users: PropTypes.array,
-  limit: PropTypes.number,
+  limit: PropTypes.number
 };
 
 export default withTracker(() => {
   Meteor.subscribe('usersList');
 
-  return { 
+  return {
     users: Meteor.users.find({}).fetch()
   };
 })(AdminUsers);

@@ -15,10 +15,14 @@ const Countries = CityCountry.getCountries();
 class EditUser extends React.Component {
   componentWillMount() {
     const user = this.props.user;
-    const showResetPassword = typeof(this.props.showResetPassword) === 'undefined' ? true
-      : this.props.showResetPassword;
-    const showCancelButton = typeof(this.props.showCancelButton) === 'undefined' ? true
-      : this.props.showCancelButton;
+    const showResetPassword =
+      typeof this.props.showResetPassword === 'undefined'
+        ? true
+        : this.props.showResetPassword;
+    const showCancelButton =
+      typeof this.props.showCancelButton === 'undefined'
+        ? true
+        : this.props.showCancelButton;
     this.state = {
       _id: user._id,
       firstname: user.profile.name.first,
@@ -30,22 +34,27 @@ class EditUser extends React.Component {
       facebook: user.profile.facebook || '',
       twitter: user.profile.twitter || '',
       postal_code: user.profile.postal_code || '',
-      cities: user.profile.city ? CityCountry.getCities(user.profile.country) : [],
+      cities: user.profile.city
+        ? CityCountry.getCities(user.profile.country)
+        : [],
       showResetPassword,
-      showCancelButton,
+      showCancelButton
     };
   }
 
   handleResetPassword() {
-    Accounts.forgotPassword({
-      email: this.state.email_address,
-    }, (error) => {
-      if (error) {
-        Bert.alert(error.reason, 'warning');
-      } else {
-        Bert.alert('Email was sent to users email address.!', 'success');
+    Accounts.forgotPassword(
+      {
+        email: this.state.email_address
+      },
+      error => {
+        if (error) {
+          Bert.alert(error.reason, 'warning');
+        } else {
+          Bert.alert('Email was sent to users email address.!', 'success');
+        }
       }
-    });
+    );
   }
 
   handleSubmit(event) {
@@ -57,24 +66,27 @@ class EditUser extends React.Component {
       'profile.city': this.state.city,
       'profile.postal_code': this.state.postal_code,
       'profile.facebook': this.state.facebook,
-      'profile.twitter': this.state.twitter,
+      'profile.twitter': this.state.twitter
     };
-    updateUser.call({
-      _id: this.state._id,
-      update,
-      email: this.state.email_address,
-    }, (error) => {
-      if (error) {
-        Bert.alert(error.reason, 'danger');
-      } else {
-        if (this.props.onSubmitted) {
-          this.props.onSubmitted.call();
+    updateUser.call(
+      {
+        _id: this.state._id,
+        update,
+        email: this.state.email_address
+      },
+      error => {
+        if (error) {
+          Bert.alert(error.reason, 'danger');
         } else {
-          Bert.alert('User updated!', 'success');
-          browserHistory.goBack();
+          if (this.props.onSubmitted) {
+            this.props.onSubmitted.call();
+          } else {
+            Bert.alert('User updated!', 'success');
+            browserHistory.goBack();
+          }
         }
       }
-    });
+    );
     event.preventDefault();
   }
 
@@ -84,10 +96,13 @@ class EditUser extends React.Component {
   }
 
   handleChange(event) {
-    let value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    let value =
+      event.target.type === 'checkbox'
+        ? event.target.checked
+        : event.target.value;
     value = event.target.type === 'number' ? +value : value;
     this.setState({
-      [event.target.name]: value,
+      [event.target.name]: value
     });
   }
 
@@ -97,20 +112,25 @@ class EditUser extends React.Component {
     this.setState({
       [event.target.name]: value,
       cities,
-      city: cities[0],
+      city: cities[0]
     });
   }
 
   render() {
     return (
       <div className="row">
-        {this.state.showResetPassword ?
+        {this.state.showResetPassword ? (
           <div className="col-md-12">
             <button
               className="pull-right btn btn-primary"
-              onClick={this.handleResetPassword.bind(this)}>Reset Password</button>
+              onClick={this.handleResetPassword.bind(this)}
+            >
+              Reset Password
+            </button>
           </div>
-          : ''}
+        ) : (
+          ''
+        )}
         <div className="col-md-12">
           <form>
             <div className="form-group">
@@ -154,23 +174,33 @@ class EditUser extends React.Component {
             </div>
             <div className="form-group">
               <label className="control-label">Country</label>
-              <select className="selectpicker form-control"
+              <select
+                className="selectpicker form-control"
                 name="country"
                 onChange={this.handleCountryChange.bind(this)}
-                value={this.state.country}>
+                value={this.state.country}
+              >
                 <option value="">Select Country</option>
-                {Countries.map((country, index) => (<option key={country}
-                  value={country}>{country}</option>))}
+                {Countries.map((country, index) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
               <label className="control-label">City</label>
-              <select className="selectpicker form-control"
+              <select
+                className="selectpicker form-control"
                 name="city"
                 onChange={this.handleChange.bind(this)}
-                value={this.state.city}>
+                value={this.state.city}
+              >
                 {this.state.cities.map((city, index) => (
-                  <option key={city} value={city}>{city}</option>))}
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -183,7 +213,9 @@ class EditUser extends React.Component {
                 onChange={this.handleChange.bind(this)}
               />
             </div>
-            <div className="form-group"><hr/></div>
+            <div className="form-group">
+              <hr />
+            </div>
             <div className="form-group">
               <label className="control-label">Facebook Profile</label>
               <input
@@ -208,7 +240,9 @@ class EditUser extends React.Component {
               <button
                 className="btn btn-primary"
                 onClick={this.handleSubmit.bind(this)}
-              >Update</button>
+              >
+                Update
+              </button>
               {this.renderCancelButton()}
             </div>
           </form>
@@ -220,7 +254,10 @@ class EditUser extends React.Component {
   renderCancelButton() {
     if (this.state.showCancelButton) {
       return (
-        <button className="btn btn-secondary" onClick={this.handleCancel.bind(this)}>
+        <button
+          className="btn btn-secondary"
+          onClick={this.handleCancel.bind(this)}
+        >
           Cancel
         </button>
       );
@@ -235,10 +272,10 @@ EditUser.propTypes = {
   showResetPassword: PropTypes.bool,
   showCancelButton: PropTypes.bool,
   onCancelled: PropTypes.func,
-  onSubmitted: PropTypes.func,
+  onSubmitted: PropTypes.func
 };
 
-export default withTracker((props) => {
+export default withTracker(props => {
   Meteor.subscribe('usersList');
 
   return {

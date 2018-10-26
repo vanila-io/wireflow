@@ -17,9 +17,13 @@ const userName = () => {
 export const AuthenticatedNavigation = () => (
   <div>
     <Nav pullRight>
-      <NavDropdown eventKey={ 3 } title={ userName() } id="basic-nav-dropdown">
-        <MenuItem eventKey={ 3.1 } onClick={ handleViewProfile }>Profile</MenuItem>
-        <MenuItem eventKey={ 3.2 } onClick={ handleLogout }>Logout</MenuItem>
+      <NavDropdown eventKey={3} title={userName()} id="basic-nav-dropdown">
+        <MenuItem eventKey={3.1} onClick={handleViewProfile}>
+          Profile
+        </MenuItem>
+        <MenuItem eventKey={3.2} onClick={handleLogout}>
+          Logout
+        </MenuItem>
       </NavDropdown>
     </Nav>
   </div>

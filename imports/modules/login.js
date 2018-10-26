@@ -11,7 +11,7 @@ const login = () => {
   const email = getInputValue(component.refs.emailAddress);
   const password = getInputValue(component.refs.password);
 
-  Meteor.loginWithPassword(email, password, (error) => {
+  Meteor.loginWithPassword(email, password, error => {
     if (error) {
       Bert.alert(error.reason, 'warning');
     } else {
@@ -32,26 +32,28 @@ const validate = () => {
     rules: {
       emailAddress: {
         required: true,
-        email: true,
+        email: true
       },
       password: {
-        required: true,
-      },
+        required: true
+      }
     },
     messages: {
       emailAddress: {
         required: 'Need an email address here.',
-        email: 'Is this email address legit?',
+        email: 'Is this email address legit?'
       },
       password: {
-        required: 'Need a password here.',
-      },
+        required: 'Need a password here.'
+      }
     },
-    submitHandler() { login(); },
+    submitHandler() {
+      login();
+    }
   });
 };
 
-export const handleLogin = (options) => {
+export const handleLogin = options => {
   component = options.component;
   validate();
 };

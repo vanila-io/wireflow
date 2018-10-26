@@ -10,13 +10,11 @@ export const insertCategory = new ValidatedMethod({
   }).validator(),
   run(category) {
     return Categories.insert(category);
-  },
+  }
 });
 
 rateLimit({
-  methods: [
-    insertCategory,
-  ],
+  methods: [insertCategory],
   limit: 5,
-  timeRange: 1000,
+  timeRange: 1000
 });

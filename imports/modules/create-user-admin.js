@@ -13,18 +13,18 @@ const getUserData = () => ({
   profile: {
     name: {
       first: getInputValue(component.refs.firstName),
-      last: getInputValue(component.refs.lastName),
+      last: getInputValue(component.refs.lastName)
     },
     address: getInputValue(component.refs.address),
     country: getInputValue(component.refs.country),
     city: getInputValue(component.refs.city),
-    postal_code: getInputValue(component.refs.postal_code),
-  },
+    postal_code: getInputValue(component.refs.postal_code)
+  }
 });
 
 const signUp = () => {
   const user = getUserData();
-  createUser.call(user, (error) => {
+  createUser.call(user, error => {
     if (error) {
       Bert.alert(error.reason, 'danger');
     } else {
@@ -38,41 +38,43 @@ const validate = () => {
   $(component.refs.signup).validate({
     rules: {
       firstName: {
-        required: true,
+        required: true
       },
       lastName: {
-        required: true,
+        required: true
       },
       emailAddress: {
         required: true,
-        email: true,
+        email: true
       },
       password: {
         required: true,
-        minlength: 6,
-      },
+        minlength: 6
+      }
     },
     messages: {
       firstName: {
-        required: 'First name?',
+        required: 'First name?'
       },
       lastName: {
-        required: 'Last name?',
+        required: 'Last name?'
       },
       emailAddress: {
         required: 'Need an email address here.',
-        email: 'Is this email address legit?',
+        email: 'Is this email address legit?'
       },
       password: {
         required: 'Need a password here.',
-        minlength: 'Use at least six characters, please.',
-      },
+        minlength: 'Use at least six characters, please.'
+      }
     },
-    submitHandler() { signUp(); },
+    submitHandler() {
+      signUp();
+    }
   });
 };
 
-export const handleSignup = (options) => {
+export const handleSignup = options => {
   component = options.component;
   validate();
 };
