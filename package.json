@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "bcrypt": "^1.0.3",
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^3.4.1",
     "country-city": "^1.0.0",
     "coupon-code": "^0.4.4",
     "create-react-class": "^15.6.2",
