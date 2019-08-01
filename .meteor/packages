@@ -4,19 +4,16 @@
 # 'meteor add' and 'meteor remove' will edit this file for you,
 # but you can also edit it by hand.
 
-meteor-base@1.2.0             # Packages every Meteor app needs to have
+meteor-base@1.4.0             # Packages every Meteor app needs to have
 mobile-experience@1.0.5       # Packages for a great mobile UX
-mongo@1.3.0                   # The database Meteor supports right now
+mongo@1.6.2                   # The database Meteor supports right now
 reactive-var@1.0.11            # Reactive variable for tracker
-session@1.1.7
-tracker                 # Meteor's client-side reactive programming library
+session@1.2.0
+tracker@1.2.0                 # Meteor's client-side reactive programming library
 
-es5-shim@4.6.15                # ECMAScript 5 compatibility for older browsers.
-ecmascript@0.9.0              # Enable ECMAScript2015+ syntax in app code
-
-accounts-password@1.5.0
-accounts-base@1.4.0
-check@1.2.5
+accounts-password@1.5.1
+accounts-base
+check@1.3.1
 audit-argument-checks@1.0.7
 browser-policy@1.1.0
 
@@ -32,14 +29,13 @@ mdg:validated-method
 dburles:factory
 ddp-rate-limiter@1.0.7
 react-meteor-data
-edgee:slingshot
-random@1.0.10
+random
 ryanswapp:fabricjs
-shell-server@0.3.0
+shell-server@0.4.0
 yuukan:streamy
-dynamic-import
+dynamic-import@0.5.1
 practicalmeteor:chai
 practicalmeteor:sinon
-coffeescript@1.12.7_3
-standard-minifier-js@2.2.0
-standard-minifier-css@1.3.5
+underscore
+ecmascript
+edgee:slingshot
