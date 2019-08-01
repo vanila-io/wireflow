@@ -31,6 +31,7 @@
     "materialize-css": "^1.0.0",
     "meteor-node-stubs": "^0.3.3",
     "numeral": "^2.0.6",
+    "prettier": "^1.18.2",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-bootstrap": "^0.31.5",
