@@ -10,6 +10,7 @@ mongo@1.6.2                   # The database Meteor supports right now
 reactive-var@1.0.11            # Reactive variable for tracker
 session@1.2.0
 tracker@1.2.0                 # Meteor's client-side reactive programming library
+ecmascript
 
 accounts-password@1.5.1
 accounts-base
@@ -29,6 +30,7 @@ mdg:validated-method
 dburles:factory
 ddp-rate-limiter@1.0.7
 react-meteor-data
+edgee:slingshot
 random
 ryanswapp:fabricjs
 shell-server@0.4.0
@@ -37,5 +39,3 @@ dynamic-import@0.5.1
 practicalmeteor:chai
 practicalmeteor:sinon
 underscore
-ecmascript
-edgee:slingshot
