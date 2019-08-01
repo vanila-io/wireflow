@@ -25,7 +25,7 @@ Slingshot.createDirective('uploadTemplate', Slingshot.S3Storage, {
     //   throw new Meteor.Error('permission-denied', 'Permission denied');
     // }
 
-    return 'true';
+    return true;
   },
 
   key(file) {
@@ -47,7 +47,7 @@ Slingshot.createDirective('uploadJSON', Slingshot.S3Storage, {
     //   throw new Meteor.Error('permission-denied', 'Permission denied');
     // }
 
-    return 'true';
+    return true;
   },
 
   key(file) {
