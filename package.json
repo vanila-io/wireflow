@@ -38,11 +38,11 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^5.9.0",
     "@testing-library/react": "^10.0.6",
-    "@testing-library/user-event": "^11.0.0",
+    "@testing-library/user-event": "^12.0.11",
     "@types/expect-puppeteer": "^4.4.3",
     "@types/jest-environment-puppeteer": "^4.3.1",
     "@types/puppeteer": "^3.0.0",
     "jest-puppeteer": "^4.4.0",
-    "puppeteer": "^3.3.0"
+    "puppeteer": "^5.0.0"
   }
 }
