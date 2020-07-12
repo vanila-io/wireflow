@@ -1,62 +1,48 @@
 {
-  "name": "WireFlow",
-  "version": "0.0.2",
+  "name": "wireflow",
+  "version": "0.0.3",
+  "private": true,
   "description": "Flowchart collaboration App",
   "scripts": {
-    "start": "meteor --settings settings.json",
-    "lint": "eslint .",
-    "pretest": "npm run lint --silent",
-    "test": "meteor test --driver-package=practicalmeteor:mocha --port 3100",
-    "postinstall": "cp node_modules/materialize-css/js/date_picker/picker.js node_modules/materialize-css/bin"
+    "build": "react-scripts build",
+    "e2e": "cd e2e && jest",
+    "eject": "react-scripts eject",
+    "start": "react-scripts start",
+    "test": "react-scripts test"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "eslintConfig": {
-    "extends": "@meteorjs/eslint-config-meteor"
+    "extends": "react-app"
   },
   "dependencies": {
-    "@babel/runtime": "^7.5.5",
-    "bootstrap": "^3.4.1",
-    "canvas": "^2.5.0",
-    "country-city": "^1.0.0",
-    "coupon-code": "^0.4.4",
-    "create-react-class": "^15.6.3",
-    "fabric": "^3.3.2",
-    "fibers": "^4.0.1",
-    "graceful-fs": "^4.2.0",
-    "hammerjs": "^2.0.8",
-    "jquery": "^3.4.1",
-    "jquery-mousewheel": "^3.1.13",
-    "jquery-ui": "^1.12.1",
-    "jquery-validation": "^1.19.1",
-    "jsdom": "^11.12.0",
-    "materialize-css": "^1.0.0",
-    "meteor-node-stubs": "^0.3.3",
-    "numeral": "^2.0.6",
-    "prop-types": "^15.7.2",
-    "react": "^16.8.6",
-    "react-bootstrap": "^0.31.5",
-    "react-custom-scrollbars": "^4.0.0",
-    "react-dom": "^16.8.6",
-    "react-edit-inline": "git+https://github.com/entrptaher/ReactInlineEdit.git",
-    "react-router": "^3.2.3",
-    "react-router-bootstrap": "^0.23.1",
-    "react-select": "^1.3.0"
+    "@ant-design/icons": "^4.0.6",
+    "@testing-library/jest-dom": "^5.9.0",
+    "@testing-library/react": "^10.0.6",
+    "@testing-library/user-event": "^11.0.0",
+    "@types/expect-puppeteer": "^4.4.3",
+    "@types/jest-environment-puppeteer": "^4.3.1",
+    "@types/puppeteer": "^3.0.0",
+    "antd": "^4.1.4",
+    "gg-editor": "^2.0.3",
+    "html-to-image": "^0.1.1",
+    "rc-color-picker": "^1.2.6",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.1"
   },
   "devDependencies": {
-    "@meteorjs/eslint-config-meteor": "^1.0.5",
-    "babel-eslint": "^8.2.6",
-    "enzyme": "^3.10.0",
-    "enzyme-adapter-react-16": "^1.14.0",
-    "eslint": "^4.19.1",
-    "eslint-config-airbnb": "^16.1.0",
-    "eslint-import-resolver-meteor": "^0.4.0",
-    "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-meteor": "^4.2.2",
-    "eslint-plugin-mocha": "^4.12.1",
-    "eslint-plugin-react": "^7.14.3"
-  },
-  "license": "MIT",
-  "repository": {
-    "url": "git@github.com:vanila-io/wireflow.git"
+    "jest-puppeteer": "^4.4.0",
+    "puppeteer": "^3.3.0"
   }
 }

@@ -1,7 +1,5 @@
 # Wireflow - flow chart collaboration app
 
-**March 2020: We are rebuilding WireFlow from scratch using [G6](https://github.com/antvis/G6)/[GGEditor](https://github.com/alibaba/GGEditor) as a base instead of [fabric.js](https://github.com/fabricjs/fabric.js), the initial research has started and this time we intend to make it more stable. We will also remove meteor and intend to make it lighter. We will create a project plan after the research is done. See the latest version on [wireflow2](https://github.com/vanila-io/wireflow2) repo.**
-
 [![dependencies Status](https://david-dm.org/vanila-io/wireflow/status.svg)](https://david-dm.org/vanila-io/wireflow)
 [![devDependencies Status](https://david-dm.org/vanila-io/wireflow/dev-status.svg)](https://david-dm.org/vanila-io/wireflow?type=dev)
 [![OpenCollective](https://opencollective.com/wireflow/backers/badge.svg)](#backers) 

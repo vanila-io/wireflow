@@ -1,0 +1,26 @@
+.toolbar {
+  position: absolute;
+  display: flex;
+  z-index: 9999;
+  background: #fff;
+  padding: 5px 15px;
+  bottom: 30px;
+  transform: translateX(-50%);
+  left: 50%;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba($color: #000000, $alpha: 0.1);
+}
+.toolbar .command span {
+  padding: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.toolbar .command .ant-divider {
+  height: auto;
+  background: #e0e0e0;
+}
+.toolbar .command:hover span {
+  transform: scale(1.4);
+}
