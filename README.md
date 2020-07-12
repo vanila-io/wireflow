@@ -1,5 +1,6 @@
 # Wireflow - flow chart collaboration app
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/15abd946-68e7-4cdb-8d9e-4930d5a2191c/deploy-status)](https://app.netlify.com/sites/wireflow-app/deploys)
 [![dependencies Status](https://david-dm.org/vanila-io/wireflow/status.svg)](https://david-dm.org/vanila-io/wireflow)
 [![devDependencies Status](https://david-dm.org/vanila-io/wireflow/dev-status.svg)](https://david-dm.org/vanila-io/wireflow?type=dev)
 [![OpenCollective](https://opencollective.com/wireflow/backers/badge.svg)](#backers) 
