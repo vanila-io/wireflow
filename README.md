@@ -21,19 +21,19 @@ Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io) and [
 - [ProductHunt page](https://www.producthunt.com/posts/wireflow)
 - [Open Hub analysis of Wireflow code](https://www.openhub.net/p/wireflow)
 
-# Install Locally
+# Develop Locally
 
-Follow instructions based on your operating system.
-- [Windows](https://github.com/vanila-io/wireflow/wiki/Installation-Windows)
-- [Linux](https://github.com/vanila-io/wireflow/wiki/Installation-Linux)
-
-> Warning, set ADMIN_USER and ADMIN_PASS environment variable before deploying otherwise admin@example.com will be used.
+```
+yarn
+yarn start
+open http://localhost:3000
+```
 
 ## Credits
 ### Contributors
 
 This project exists thanks to all the people who contribute. 
-<a href="graphs/contributors"><img src="https://opencollective.com/wireflow/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/vanila-io/wireflow/graphs/contributors"><img src="https://opencollective.com/wireflow/contributors.svg?width=890&button=false" /></a>
 
 
 ### Backers
