@@ -8,18 +8,18 @@
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "mstile-150x150.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "150x150"
     },
     {
-      "src": "logo512.png",
+      "src": "android-chrome-96x96.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "96x96"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#ffffff",
   "background_color": "#ffffff"
 }
