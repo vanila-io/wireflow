@@ -9834,10 +9834,10 @@ react-app-polyfill@^1.0.6:
     regenerator-runtime "^0.13.3"
     whatwg-fetch "^3.0.0"
 
-react-colorful@^4.0.3:
-  version "4.0.3"
-  resolved "https://registry.yarnpkg.com/react-colorful/-/react-colorful-4.0.3.tgz#4944485ca924e1555f924a468421c3692b97e2c0"
-  integrity sha512-j3gjo7Fwa9T6KaVIoeUO1LybItCdTnfJM6ceOkHVXzJQGeRSEDgkUPCSuTboqgp7SERcnPpTP3Px39g1WFLwPQ==
+react-colorful@^4.0.4:
+  version "4.0.4"
+  resolved "https://registry.yarnpkg.com/react-colorful/-/react-colorful-4.0.4.tgz#8c42d15d847c48282f3033c9f227b59c7b4ee6bf"
+  integrity sha512-AbOOjRHm3g2NlH4yyNdsZ6uuRT2oi2UMdAvIbHIhMrOfQkDWByQ80jSJaRvP2Or8jY4KB7l1gLYFkTaCTdBpgg==
 
 react-dev-utils@^10.2.1:
   version "10.2.1"
