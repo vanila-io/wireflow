@@ -40,7 +40,7 @@ This project exists thanks to all the people who contribute.
 
 Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/wireflow#backer)]
 
-<a href="https://opencollective.com/{{slug}}#backers" target="_blank"><img src="https://opencollective.com/wireflow/backers.svg?width=890"></a>
+<a href="https://opencollective.com/wireflow#backer" target="_blank"><img src="https://opencollective.com/wireflow/backers.svg?width=890"></a>
 
 
 ### Sponsors
