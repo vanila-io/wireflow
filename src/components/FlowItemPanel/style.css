@@ -63,6 +63,7 @@
   margin-top: -10px;
   position: relative;
   z-index: 9999;
+  pointer-events: none;
 }
 ::-webkit-scrollbar {
   width: 0px;
