@@ -9,6 +9,7 @@
 .sidebar {
   width: 112px;
   height: 100vh;
+  user-select: none;
 }
 .sidebar .ant-card-body {
   position: fixed;
@@ -62,6 +63,7 @@
   margin-top: -10px;
   position: relative;
   z-index: 9999;
+  pointer-events: none;
 }
 ::-webkit-scrollbar {
   width: 0px;
