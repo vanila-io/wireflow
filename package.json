@@ -8,7 +8,7 @@
     "e2e": "cd e2e && jest",
     "eject": "react-scripts eject",
     "start": "react-scripts start",
-    "test": "react-scripts test"
+    "test": "react-scripts test --watchAll=false"
   },
   "browserslist": {
     "production": [
