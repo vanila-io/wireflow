@@ -1,0 +1,6 @@
+*e2e
+*.git*
+*.editorconfig
+*.eslintignore
+*.eslintrc.js
+*build
