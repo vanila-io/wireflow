@@ -29,6 +29,11 @@ yarn start
 open http://localhost:3000
 ```
 
+# Using docker-compose
+```
+docker-compose up -d
+```
+
 ## Credits
 ### Contributors
 

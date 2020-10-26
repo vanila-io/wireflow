@@ -1,0 +1,14 @@
+version: '3.5'
+
+services:
+  web:
+    image: debarshri/wireflow
+    build: .
+    ports:
+      - 8083:80
+    environment:
+      - MONGO_URL="mongodb://localhost:27018 meteor --port 3050"
+  db:
+    image: mongo:latest
+    ports:
+      - 3050:3050
