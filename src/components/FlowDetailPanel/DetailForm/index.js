@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { withPropsAPI } from 'gg-editor';
 import Card from 'antd/es/card';
 import Input from 'antd/es/input';
@@ -197,5 +198,9 @@ class DetailForm extends React.Component {
     );
   }
 }
+
+DetailForm.propTypes = { 
+  type: PropTypes.string.isRequired
+};
 
 export default withPropsAPI(DetailForm);
