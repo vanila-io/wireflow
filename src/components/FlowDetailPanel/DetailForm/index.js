@@ -5,16 +5,16 @@ import Card from 'antd/es/card';
 import Input from 'antd/es/input';
 import Select from 'antd/es/select';
 import Form from 'antd/es/form';
-import ColorPicker from 'rc-color-picker';
 import Slider from 'antd/es/slider';
 import Descriptions from 'antd/es/descriptions';
+import { HexColorPicker as ColorPicker } from 'react-colorful';
 
 import 'antd/es/card/style/css';
 import 'antd/es/input/style/css';
 import 'antd/es/select/style/css';
 import 'antd/es/form/style/css';
 import 'antd/es/slider/style/css';
-import 'rc-color-picker/assets/index.css';
+import 'react-colorful/dist/index.css';
 import 'antd/es/descriptions/style/css';
 
 import { upperFirst } from '../../../utils';
@@ -147,9 +147,8 @@ class DetailForm extends React.Component {
 
           <Item label='Color' name='color' {...inlineFormItemLayout}>
             <ColorPicker
-              animation='slide-up'
               color={color}
-              onChange={({ color }) => this.handleFieldChange({ color })}
+              onChange={(color) => this.handleFieldChange({ color })}
             />
           </Item>
         </Form>
