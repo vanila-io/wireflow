@@ -14,6 +14,7 @@ Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io) and [
 
 ## Around the web:
 
+- [Private slack channel invite link](https://join.slack.com/t/wireflow/shared_invite/zt-iwgx8efa-Vt~_rnkw2tGAhSR~nJs9bA)
 - Join our community chat: https://community.vanila.io/wireflow
 - [Youtube Video with a short story](https://youtu.be/zm0XbLmXtXY)
 - [Post regarding Contribution](https://forums.meteor.com/t/anyone-interested-in-collaboration-on-wireflow-co-open-source-project/40716)
