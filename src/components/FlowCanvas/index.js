@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Flow } from 'gg-editor';
 import './style.css';
 import { dataMapToData } from '../../utils/dataMapToData';
+import { saveData } from '../../utils/saveData';
 
 const data = JSON.parse(localStorage.getItem('data'));
 
@@ -49,12 +50,7 @@ const FlowCanvas = () => {
           return;
         }
 
-        localStorage.setItem(
-          'data',
-          JSON.stringify(
-            dataMapToData(e.item && e.item.dataMap, e.item.itemMap)
-          )
-        );
+        saveData(dataMapToData(e.item && e.item.dataMap, e.item.itemMap));
       }}
       data={data}
       onBeforeItemUnselected={() => setEdge({})}

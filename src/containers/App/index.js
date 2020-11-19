@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import Layout from 'antd/es/layout';
 import Row from 'antd/es/row';
 import Col from 'antd/es/col';
@@ -18,6 +18,7 @@ import FlowItemPanel from '../../components/FlowItemPanel';
 import FlowDetailPanel from '../../components/FlowDetailPanel';
 import FlowMiniMap from '../../components/FlowMiniMap';
 import ExportCanvas from '../../components/ExportCanvas';
+import { saveData } from '../../utils/saveData';
 
 GGEditor.setTrackable(false);
 
@@ -53,36 +54,32 @@ const App = () => {
     // and we don't get the updated snapshot
 
     // so using a dirty trick here
-    if (counter % 2 === 1)
-      localStorage.setItem('data', JSON.stringify(ev.command.snapShot));
+    if (counter % 2 === 1) saveData(ev.command.snapShot);
     counter += 1;
   }
 
-  return useMemo(
-    () => (
-      <Layout>
-        <GGEditor
-          onAfterCommandExecute={onAfterCommandExecute}
-          onBeforeCommandExecute={onBeforeCommandExecute}
-        >
-          <FlowItemPanel />
-          <Row style={{ marginLeft: 112 }}>
-            <Col span={19} className='text-center'>
-              <ExportCanvas />
-              <FlowToolbar />
-              <FlowCanvas />
-            </Col>
-            <Col span={5}>
-              <FlowDetailPanel />
-              <FlowMiniMap />
-            </Col>
-          </Row>
-          <NodeRegisteWithHeader />
-          <NodeRegisteWithoutHeader />
-        </GGEditor>
-      </Layout>
-    ),
-    []
+  return (
+    <Layout>
+      <GGEditor
+        onAfterCommandExecute={onAfterCommandExecute}
+        onBeforeCommandExecute={onBeforeCommandExecute}
+      >
+        <FlowItemPanel />
+        <Row style={{ marginLeft: 112 }}>
+          <Col span={19} className='text-center'>
+            <ExportCanvas />
+            <FlowToolbar />
+            <FlowCanvas />
+          </Col>
+          <Col span={5}>
+            <FlowDetailPanel />
+            <FlowMiniMap />
+          </Col>
+        </Row>
+        <NodeRegisteWithHeader />
+        <NodeRegisteWithoutHeader />
+      </GGEditor>
+    </Layout>
   );
 };
 
