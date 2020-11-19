@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 import Layout from 'antd/es/layout';
 import Row from 'antd/es/row';
 import Col from 'antd/es/col';
@@ -60,28 +60,31 @@ const App = () => {
     counter += 1;
   }
 
-  return (
-    <Layout>
-      <GGEditor
-        onAfterCommandExecute={onAfterCommandExecute}
-        onBeforeCommandExecute={onBeforeCommandExecute}
-      >
-        <FlowItemPanel />
-        <Row style={{ marginLeft: 112 }}>
-          <Col span={19} className='text-center'>
-            <ExportCanvas />
-            <FlowToolbar />
-            <FlowCanvas />
-          </Col>
-          <Col span={5}>
-            <FlowDetailPanel />
-            <FlowMiniMap />
-          </Col>
-        </Row>
-        <NodeRegisteWithHeader />
-        <NodeRegisteWithoutHeader />
-      </GGEditor>
-    </Layout>
+  return useMemo(
+    () => (
+      <Layout>
+        <GGEditor
+          onAfterCommandExecute={onAfterCommandExecute}
+          onBeforeCommandExecute={onBeforeCommandExecute}
+        >
+          <FlowItemPanel />
+          <Row style={{ marginLeft: 112 }}>
+            <Col span={19} className='text-center'>
+              <ExportCanvas />
+              <FlowToolbar />
+              <FlowCanvas />
+            </Col>
+            <Col span={5}>
+              <FlowDetailPanel />
+              <FlowMiniMap />
+            </Col>
+          </Row>
+          <NodeRegisteWithHeader />
+          <NodeRegisteWithoutHeader />
+        </GGEditor>
+      </Layout>
+    ),
+    []
   );
 };
 
