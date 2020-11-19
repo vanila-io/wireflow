@@ -4,11 +4,14 @@ import ReactDOM from 'react-dom';
 import * as serviceWorker from './serviceWorker';
 import App from './containers/App';
 import './index.css';
+import { DataProvider } from './contexts/dataContext';
 
 const Container = () => {
   return (
     <React.StrictMode>
-      <App />
+      <DataProvider>
+        <App />
+      </DataProvider>
     </React.StrictMode>
   );
 };

@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Flow } from 'gg-editor';
 import './style.css';
-
-// doesn't work in a useEffect, for some strange reason
-const initData = JSON.parse(localStorage.getItem("graph") || "{}");
+import { dataMapToData } from '../../utils/dataMapToData';
+import { DataContext } from '../../contexts/dataContext';
 
 const FlowCanvas = () => {
   const [edge, setEdge] = useState({});
   const [oncanvas, setOnCanvas] = useState(false);
 
-  const [data, setData] = useState(initData);
+  const { data, setData } = useContext(DataContext);
 
   const mouseEvent = async (e) => {
     const event = await e;
@@ -44,23 +43,14 @@ const FlowCanvas = () => {
       }}
       onAfterChange={(e) => {
         // `changeData` is caused by setData and allowing `group` causes some error
-        if (e.action === "changeData" || e.item.type === "group") return;
-        const dataMap = e.item && e.item.dataMap;
+        if (
+          e.action === 'changeData' ||
+          (e.item.type === 'group' && e.action !== 'remove')
+        ) {
+          return;
+        }
 
-        const data = { nodes: [], edges: [], groups: [] };
-        dataMap &&
-          Object.keys(dataMap).forEach((id) => {
-            const item = dataMap[id];
-            if (item.type === "node") data.nodes.push(item);
-            else if (!!item.source && !!item.target) data.edges.push(item);
-            else if (!!item.x && !!item.y) {
-              // just assuming that if an item doesn't have x and y, it's a group
-              data.groups.push(item);
-            }
-          });
-
-        setData(data);
-        localStorage.setItem("graph", JSON.stringify(data));
+        setData(dataMapToData(e.item && e.item.dataMap, e.item.itemMap));
       }}
       data={data}
       onBeforeItemUnselected={() => setEdge({})}
