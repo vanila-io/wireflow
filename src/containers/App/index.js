@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import Layout from 'antd/es/layout';
 import Row from 'antd/es/row';
 import Col from 'antd/es/col';
@@ -18,7 +18,6 @@ import FlowItemPanel from '../../components/FlowItemPanel';
 import FlowDetailPanel from '../../components/FlowDetailPanel';
 import FlowMiniMap from '../../components/FlowMiniMap';
 import ExportCanvas from '../../components/ExportCanvas';
-import { DataContext } from '../../contexts/dataContext';
 
 GGEditor.setTrackable(false);
 
@@ -43,8 +42,6 @@ const App = () => {
     }
   }
 
-  const { setData } = useContext(DataContext);
-
   function onAfterCommandExecute(ev) {
     if (!['toFront', 'toBack'].includes(ev.command.name)) return;
 
@@ -56,7 +53,8 @@ const App = () => {
     // and we don't get the updated snapshot
 
     // so using a dirty trick here
-    if (counter % 2 === 1) setData(ev.command.snapShot);
+    if (counter % 2 === 1)
+      localStorage.setItem('data', JSON.stringify(ev.command.snapShot));
     counter += 1;
   }
 

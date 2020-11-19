@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Flow } from 'gg-editor';
 import './style.css';
 import { dataMapToData } from '../../utils/dataMapToData';
-import { DataContext } from '../../contexts/dataContext';
+
+const data = JSON.parse(localStorage.getItem('data'));
 
 const FlowCanvas = () => {
   const [edge, setEdge] = useState({});
   const [oncanvas, setOnCanvas] = useState(false);
-
-  const { data, setData } = useContext(DataContext);
 
   const mouseEvent = async (e) => {
     const event = await e;
@@ -50,7 +49,12 @@ const FlowCanvas = () => {
           return;
         }
 
-        setData(dataMapToData(e.item && e.item.dataMap, e.item.itemMap));
+        localStorage.setItem(
+          'data',
+          JSON.stringify(
+            dataMapToData(e.item && e.item.dataMap, e.item.itemMap)
+          )
+        );
       }}
       data={data}
       onBeforeItemUnselected={() => setEdge({})}
