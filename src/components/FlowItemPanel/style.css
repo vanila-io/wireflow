@@ -13,7 +13,7 @@
 }
 .sidebar .ant-card-body {
   position: fixed;
-  top: 15px;
+  top: 55px;
   left: 0;
   width: 112px;
   bottom: 0;
@@ -36,7 +36,7 @@
   z-index: 9999;
 } */
 .sidebar .ant-card-body div:after {
-  content: '';
+  content: "";
   position: absolute;
   z-index: 9;
   left: 0;
@@ -45,7 +45,7 @@
   bottom: 0;
 }
 .sidebar .ant-card-body div:hover:after {
-  content: '';
+  content: "";
   position: absolute;
   z-index: 999;
   left: 0;
@@ -68,4 +68,21 @@
 ::-webkit-scrollbar {
   width: 0px;
   background: transparent; /* make scrollbar transparent */
+}
+
+.dropdown-container {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdown-container .ant-select {
+  width: 90%;
+  margin: 10px 0;
+}
+
+.ant-select-dropdown,
+.ant-select-dropdown .ant-select-item {
+  width: 120px !important;
 }
