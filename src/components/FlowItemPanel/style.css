@@ -65,10 +65,12 @@
   z-index: 9999;
   pointer-events: none;
 }
+
 .sidebar .sidebar-search {
   margin: 5px;
   width: auto;
 }
+
 .sidebar .sidebar-search input {
   font-size: 10px;
 }
