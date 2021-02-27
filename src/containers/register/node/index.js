@@ -71,7 +71,7 @@ const NodeRegisteWithHeader = () => {
             textAlign: 'center',
             fontWeight: 600,
             textBaseline: 'middle',
-            text: cfg.model.label,
+            text: (cfg.model.label.length > 23) ? cfg.model.label.substr(0, 20) + "..." : cfg.model.label,
             fill: '#94A4A5',
             fontSize: 10,
           },
