@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Flow } from 'gg-editor';
 import './style.css';
+import { dataMapToData } from '../../utils/dataMapToData';
+import { saveData } from '../../utils/saveData';
+
+const data = JSON.parse(localStorage.getItem('data'));
 
 const FlowCanvas = () => {
   const [edge, setEdge] = useState({});
@@ -37,6 +41,18 @@ const FlowCanvas = () => {
 
         setEdge(item);
       }}
+      onAfterChange={(e) => {
+        // `changeData` is caused by setData and allowing `group` causes some error
+        if (
+          e.action === 'changeData' ||
+          (e.item.type === 'group' && e.action !== 'remove')
+        ) {
+          return;
+        }
+
+        saveData(dataMapToData(e.item && e.item.dataMap, e.item.itemMap));
+      }}
+      data={data}
       onBeforeItemUnselected={() => setEdge({})}
       onMouseEnter={mouseEvent}
       onMouseLeave={mouseEvent}

@@ -18,8 +18,11 @@ import FlowItemPanel from '../../components/FlowItemPanel';
 import FlowDetailPanel from '../../components/FlowDetailPanel';
 import FlowMiniMap from '../../components/FlowMiniMap';
 import ExportCanvas from '../../components/ExportCanvas';
+import { saveData } from '../../utils/saveData';
 
 GGEditor.setTrackable(false);
+
+let counter = 0;
 
 const App = () => {
   function onBeforeCommandExecute(ev) {
@@ -40,9 +43,27 @@ const App = () => {
     }
   }
 
+  function onAfterCommandExecute(ev) {
+    if (!['toFront', 'toBack'].includes(ev.command.name)) return;
+
+    // this event is triggered twice for every `toBack` or `toFront`
+    // first time with outdated snapshot and second time with updated snapshot.
+    // there's no way to tell them apart
+
+    // if we setData with the outdated snapshot, it doesn't trigger the second time
+    // and we don't get the updated snapshot
+
+    // so using a dirty trick here
+    if (counter % 2 === 1) saveData(ev.command.snapShot);
+    counter += 1;
+  }
+
   return (
     <Layout>
-      <GGEditor onBeforeCommandExecute={onBeforeCommandExecute}>
+      <GGEditor
+        onAfterCommandExecute={onAfterCommandExecute}
+        onBeforeCommandExecute={onBeforeCommandExecute}
+      >
         <FlowItemPanel />
         <Row style={{ marginLeft: 112 }}>
           <Col span={19} className='text-center'>

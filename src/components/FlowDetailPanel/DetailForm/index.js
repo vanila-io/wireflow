@@ -180,7 +180,7 @@ class DetailForm extends React.Component {
 
   render() {
     const { type } = this.props;
-    if (!this.item) return;
+    if (!this.item) return null;
 
     return (
       <Card
