@@ -103,75 +103,75 @@ import users from '../../assets/images/Socials/Users.svg';
 
 export default [
   {
-    label: '',
+    label: 'Article',
     img: articleImage1,
   },
   {
-    label: '',
+    label: 'Article',
     img: articleImage2,
   },
   {
-    label: '',
+    label: 'Article',
     img: articleImage3,
   },
   {
-    label: '',
+    label: 'Article',
     img: articleImage4,
   },
   {
-    label: '',
+    label: 'Article',
     img: articleImage5,
   },
   {
-    label: '',
+    label: 'Article',
     img: articleImage6,
   },
   {
-    label: '',
+    label: 'Blog',
     img: blogImage1,
   },
   {
-    label: '',
+    label: 'Blog',
     img: blogImage2,
   },
   {
-    label: '',
+    label: 'Blog',
     img: blogImage3,
   },
   {
-    label: '',
+    label: 'Blog',
     img: blogImage4,
   },
   {
-    label: '',
+    label: 'Blog',
     img: blogImage5,
   },
   {
-    label: '',
+    label: 'Blog',
     img: blogImage6,
   },
   {
-    label: '',
+    label: 'Blog',
     img: blogImage7,
   },
   {
-    label: '',
+    label: 'Blog',
     img: blogImage8,
   },
   {
-    label: '',
+    label: 'Blog video',
     img: blogImage9,
   },
   {
-    label: '',
+    label: 'Blog video',
     img: blogImage10,
   },
   {
-    label: '',
+    label: 'Blog',
     img: blogImage11,
   },
   {
-    label: '',
+    label: 'Blog video',
     img: blogImage12,
   },
   {
@@ -187,19 +187,19 @@ export default [
     img: checkout,
   },
   {
-    label: 'Complete',
+    label: 'Checkout Complete',
     img: complete,
   },
   {
-    label: 'Delivery',
+    label: 'Checkout Delivery',
     img: delivery,
   },
   {
-    label: '',
+    label: 'Product Item',
     img: ecomItem2,
   },
   {
-    label: '',
+    label: 'Product Item',
     img: ecomItem,
   },
   {
@@ -207,307 +207,307 @@ export default [
     img: paypal,
   },
   {
-    label: '',
+    label: 'Product Item',
     img: products1,
   },
   {
-    label: '',
+    label: 'Product Item',
     img: products2,
   },
   {
-    label: '',
+    label: 'Product Item',
     img: products3,
   },
   {
-    label: '',
+    label: 'Rate',
     img: rate,
   },
   {
-    label: '',
+    label: 'Feature',
     img: feature1,
   },
   {
-    label: '',
+    label: 'Feature',
     img: feature2,
   },
   {
-    label: '',
+    label: 'Feature',
     img: feature3,
   },
   {
-    label: '',
+    label: 'Feature',
     img: feature4,
   },
   {
-    label: '',
+    label: 'Feature',
     img: feature5,
   },
   {
-    label: '',
+    label: 'Feature',
     img: feature6,
   },
   {
-    label: '',
+    label: 'Gallery Image',
     img: gallery1,
   },
   {
-    label: '',
+    label: 'Gallery Image',
     img: gallery2,
   },
   {
-    label: '',
+    label: 'Gallery Image',
     img: gallery3,
   },
   {
-    label: '',
+    label: 'Gallery Image',
     img: gallery4,
   },
   {
-    label: '',
+    label: 'Gallery Image',
     img: gallery5,
   },
   {
-    label: '',
+    label: 'Gallery Image',
     img: gallery6,
   },
   {
-    label: '',
+    label: 'Header Image',
     img: header1,
   },
   {
-    label: '',
+    label: 'Header Image',
     img: header2,
   },
   {
-    label: '',
+    label: 'Header Video',
     img: header3,
   },
   {
-    label: '',
+    label: 'Header Video',
     img: header4,
   },
   {
-    label: '',
+    label: 'Header Image',
     img: header5,
   },
   {
-    label: '',
+    label: 'Header Image',
     img: header6,
   },
   {
-    label: '',
+    label: 'Not Found 404',
     img: error404,
   },
   {
-    label: '',
+    label: 'About',
     img: about,
   },
   {
-    label: '',
+    label: 'Analitycs Chart',
     img: analitycs,
   },
   {
-    label: '',
+    label: 'Calender Schedule',
     img: calender,
   },
   {
-    label: '',
+    label: 'Cards',
     img: cards,
   },
   {
-    label: '',
+    label: 'Contact',
     img: contact,
   },
   {
-    label: '',
+    label: 'Counter Timer',
     img: counter,
   },
   {
-    label: '',
+    label: 'Error Fail',
     img: error,
   },
   {
-    label: '',
+    label: 'FAQS',
     img: faqs,
   },
   {
-    label: '',
+    label: 'Forum',
     img: forum,
   },
   {
-    label: '',
+    label: 'Loading Progress',
     img: loading,
   },
   {
-    label: '',
+    label: 'Price',
     img: price1,
   },
   {
-    label: '',
+    label: 'Price',
     img: price2,
   },
   {
-    label: '',
+    label: 'Loading Progress',
     img: progress,
   },
   {
-    label: '',
+    label: 'Search Results',
     img: searchresults,
   },
   {
-    label: '',
+    label: 'Search',
     img: search,
   },
   {
-    label: '',
+    label: 'Settings',
     img: settings,
   },
   {
-    label: '',
+    label: 'Sitemap',
     img: sitemap,
   },
   {
-    label: '',
+    label: 'Socials',
     img: socials,
   },
   {
-    label: '',
+    label: 'Steps',
     img: steps,
   },
   {
-    label: '',
+    label: 'Subscribe',
     img: subscribde,
   },
   {
-    label: '',
+    label: 'Tags',
     img: tags,
   },
   {
-    label: '',
+    label: 'Team',
     img: team,
   },
   {
-    label: '',
+    label: 'Under Contruction',
     img: underContruction,
   },
   {
-    label: '',
+    label: 'Files',
     img: files,
   },
   {
-    label: '',
+    label: 'Media Songs',
     img: songs1,
   },
   {
-    label: '',
+    label: 'Media Songs',
     img: songs2,
   },
   {
-    label: '',
+    label: 'Media Songs',
     img: songs3,
   },
   {
-    label: '',
+    label: 'Upload Files',
     img: uploadFiles,
   },
   {
-    label: '',
+    label: 'Upload Image',
     img: uploadImage,
   },
   {
-    label: '',
+    label: 'Video Player',
     img: videoPlayer1,
   },
   {
-    label: '',
+    label: 'Video Player',
     img: videoPlayer2,
   },
   {
-    label: '',
+    label: 'Video',
     img: videos1,
   },
   {
-    label: '',
+    label: 'Video',
     img: videos2,
   },
   {
-    label: '',
+    label: 'Video',
     img: videos3,
   },
   {
-    label: '',
+    label: 'Video',
     img: videos4,
   },
   {
-    label: '',
+    label: 'Forgot Password',
     img: forgotPassword1,
   },
   {
-    label: '',
+    label: 'Forgot Password',
     img: forgotPassword2,
   },
   {
-    label: '',
+    label: 'Sign In',
     img: signin1,
   },
   {
-    label: '',
+    label: 'Sign In',
     img: signin2,
   },
   {
-    label: '',
+    label: 'Sign Up',
     img: signUp1,
   },
   {
-    label: '',
+    label: 'Sign Up',
     img: signUp2,
   },
   {
-    label: '',
+    label: 'Chat',
     img: chat,
   },
   {
-    label: '',
+    label: 'Comments',
     img: comments,
   },
   {
-    label: '',
+    label: 'Connection',
     img: connection,
   },
   {
-    label: '',
+    label: 'Feeds',
     img: feeds,
   },
   {
-    label: '',
+    label: 'Profile',
     img: profile1,
   },
   {
-    label: '',
+    label: 'Profile',
     img: profile2,
   },
   {
-    label: '',
+    label: 'Profile',
     img: profile3,
   },
   {
-    label: '',
+    label: 'Profile',
     img: profile4,
   },
   {
-    label: '',
+    label: 'User Settings',
     img: userSettings2,
   },
   {
-    label: '',
+    label: 'User Settings',
     img: userSettings,
   },
   {
-    label: '',
+    label: 'User',
     img: users2,
   },
   {
-    label: '',
+    label: 'User',
     img: users,
   },
 ];
