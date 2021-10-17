@@ -15,6 +15,9 @@
   text-indent: -9999px;
   cursor: pointer;
 }
+.ant-alert {
+  z-index: 999;
+}
 #canvas_1 {
   background: #f0f2f5;
 }

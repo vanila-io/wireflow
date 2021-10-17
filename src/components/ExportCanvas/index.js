@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Button from 'antd/es/button';
 import Dropdown from 'antd/es/dropdown';
 import Menu from 'antd/es/menu';
+import Alert from 'antd/es/alert';
 import { MoreOutlined, ExportOutlined, ImportOutlined } from '@ant-design/icons';
 import 'antd/es/button/style/css';
 import 'antd/es/dropdown/style/css';
 import 'antd/es/menu/style/css';
+import 'antd/es/alert/style/css';
 import htmlToImage from 'html-to-image';
 import { ContextMenu, Command, CanvasMenu } from 'gg-editor';
 
@@ -13,6 +15,7 @@ import IconFont from '../IconFont';
 import './style.css';
 
 const ExportCanvas = () => {  
+  const [error, setError] = useState(null)
   function saveCanvas() {
     htmlToImage
       .toJpeg(document.getElementById('canvas_1'), { quality: 1 })
@@ -35,13 +38,21 @@ const ExportCanvas = () => {
 
   function importCanvas(event, b) {    
     const r = new FileReader();
-    const file = event.target.files[0];    
+    const file = event.target.files[0];   
     r.onloadend = function(){      
-      const data = atob(r.result.replace('data:application/json;base64,', ''));
-      localStorage.setItem('data', data);      
-      window.location.reload();
+      try {
+        const data = atob(r.result.replace('data:application/json;base64,', ''));
+        localStorage.setItem('data', data);      
+        window.location.reload();
+      } catch (error) {
+        setError(`Unable to import file. ${error}`)
+      }
     }
     r.readAsDataURL(file);
+  }
+
+  function hideError() {
+    setError(null)
   }
 
   const menu = (
@@ -87,6 +98,14 @@ const ExportCanvas = () => {
               </Button>  
             </Dropdown>            
           </div>
+          {error && <Alert
+            message="Error"
+            description={error}
+            type="error"
+            showIcon
+            closable
+            onClose={hideError}
+          />}
         </Command>
       </CanvasMenu>
     </ContextMenu>
