@@ -15,7 +15,7 @@ import IconFont from '../IconFont';
 import './style.css';
 
 const ExportCanvas = () => {  
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(null);
   function saveCanvas() {
     htmlToImage
       .toJpeg(document.getElementById('canvas_1'), { quality: 1 })
@@ -29,14 +29,14 @@ const ExportCanvas = () => {
 
   function exportCanvas() {
     const data = localStorage.getItem('data');    
-    const blob = new Blob([data], {type: 'application/json'})    
+    const blob = new Blob([data], {type: 'application/json'});
     const link = document.createElement('a');
     link.download = 'wireflow.json';
     link.href = URL.createObjectURL(blob);
     link.click();
   }  
 
-  function importCanvas(event, b) {    
+  function importCanvas(event) {    
     const r = new FileReader();
     const file = event.target.files[0];   
     r.onloadend = function(){      
@@ -47,12 +47,12 @@ const ExportCanvas = () => {
       } catch (error) {
         setError(`Unable to import file. ${error}`)
       }
-    }
+    };
     r.readAsDataURL(file);
   }
 
   function hideError() {
-    setError(null)
+    setError(null);
   }
 
   const menu = (
