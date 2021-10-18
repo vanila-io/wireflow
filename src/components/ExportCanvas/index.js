@@ -45,7 +45,7 @@ const ExportCanvas = () => {
         localStorage.setItem('data', data);      
         window.location.reload();
       } catch (error) {
-        setError(`Unable to import file. ${error}`)
+        setError(`Unable to import file. ${error}`);
       }
     };
     r.readAsDataURL(file);
