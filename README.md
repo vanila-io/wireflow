@@ -6,7 +6,7 @@
 [![OpenCollective](https://opencollective.com/wireflow/backers/badge.svg)](#backers) 
 [![OpenCollective](https://opencollective.com/wireflow/sponsors/badge.svg)](#sponsors)
 
-Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io) and [UX Store](https://uxstore.com).
+Alpha version of Wireflow app made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automatio.ai).
 
 ### Official Website: [Wireflow.co](https://wireflow.co)
 
