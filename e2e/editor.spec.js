@@ -1,58 +1,17 @@
 import { readFile } from 'node:fs/promises';
-import { test as base, expect } from '@playwright/test';
-
-// Every test fails if the app logs a console error or throws an uncaught error.
-const test = base.extend({
-  page: async ({ page }, runTest) => {
-    const errors = [];
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') errors.push(msg.text());
-    });
-    page.on('pageerror', (error) => errors.push(error.message));
-    await runTest(page);
-    expect(errors, 'console errors / uncaught page errors').toEqual([]);
-  },
-});
-
-// The diagram the app autosaves to localStorage on every change.
-const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('data')));
-
-const templates = (page) => page.locator('.sidebar img');
-const panelTitle = (page) => page.locator('.details .ant-card-head-title');
-const nodeLabelInput = (page) => page.locator('.details input[name=title]');
-const command = (page, name) => page.locator(`.toolbar .command[data-command="${name}"]`);
-
-async function openEditor(page) {
-  await page.goto('/');
-  await expect(page.locator('#canvas_1')).toBeVisible();
-}
-
-// Page coordinates of a point given in canvas coordinates (the canvas opens at zoom 1).
-async function onCanvas(page, x, y) {
-  const box = await page.locator('#canvas_1').boundingBox();
-  return { x: box.x + x, y: box.y + y };
-}
-
-// Drag the sidebar template at `index` and drop it so the node is centred on `at`.
-async function dropTemplate(page, index, at) {
-  const item = templates(page).nth(index);
-  await item.scrollIntoViewIfNeeded();
-  const box = await item.boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(at.x, at.y, { steps: 15 });
-  await page.mouse.up();
-}
-
-// Templates are 96 px wide. G6 shows anchors only while the node is hovered and
-// hit-tests on every mousemove, so approach the anchor and drag in small steps.
-async function connect(page, from, to) {
-  await page.mouse.move(from.x, from.y, { steps: 5 });
-  await page.mouse.move(from.x + 48, from.y, { steps: 10 }); // right anchor of `from`
-  await page.mouse.down();
-  await page.mouse.move(to.x - 48, to.y, { steps: 40 }); // left anchor of `to`
-  await page.mouse.up();
-}
+import {
+  test,
+  expect,
+  saved,
+  templates,
+  panelTitle,
+  nodeLabelInput,
+  command,
+  openEditor,
+  onCanvas,
+  dropTemplate,
+  connect,
+} from './helpers.js';
 
 test('app shell loads with templates, toolbar, minimap and canvas panel', async ({ page }) => {
   await openEditor(page);
