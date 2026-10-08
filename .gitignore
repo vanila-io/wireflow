@@ -104,3 +104,8 @@ dist
 .tern-port
 
 build
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ItemPanel } from 'gg-editor';
-import { Card, Input } from 'antd/es';
-import 'antd/es/card/style/css';
+import { Card, Input } from 'antd';
 
 import NodeItem from './NodeItem';
 import nodes from './nodesData';
@@ -18,7 +17,7 @@ const FlowItemPanel = () => {
 
   return (
     <ItemPanel className='sidebar-wrapper'> 
-      <Card className='sidebar' bodyStyle={{ padding: 0 }}>
+      <Card className='sidebar' styles={{ body: { padding: 0 } }}>
         <Input.Search className='sidebar-search' placeholder='Search' allowClear size='small' onChange={onChange} />
         {items && items.map((item, i) => <NodeItem key={i} {...item} />)}
       </Card>

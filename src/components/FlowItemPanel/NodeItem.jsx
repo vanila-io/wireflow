@@ -1,4 +1,3 @@
-import React from 'react';
 import { Item } from 'gg-editor';
 
 const NodeItem = (props) => {

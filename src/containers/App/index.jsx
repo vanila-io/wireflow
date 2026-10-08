@@ -1,12 +1,5 @@
-import React from 'react';
-import Layout from 'antd/es/layout';
-import Row from 'antd/es/row';
-import Col from 'antd/es/col';
+import { Col, Layout, Row } from 'antd';
 import GGEditor from 'gg-editor';
-
-import 'antd/es/layout/style/css';
-import 'antd/es/row/style/css';
-import 'antd/es/col/style/css';
 
 import {
   NodeRegisteWithHeader,

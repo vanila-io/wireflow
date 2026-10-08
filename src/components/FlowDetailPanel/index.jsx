@@ -1,8 +1,4 @@
-import React from 'react';
-import Card from 'antd/es/card';
-import 'antd/es/card/style/css';
-import Descriptions from 'antd/es/descriptions';
-import 'antd/es/descriptions/style/css';
+import { Card, Descriptions } from 'antd';
 import {
   CanvasPanel,
   DetailPanel,
@@ -14,6 +10,27 @@ import {
 
 import DetailForm from './DetailForm';
 import './style.css';
+
+const canvasShortcuts = [
+  {
+    key: 'zoomIn',
+    label: 'Zoom in',
+    children: (
+      <>
+        <code>Ctrl</code> + <code> =</code>
+      </>
+    ),
+  },
+  {
+    key: 'zoomOut',
+    label: 'Zoom out',
+    children: (
+      <>
+        <code>Ctrl</code> + <code>-</code>
+      </>
+    ),
+  },
+];
 
 const FlowDetailPanel = () => {
   return (
@@ -33,7 +50,7 @@ const FlowDetailPanel = () => {
           size='small'
           title='Multi Select'
           className='details__card'
-          bordered={false}
+          variant='borderless'
         />
       </MultiPanel>
       <CanvasPanel>
@@ -42,21 +59,15 @@ const FlowDetailPanel = () => {
           size='small'
           title='Canvas'
           className='details__card'
-          bordered={false}
+          variant='borderless'
         >
           <Descriptions
             column={1}
             layout='horizontal'
             bordered
             title='Keyboard Shortcuts'
-          >
-            <Descriptions.Item label='Zoom in'>
-              <code>Ctrl</code> + <code> =</code>
-            </Descriptions.Item>
-            <Descriptions.Item label='Zoom out'>
-              <code>Ctrl</code> + <code>-</code>
-            </Descriptions.Item>
-          </Descriptions>
+            items={canvasShortcuts}
+          />
         </Card>
       </CanvasPanel>
     </DetailPanel>

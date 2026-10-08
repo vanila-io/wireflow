@@ -1,10 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Flow } from 'gg-editor';
 import './style.css';
 import { dataMapToData } from '../../utils/dataMapToData';
 import { saveData } from '../../utils/saveData';
 
+// Diagrams saved by the old Create React App build point at template images as
+// /static/media/<file>.<hash>.svg, which the Vite build no longer serves.
+// Re-point them at the current URL of the same template file.
+const templateUrls = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('../../assets/images/*/*.svg', { eager: true, import: 'default' })
+  ).map(([path, url]) => [path.split('/').pop(), url])
+);
+
 const data = JSON.parse(localStorage.getItem('data'));
+data?.nodes?.forEach((node) => {
+  const legacy = /\/static\/media\/(.+)\.[0-9a-f]{8}\.svg$/.exec(node.img);
+  if (legacy && templateUrls[`${legacy[1]}.svg`]) node.img = templateUrls[`${legacy[1]}.svg`];
+});
 
 const FlowCanvas = () => {
   const [edge, setEdge] = useState({});
@@ -30,6 +43,8 @@ const FlowCanvas = () => {
 
   useEffect(() => {
     if (edge.type === 'edge') {
+      // `edge` is a mutable G6 item instance owned by gg-editor, not React data.
+      // eslint-disable-next-line react-hooks/immutability
       oncanvas ? (edge.isSelected = false) : (edge.isSelected = true);
     }
   }, [oncanvas, edge]);

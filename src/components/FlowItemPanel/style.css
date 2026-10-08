@@ -23,7 +23,7 @@
   z-index: 1000;
   text-align: center;
 }
-.sidebar .ant-card-body div {
+.sidebar .ant-card-body > div:not(.sidebar-search) {
   padding: 4px 16px;
   transition: all 0.1s ease;
   background: #ffffff;
@@ -35,7 +35,7 @@
   position: relative;
   z-index: 9999;
 } */
-.sidebar .ant-card-body div:after {
+.sidebar .ant-card-body > div:not(.sidebar-search):after {
   content: '';
   position: absolute;
   z-index: 9;
@@ -44,7 +44,7 @@
   top: 0;
   bottom: 0;
 }
-.sidebar .ant-card-body div:hover:after {
+.sidebar .ant-card-body > div:not(.sidebar-search):hover:after {
   content: '';
   position: absolute;
   z-index: 999;
@@ -53,7 +53,7 @@
   top: 0;
   bottom: 0;
 }
-.sidebar .ant-card-body div:hover {
+.sidebar .ant-card-body > div:not(.sidebar-search):hover {
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
   transform: scale(1.15);
   z-index: 999;
