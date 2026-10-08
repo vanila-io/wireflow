@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   build: {
-    // Netlify and the Dockerfile publish this directory.
+    // Netlify, Cloudflare Workers (wrangler.jsonc) and the Dockerfile publish this directory.
     outDir: 'build',
   },
   test: {

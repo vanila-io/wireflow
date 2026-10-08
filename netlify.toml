@@ -1,0 +1,8 @@
+# Netlify (wireflow-app.netlify.app): serve index.html for unknown paths.
+# This lives here rather than in public/_redirects because Cloudflare Workers
+# reads build/_redirects and rejects this rule as an infinite loop; Workers
+# gets the same fallback from not_found_handling in wrangler.jsonc.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
