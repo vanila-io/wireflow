@@ -90,6 +90,37 @@ docker compose up -d --build
 
 Then open http://localhost:8083. The image builds the app in a Node 24 stage and serves the static `build/` output with nginx. Stop it with `docker compose down`.
 
+## Deploy
+
+The app is a static site, so any static host can serve `build/`. The live demo runs on Netlify, which reads its single-page fallback rule from `netlify.toml`.
+
+### Cloudflare Workers (staging)
+
+`wrangler.jsonc` serves `build/` as [Workers static assets](https://developers.cloudflare.com/workers/static-assets/), with no Worker script. Its `staging` environment deploys to a separate Worker, `wireflow-staging`, at `https://wireflow-staging.<your-subdomain>.workers.dev`. Per-version preview URLs are turned off.
+
+Deploy the `staging` branch from your machine:
+
+```bash
+pnpm exec wrangler login                  # first time only
+git switch staging
+pnpm install
+pnpm build
+pnpm exec wrangler dev --env staging      # optional: try it at http://localhost:8787
+pnpm exec wrangler deploy --env staging
+```
+
+Production will be the `wireflow` Worker, deployed from `main` with `pnpm build && pnpm exec wrangler deploy`. It isn't set up yet.
+
+To deploy on every push to `staging` instead, connect the repository in the Cloudflare dashboard (**Workers & Pages** → `wireflow-staging` → **Settings** → **Builds** → **Connect**) and use these settings:
+
+| Setting               | Value                                                             |
+| --------------------- | ----------------------------------------------------------------- |
+| Git branch            | `staging`                                                         |
+| Build command         | `pnpm build`                                                      |
+| Deploy command        | `pnpm exec wrangler deploy --env staging`                         |
+| Enable Preview Builds | Off, so pull requests and other branches never build or deploy    |
+| Build variable        | `PNPM_VERSION` = `12.10.1` (the build image defaults to pnpm 10)  |
+
 ## Keyboard shortcuts
 
 | Shortcut                   | Action                                   |
@@ -116,7 +147,7 @@ Then open http://localhost:8083. The image builds the app in a Node 24 stage and
 .
 ├── docs/                 README images (animated SVGs, screenshot)
 ├── e2e/                  Playwright end-to-end specs
-├── public/               static files copied as-is (icons, manifest, Netlify _redirects)
+├── public/               static files copied as-is (icons, manifest, service worker)
 ├── src/
 │   ├── assets/images/    wireframe screen templates (SVG), one folder per category
 │   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export button
@@ -127,7 +158,9 @@ Then open http://localhost:8083. The image builds the app in a Node 24 stage and
 ├── playwright.config.js  Playwright config
 ├── eslint.config.js      ESLint flat config
 ├── Dockerfile            Node 24 build stage + nginx runtime
-└── docker-compose.yml    serves the app on port 8083
+├── docker-compose.yml    serves the app on port 8083
+├── netlify.toml          Netlify single-page fallback rule
+└── wrangler.jsonc        Cloudflare Workers config (staging environment)
 ```
 
 ## Contributing

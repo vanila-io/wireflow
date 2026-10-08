@@ -109,3 +109,6 @@ build
 test-results/
 playwright-report/
 blob-report/
+
+# Cloudflare Wrangler local state
+.wrangler/
