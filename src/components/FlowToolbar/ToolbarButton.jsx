@@ -1,7 +1,5 @@
-import React from 'react';
 import { Command } from 'gg-editor';
-import Tooltip from 'antd/es/tooltip';
-import 'antd/es/tooltip/style/css';
+import { Tooltip } from 'antd';
 
 import { upperFirst } from '../../utils';
 import IconFont from '../IconFont';

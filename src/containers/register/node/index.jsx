@@ -1,4 +1,3 @@
-import React from 'react';
 import { RegisterNode } from 'gg-editor';
 
 const NodeRegisteWithoutHeader = () => {
@@ -26,7 +25,7 @@ const NodeRegisteWithoutHeader = () => {
         draggable: true,
       });
     },
-    drawLabel(t) {},
+    drawLabel() {},
   };
 
   return (
@@ -78,7 +77,7 @@ const NodeRegisteWithHeader = () => {
         });
       }
     },
-    drawLabel(t) {},
+    drawLabel() {},
   };
 
   return (

@@ -1,0 +1,11 @@
+# core-js's postinstall only prints a funding banner; nothing depends on it running.
+allowBuilds:
+  core-js: false
+
+# gg-editor 2.x imports @babel/runtime (Babel 7) helpers without declaring the
+# dependency. Declare it for gg-editor itself instead of relying on whichever
+# runtime copy antd's sub-dependencies happen to hoist (both 7.x and 8.x exist).
+packageExtensions:
+  gg-editor@2:
+    dependencies:
+      '@babel/runtime': ^7.0.0

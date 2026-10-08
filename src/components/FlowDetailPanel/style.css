@@ -11,28 +11,30 @@ code {
   font-size: 13px;
 }
 
-.react-colorful {
+/* react-colorful 5 injects its own <style> at runtime, after this file loads,
+   so these overrides are scoped under .details to win on specificity. */
+.details .react-colorful {
   width: 100%;
   height: 150px;
   cursor: pointer;
 }
 
-.react-colorful__saturation,
-.react-colorful__hue {
+.details .react-colorful__saturation,
+.details .react-colorful__hue {
   border-radius: 3px;
 }
 
-.react-colorful__saturation {
+.details .react-colorful__saturation {
   margin-bottom: 10px;
   border-bottom: none;
 }
 
-.react-colorful__hue {
+.details .react-colorful__hue {
   height: 6px;
 }
 
-.react-colorful__saturation-pointer,
-.react-colorful__hue-pointer {
+.details .react-colorful__saturation-pointer,
+.details .react-colorful__hue-pointer {
   width: 16px;
   height: 16px;
   z-index: auto;

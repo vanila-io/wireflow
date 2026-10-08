@@ -1,7 +1,5 @@
-import React from 'react';
 import { Toolbar } from 'gg-editor';
-import Divider from 'antd/es/divider';
-import 'antd/es/divider/style/css';
+import { Divider } from 'antd';
 
 import ToolbarButton from './ToolbarButton';
 import './style.css';
@@ -11,11 +9,11 @@ const FlowToolbar = () => {
     <Toolbar className='toolbar'>
       <ToolbarButton command='undo' />
       <ToolbarButton command='redo' />
-      <Divider type='vertical' />
+      <Divider orientation='vertical' />
       <ToolbarButton command='copy' />
       <ToolbarButton command='paste' />
       <ToolbarButton command='delete' />
-      <Divider type='vertical' />
+      <Divider orientation='vertical' />
       <ToolbarButton command='zoomIn' icon='zoomin' text='Zoom In' />
       <ToolbarButton command='zoomOut' icon='zoomout' text='Zoom Out' />
       <ToolbarButton command='autoZoom' icon='fit-map' text='Fit Map' />
@@ -24,10 +22,10 @@ const FlowToolbar = () => {
         icon='actual-size'
         text='Actual Size'
       />
-      <Divider type='vertical' />
+      <Divider orientation='vertical' />
       <ToolbarButton command='toBack' icon='to-back' text='To Back' />
       <ToolbarButton command='toFront' icon='to-front' text='To Front' />
-      <Divider type='vertical' />
+      <Divider orientation='vertical' />
       <ToolbarButton
         command='multiSelect'
         icon='multi-select'
