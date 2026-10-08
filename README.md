@@ -3,7 +3,6 @@
 </p>
 
 <p align="center">
-  <a href="https://app.netlify.com/sites/wireflow-app/deploys"><img src="https://api.netlify.com/api/v1/badges/15abd946-68e7-4cdb-8d9e-4930d5a2191c/deploy-status" alt="Netlify status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
   <a href="#backers"><img src="https://opencollective.com/wireflow/backers/badge.svg" alt="OpenCollective backers"></a>
   <a href="#sponsors"><img src="https://opencollective.com/wireflow/sponsors/badge.svg" alt="OpenCollective sponsors"></a>
@@ -11,7 +10,6 @@
 
 <p align="center">
   <a href="https://wireflow.co"><b>Website</b></a> ·
-  <a href="https://wireflow-app.netlify.app"><b>Live demo</b></a> ·
   <a href="https://www.producthunt.com/posts/wireflow">Product Hunt</a>
 </p>
 
@@ -92,7 +90,7 @@ Then open http://localhost:8083. The image builds the app in a Node 24 stage and
 
 ## Deploy
 
-The app is a static site, so any static host can serve `build/`. The live demo runs on Netlify, which reads its single-page fallback rule from `netlify.toml`.
+The app is a static site, so any static host can serve `build/`.
 
 ### Cloudflare Workers (staging)
 
@@ -159,7 +157,6 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 ├── eslint.config.js      ESLint flat config
 ├── Dockerfile            Node 24 build stage + nginx runtime
 ├── docker-compose.yml    serves the app on port 8083
-├── netlify.toml          Netlify single-page fallback rule
 └── wrangler.jsonc        Cloudflare Workers config (staging environment)
 ```
 
