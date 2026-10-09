@@ -38,17 +38,23 @@ const ExportCanvas = ({ propsAPI }) => {
     propsAPI.currentPage.clearSelected(); // so the detail panel lets go of the old item
     try {
       propsAPI.read(diagram);
-    } catch {
+      saveData(diagram);
+    } catch (error) {
+      // Put the previous diagram back. A failed setItem leaves localStorage as it was.
       propsAPI.read(previous);
-      messageApi.error(`Couldn't open ${name}. The diagram in it couldn't be drawn.`);
+      const reason = error?.name === 'QuotaExceededError'
+        ? "It's too big to keep in this browser's storage."
+        : "The diagram in it couldn't be drawn.";
+      messageApi.error(`Couldn't open ${name}. ${reason}`);
       return;
     }
-    // Undo/redo replay snapshots of the previous diagram, so start a fresh history.
+    // Undo/redo would replay snapshots of the previous diagram, so start a fresh history.
+    // gg-editor 2 has no public API for this; `_command` is gg-editor-core 1.3.4's
+    // { queue, current } undo stack, which undo/redo and the toolbar read.
     const history = propsAPI.editor.get('_command');
     history.queue = [];
     history.current = 0;
     propsAPI.editor.setCommandDOMenable();
-    saveData(diagram);
     messageApi.success(`Opened ${name}`);
   }
 

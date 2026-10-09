@@ -211,3 +211,23 @@ test('a hand-made file with loose edges, edges without a style and odd keys open
   await expect(panelTitle(page)).toHaveText(['Edge']);
   expect((await saved(page)).edges.map((edge) => edge.target)).toEqual(['b', { x: 300, y: 560 }]);
 });
+
+test('a diagram too big for browser storage is not opened', async ({ page }) => {
+  await openEditor(page);
+  const at = await onCanvas(page, 300, 300);
+  await dropTemplate(page, CART, at);
+  await expect.poll(async () => (await saved(page))?.nodes.length).toBe(1);
+  const before = await saved(page);
+
+  // localStorage holds a few MB per site in every browser.
+  const [checkout] = loneCheckout.diagram.nodes;
+  const huge = { ...loneCheckout, diagram: { ...loneCheckout.diagram, nodes: [{ ...checkout, label: 'x'.repeat(16_000_000) }] } };
+  await openFile(page, jsonFile('huge.json', huge));
+  await confirmDialog(page).getByRole('button', { name: 'Replace' }).click();
+  await expect(toast(page)).toHaveText("Couldn't open huge.json. It's too big to keep in this browser's storage.");
+  await expect(confirmDialog(page)).toHaveCount(0);
+
+  expect(await saved(page)).toEqual(before);
+  await page.mouse.click(at.x, at.y);
+  await expect(nodeLabelInput(page)).toHaveValue('Cart');
+});
