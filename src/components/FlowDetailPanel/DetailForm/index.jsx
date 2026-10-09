@@ -148,7 +148,8 @@ class DetailForm extends Component {
 
     if (type === 'edge') {
       const { label = '', shape = 'flow-polyline-round', color, style } = model;
-      return { label, shape, size: style.lineWidth, color };
+      // An edge from an opened or older file may have no style.
+      return { label, shape, size: style?.lineWidth, color };
     }
     if (type === 'group') {
       const { label = 'Group' } = model;

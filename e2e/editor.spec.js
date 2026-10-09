@@ -405,3 +405,26 @@ test('a diagram saved by the pre-Vite app still loads, with its template images'
     expect(response.headers()['content-type']).toContain('image/svg+xml');
   }
 });
+
+test('an edge saved without a style can still be selected and recolored', async ({ page }) => {
+  const data = {
+    nodes: [
+      { type: 'node', size: [96, 88], label: 'Sign in', x: 250, y: 250, id: '3c1f0a2b', shape: 'node-image-header' },
+      { type: 'node', size: [96, 88], label: 'Cart', x: 550, y: 250, id: '9d4e7b10', shape: 'node-image-header' },
+    ],
+    edges: [{ source: '3c1f0a2b', sourceAnchor: 1, target: '9d4e7b10', targetAnchor: 3, shape: 'flow-smooth', color: '#1890ff', id: '5a6b7c8d' }],
+    groups: [],
+  };
+  await page.addInitScript((data) => {
+    if (localStorage.getItem('data') === null) localStorage.setItem('data', JSON.stringify(data));
+  }, data);
+  await openEditor(page);
+
+  const signIn = await onCanvas(page, 250, 250);
+  await page.mouse.click(signIn.x + 150, signIn.y);
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+  await expect(colorTrigger(page)).toHaveText('#1890FF');
+  await colorTrigger(page).click();
+  await colorPicker(page).locator('.ant-color-picker-hex-input input').fill('E8590C');
+  await expect.poll(async () => (await saved(page)).edges[0].color).toBe('#e8590c');
+});
