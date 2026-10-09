@@ -30,6 +30,12 @@ describe('template catalog', () => {
     }
   });
 
+  it('has an up-to-date size for every graphic (run node tools/graphic-sizes.mjs)', async () => {
+    const { graphicRatios } = await import('@/tools/graphic-sizes.mjs');
+    const sizes = (await import('@/data/graphic-sizes.json')).default;
+    expect(sizes).toEqual(graphicRatios());
+  });
+
   it('finds graphics by id and by category', () => {
     expect(graphicById('article-article-1')?.label).toBe('Article');
     expect(graphicById('nope')).toBeUndefined();
