@@ -64,18 +64,21 @@ const FlowItemPanel = () => {
 
             return (
               <section key={category} className='sidebar-category'>
-                <button
-                  type='button'
-                  className='sidebar-category-toggle'
-                  aria-expanded={expanded}
-                  aria-controls={id}
-                  disabled={searching}
-                  onClick={(e) => toggle(e.currentTarget, category)}
-                >
-                  <RightOutlined className='sidebar-category-caret' />
-                  <span className='sidebar-category-name'>{category}</span>
-                  <span className='sidebar-category-count'>{items.length}</span>
-                </button>
+                <h2 className='sidebar-category-heading'>
+                  <button
+                    type='button'
+                    className='sidebar-category-toggle'
+                    aria-expanded={expanded}
+                    // Collapsed categories render no list, so there is nothing to point at.
+                    aria-controls={expanded ? id : undefined}
+                    disabled={searching}
+                    onClick={(e) => toggle(e.currentTarget, category)}
+                  >
+                    <RightOutlined className='sidebar-category-caret' aria-hidden />
+                    <span className='sidebar-category-name'>{category}</span>
+                    <span className='sidebar-category-count'>{items.length}</span>
+                  </button>
+                </h2>
                 {expanded && (
                   <div id={id}>
                     {items.map((item, i) => (

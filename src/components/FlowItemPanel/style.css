@@ -40,15 +40,18 @@
 }
 
 /* A category's heading stays pinned at the top of the list while you scroll through it. */
-.sidebar-category-toggle {
+.sidebar-category-heading {
   position: sticky;
   top: 0;
   z-index: 2;
+  margin: 0;
+}
+.sidebar-category-toggle {
   display: flex;
   align-items: center;
   gap: 4px;
   width: 100%;
-  padding: 6px 8px;
+  padding: 6px;
   border: 0;
   border-top: 1px solid #f0f0f0;
   background: #ffffff;

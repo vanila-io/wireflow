@@ -106,6 +106,30 @@ test('collapsing the category you have scrolled into keeps its heading where it 
   await expect(template(page, 'Multimedia', 'Files')).toBeInViewport();
 });
 
+test('category toggles are named headings that work from the keyboard', async ({ page }) => {
+  await openEditor(page);
+  const article = categoryToggle(page, 'Article');
+  await expect(page.locator('.sidebar-category').first()).toMatchAriaSnapshot(`
+    - heading "Article 6" [level=2]:
+      - button "Article 6" [expanded]
+  `);
+
+  await article.focus();
+  await page.keyboard.press('Enter');
+  await expect(article).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('Space');
+  await expect(article).toHaveAttribute('aria-expanded', 'true');
+  await expect(article).toBeFocused();
+
+  // aria-controls may only name a list that is on the page; a collapsed category has none.
+  await categoryToggle(page, 'Blog').click();
+  await expect(categoryToggle(page, 'Blog')).toHaveAttribute('aria-expanded', 'false');
+  const dangling = await page.locator('.sidebar-category-toggle').evaluateAll((buttons) =>
+    buttons.filter((b) => b.hasAttribute('aria-controls') && !document.getElementById(b.getAttribute('aria-controls'))).map((b) => b.textContent),
+  );
+  expect(dangling).toEqual([]);
+});
+
 test('sidebar search matches template and category names across categories', async ({ page }) => {
   await openEditor(page);
   const total = await templates(page).count();
