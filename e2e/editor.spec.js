@@ -191,7 +191,8 @@ test('edge color can be typed as hex and reused from the colors already in the d
   await colorTrigger(page).click();
   await expect(presets('Palette').first()).toHaveClass(/presets-color-checked/); // the default edge color
   await expect(used).toHaveCount(1); // both edges still have the default color
-  await colorPicker(page).locator('.ant-color-picker-hex-input input').fill('E8590C');
+  // A pasted #rrggbbaa value is saved without its alpha: edges are opaque.
+  await colorPicker(page).locator('.ant-color-picker-hex-input input').fill('E8590C80');
   await expect.poll(colors).toEqual(['#e8590c', '#a4b2c0']);
   await expect(colorTrigger(page)).toHaveText('#E8590C');
   await expect(used).toHaveCount(2); // updated while the picker is open

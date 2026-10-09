@@ -34,6 +34,10 @@ const edgeColorPalette = [
   '#722ed1',
 ];
 
+// Edges are opaque. disabledAlpha hides the picker's alpha controls, but its
+// hex field still accepts #rrggbbaa, so keep just #rrggbb.
+const toEdgeColor = (color) => color.toHexString().slice(0, 7);
+
 const nodeShortcuts = [
   {
     key: 'hideHeader',
@@ -170,10 +174,11 @@ class DetailForm extends Component {
     this.handleFieldChange({ style: { lineWidth } });
   };
 
-  // Fires once per pick (hex/RGB input, preset click or the end of a drag),
-  // so dragging across the palette adds a single undo step.
+  // Fires when a drag across the palette or hue bar ends, so a drag adds a
+  // single undo step. Other changes fire it at once: a preset click, a complete
+  // hex value, and each RGB/HSB keystroke.
   handleColorChangeComplete = (value) => {
-    const color = value.toHexString();
+    const color = toEdgeColor(value);
     if (color === this.item.getModel().color?.toLowerCase()) return;
 
     this.handleFieldChange({ color });
@@ -250,7 +255,12 @@ class DetailForm extends Component {
             />
           </Item>
 
-          <Item label='Color' name='color' {...inlineFormItemLayout}>
+          <Item
+            label='Color'
+            name='color'
+            getValueFromEvent={toEdgeColor}
+            {...inlineFormItemLayout}
+          >
             <ColorPicker
               showText
               disabledAlpha
