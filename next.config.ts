@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { APP_PATHS, securityHeaders } from './lib/security';
 
 // Optional: the origin that serves the Ghost blog under /blog/ (for example
 // https://blog-origin.example.com). Production routes /blog/* to Ghost outside
@@ -10,6 +11,12 @@ const nextConfig: NextConfig = {
   // Production serves template graphics and the logo as plain files (no
   // /_next/image optimizer).
   images: { unoptimized: true },
+  // Don't advertise the framework (production sent x-powered-by: Next.js).
+  poweredByHeader: false,
+  // CSP and other security headers (lib/security.ts), not on /blog.
+  async headers() {
+    return [{ source: APP_PATHS, headers: securityHeaders() }];
+  },
   ...(blogOrigin && {
     // Ghost serves every page at a URL ending in "/" and redirects the other
     // form, while Next.js by default redirects "/x/" to "/x": together they
