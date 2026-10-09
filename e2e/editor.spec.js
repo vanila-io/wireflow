@@ -48,6 +48,10 @@ test('app shell loads with templates, toolbar, minimap and canvas panel', async 
 
 const CATEGORIES = ['Article', 'Blog', 'E-Commerce', 'Features', 'Gallery', 'Header', 'Misc', 'Multimedia', 'Sign in', 'Socials'];
 
+// Saved nodes are not in the order they were added: Object.keys lists G6 ids that look like
+// integers (about 2% of them, e.g. "38291045") first. Tests that care sort them by x.
+const byX = (a, b) => a.x - b.x;
+
 test('the canvas starts exactly where the sidebar ends', async ({ page }) => {
   await openEditor(page);
   const canvas = await page.locator('#canvas_1').boundingBox();
@@ -205,8 +209,7 @@ test('a template drags from anywhere on its tile, in the first, a middle and the
     expected.push({ label: await img.getAttribute('alt'), img: await img.getAttribute('src'), x: 200 + 250 * i, y: 300 });
   }
 
-  // Saved nodes are not in drop order (G6 ids that look like integers sort first), so order them by x.
-  await expect.poll(async () => (await saved(page))?.nodes.toSorted((a, b) => a.x - b.x)).toMatchObject(expected);
+  await expect.poll(async () => (await saved(page))?.nodes.toSorted(byX)).toMatchObject(expected);
   expect(expected.map((node) => node.label)).toEqual(['Article', 'Team', 'User']);
 });
 
@@ -237,12 +240,12 @@ test('renaming a node is saved, survives a reload and does not leak into other n
   const cart = await onCanvas(page, 650, 300);
   await dropTemplate(page, 0, landing);
   await dropTemplate(page, 19, cart);
-  await expect.poll(async () => (await saved(page))?.nodes.map((node) => node.label)).toEqual(['Article', 'Cart']);
+  await expect.poll(async () => (await saved(page))?.nodes.toSorted(byX).map((node) => node.label)).toEqual(['Article', 'Cart']);
 
   await page.mouse.click(landing.x, landing.y);
   await nodeLabelInput(page).fill('Landing page');
   await nodeLabelInput(page).blur();
-  await expect.poll(async () => (await saved(page)).nodes[0].label).toBe('Landing page');
+  await expect.poll(async () => (await saved(page)).nodes.toSorted(byX)[0].label).toBe('Landing page');
 
   // Switching straight to another node must show (and on blur keep) that node's own label.
   await page.mouse.click(cart.x, cart.y);
@@ -252,7 +255,7 @@ test('renaming a node is saved, survives a reload and does not leak into other n
 
   await page.reload();
   await expect(page.locator('#canvas_1')).toBeVisible();
-  expect((await saved(page)).nodes.map((node) => node.label)).toEqual(['Landing page', 'Cart']);
+  expect((await saved(page)).nodes.toSorted(byX).map((node) => node.label)).toEqual(['Landing page', 'Cart']);
   await page.mouse.click(landing.x, landing.y);
   await expect(panelTitle(page)).toHaveText(['Node']);
   await expect(nodeLabelInput(page)).toHaveValue('Landing page');
@@ -265,7 +268,7 @@ test('connecting two nodes creates an edge whose shape, size and color are edita
   await dropTemplate(page, 0, a);
   await dropTemplate(page, 1, b);
   await expect.poll(async () => (await saved(page))?.nodes.length).toBe(2);
-  const [source, target] = (await saved(page)).nodes.map((node) => node.id);
+  const [source, target] = (await saved(page)).nodes.toSorted(byX).map((node) => node.id);
 
   await connect(page, a, b);
   await expect
