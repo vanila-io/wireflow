@@ -7,6 +7,7 @@ import { runRequest, TOOLS } from '../../ai/agent';
 import { applyActions } from '../../ai/diagram';
 import { systemPrompt } from '../../ai/prompt';
 import { normalize, saveData } from '../../utils/saveData';
+import { DIAGRAM_REPLACED } from '../../utils/diagramFile';
 import './style.css';
 
 const SETTINGS = 'wireflow-ai';
@@ -61,6 +62,8 @@ function changeState(editor, command) {
   return index === done - 1 ? 'latest' : 'applied';
 }
 
+const STATE_PREFIX = { latest: 'Applied: ', applied: 'Applied: ', undone: 'Undone: ', replaced: 'Replaced by an opened file: ' };
+
 let nextId = 0;
 
 const AiPanel = ({ open, onClose, propsAPI }) => {
@@ -98,8 +101,14 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
   }, [open, apiKey]);
   useEffect(() => {
     const { editor } = propsAPI;
+    const replaced = () =>
+      setMessages((ms) => ms.map((m) => (m.applied?.length ? { ...m, applied: m.applied.map((a) => ({ ...a, replaced: true })) } : m)));
     editor.on('aftercommandexecute', refresh);
-    return () => editor.off('aftercommandexecute', refresh);
+    editor.on(DIAGRAM_REPLACED, replaced);
+    return () => {
+      editor.off('aftercommandexecute', refresh);
+      editor.off(DIAGRAM_REPLACED, replaced);
+    };
   }, [propsAPI]);
 
   const persist = (patch) => {
@@ -306,12 +315,14 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
                   {m.status === 'streaming' && !m.text && <Typography.Text type='secondary'>Thinking…</Typography.Text>}
                   {m.text && <div className='ai-text'>{m.text}</div>}
                   {m.applied.map((a, i) => {
-                    const state = changeState(propsAPI.editor, a.command);
+                    // After Open file the cleared history no longer holds earlier changes, which
+                    // would read as 'undone'; they were replaced, not undone.
+                    const state = a.replaced ? 'replaced' : changeState(propsAPI.editor, a.command);
                     const summary = a.summary || `${a.count} changes`;
                     return (
                       <div key={i} className='ai-applied' data-state={state}>
                         <span>
-                          {state === 'undone' ? 'Undone: ' : 'Applied: '}
+                          {STATE_PREFIX[state]}
                           {summary}
                         </span>
                         {state === 'latest' && (
