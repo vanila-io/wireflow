@@ -30,6 +30,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 - **Navigate**: zoom in and out, fit to screen, actual size, and a minimap.
 - **Export** the canvas to a JPEG with one click.
 - **Autosave**: every change is saved to your browser's `localStorage`.
+- **Works offline and installs as an app** (PWA) on desktop browsers.
 
 ## How it works
 
@@ -40,6 +41,14 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 1. **Drag a screen.** Pick a template from the left sidebar and drop it on the canvas.
 2. **Connect the flow.** Hover a screen to show its anchor points, then drag from an anchor to another screen. Select a node, edge, or group to edit it in the right-hand panel.
 3. **Export.** Click the round button in the top-left corner of the canvas to download `wireflow.jpg`. You don't need to save; the diagram is stored in your browser as you work.
+
+## Offline and install
+
+After your first visit, Wireflow keeps working without a network connection: a service worker stores the app and all screen templates in the browser. To get a window of its own, install it from the browser (in Chrome or Edge, the install icon in the address bar, or **Install Wireflow** in the menu).
+
+When a new version is deployed, the app shows an **Update available** notice. Click **Reload** to switch; your diagram is autosaved, so nothing is lost. The service worker only runs in production builds (`pnpm build`, `pnpm preview`, deployments), never under `pnpm dev`.
+
+Editing on phones isn't supported yet: the diagram engine only handles mouse input ([#60](https://github.com/vanila-io/wireflow/issues/60)).
 
 ## Quick start
 
@@ -133,11 +142,11 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 
 - Your diagram is saved automatically to your browser's `localStorage` (key `data`) on every change. Nothing is sent to a server, and there are no accounts or analytics.
 - The diagram only exists in the browser where you made it. Clearing site data deletes it, and you can't move the editable diagram to another browser yet. JPEG export saves an image of the canvas, not an editable file.
-- The toolbar icon font is loaded from Alibaba's iconfont CDN (`at.alicdn.com`).
+- The app makes no third-party requests: the toolbar icons (from iconfont.cn) are bundled with the app.
 
 ## Tech stack
 
-[React 19](https://react.dev/) · [Vite 8](https://vite.dev/) · [Ant Design 6](https://ant.design/) · [GGEditor 2](https://github.com/alibaba/GGEditor) (built on G6) · [html-to-image](https://github.com/bubkoo/html-to-image) · [react-colorful](https://github.com/omgovich/react-colorful) · [Vitest](https://vitest.dev/) · [Playwright](https://playwright.dev/) · [ESLint](https://eslint.org/)
+[React 19](https://react.dev/) · [Vite 8](https://vite.dev/) · [Ant Design 6](https://ant.design/) · [GGEditor 2](https://github.com/alibaba/GGEditor) (built on G6) · [html-to-image](https://github.com/bubkoo/html-to-image) · [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (Workbox) · [react-colorful](https://github.com/omgovich/react-colorful) · [Vitest](https://vitest.dev/) · [Playwright](https://playwright.dev/) · [ESLint](https://eslint.org/)
 
 ## Project structure
 
@@ -145,12 +154,13 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 .
 ├── docs/                 README images (animated SVGs, screenshot)
 ├── e2e/                  Playwright end-to-end specs
-├── public/               static files copied as-is (icons, manifest, service worker)
+├── public/               static files copied as-is (icons, web app manifest)
 ├── src/
 │   ├── assets/images/    wireframe screen templates (SVG), one folder per category
 │   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export button
 │   ├── containers/       app layout and custom node shapes
-│   └── utils/            localStorage persistence helpers
+│   ├── utils/            localStorage persistence helpers
+│   └── service-worker.js offline cache (built to build/service-worker.js)
 ├── index.html            Vite entry page
 ├── vite.config.js        Vite + Vitest config (build output: build/)
 ├── playwright.config.js  Playwright config
