@@ -134,6 +134,16 @@ test('connecting two nodes creates an edge whose shape, size and color are edita
   await page.keyboard.press('ArrowRight');
   await expect.poll(async () => (await edge()).style.lineWidth).toBe(3);
 
+  // Dragging the handle commits once, on release, so one Undo goes back to 3.
+  const rail = await page.locator('.details .ant-slider-rail').boundingBox();
+  await size.hover();
+  await page.mouse.down();
+  await page.mouse.move(rail.x + rail.width, rail.y + rail.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(async () => (await edge()).style.lineWidth).toBe(10);
+  await command(page, 'undo').click();
+  await expect(size).toHaveAttribute('aria-valuenow', '3');
+
   // Dragging across the palette previews the color and commits it once, on release.
   await expect(colorTrigger(page)).toHaveText('#A4B2C0');
   await colorTrigger(page).click();

@@ -162,6 +162,14 @@ class DetailForm extends Component {
     return [...new Set(colors)];
   }
 
+  // Fires when a drag ends or an arrow key is released, so dragging the slider
+  // adds a single undo step (and pressing an arrow key at the limit none).
+  handleSizeChangeComplete = (lineWidth) => {
+    if (lineWidth === this.values.size) return;
+
+    this.handleFieldChange({ style: { lineWidth } });
+  };
+
   // Fires once per pick (hex/RGB input, preset click or the end of a drag),
   // so dragging across the palette adds a single undo step.
   handleColorChangeComplete = (value) => {
@@ -238,9 +246,7 @@ class DetailForm extends Component {
             <Slider
               min={1}
               max={10}
-              onChange={(lineWidth) =>
-                this.handleFieldChange({ style: { lineWidth } })
-              }
+              onChangeComplete={this.handleSizeChangeComplete}
             />
           </Item>
 
