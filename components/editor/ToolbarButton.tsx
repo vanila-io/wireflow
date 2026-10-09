@@ -8,6 +8,7 @@ const ICONS: Record<string, React.ReactNode> = {
   Undo: <path d="M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3" {...p} />,
   Redo: <path d="M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3" {...p} />,
   'Export JSON': <path d="M12 3v12M7 10l5 5 5-5M4 19h16" {...p} />,
+  'Open file': <path d="M12 21V9M7 14l5-5 5 5M4 5h16" {...p} />,
   'Clear canvas': <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5" {...p} />,
 };
 

@@ -16,3 +16,7 @@ export function graphicById(id: string): Graphic | undefined {
 export function graphicsByCategory(slug: string): Graphic[] {
   return slug === 'all' ? all : all.filter((g) => g.category === slug);
 }
+
+export function graphicBySrc(src: string): Graphic | undefined {
+  return all.find((g) => g.src === src);
+}

@@ -3,7 +3,7 @@
 // 98946 of build Jp7MF3_aUxMDjVuOFifu0); the diagram lives in one store
 // (lib/diagram/store.ts) that enforces the diagram rules, autosaves and keeps
 // the undo history.
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -19,6 +19,9 @@ import { graphicById, type Graphic } from '@/lib/graphics';
 import { isCard, type Diagram } from '@/lib/diagram/model';
 import { createDiagramStore, type DiagramStore } from '@/lib/diagram/store';
 import { readDiagram, readHistory, writeDiagram, writeHistory, BACKUP_KEY } from '@/lib/diagram/storage';
+import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, parseLegacyStorage, serializeFile } from '@/lib/diagram/file';
+import { serialize, type Dropped } from '@/lib/diagram/rules';
+import ConfirmDialog from './editor/ConfirmDialog';
 import FlowNode from './editor/FlowNode';
 import GroupNode from './editor/GroupNode';
 import Notices, { notice, type Notice } from './editor/Notices';
@@ -43,6 +46,20 @@ export const isTyping = (target: EventTarget | null) =>
 
 type Start = { store: DiagramStore; notices: Notice[]; hadDiagram: boolean; readOnly: boolean };
 
+// Where the previous editor autosaved (gg-editor's G6 format).
+const LEGACY_STORAGE_KEY = 'data';
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// What the rules dropped from a loaded or opened diagram, in words.
+function droppedNotices({ nodes, edges, parents }: Dropped): Notice[] {
+  return [
+    edges && notice(`Removed ${plural(edges, 'connection', 'connections')} that didn't connect two cards.`),
+    nodes && notice(`Removed ${plural(nodes, 'item', 'items')} that Wireflow can't show.`),
+    parents && notice(`Took ${plural(parents, 'item', 'items')} out of a group that was broken.`),
+  ].filter((n): n is Notice => !!n);
+}
+
 // Load the autosaved diagram (production's wireflow-flow-v1), else seed the card
 // from ?card=<graphicId> (the landing page's links).
 function start(): Start {
@@ -54,10 +71,15 @@ function start(): Start {
 
   if (loaded.status === 'loaded') {
     initial = loaded.diagram;
-    const { nodes, edges, parents } = loaded.dropped;
-    if (edges) notices.push(notice(`Removed ${edges} ${edges === 1 ? 'connection' : 'connections'} that didn't connect two cards.`));
-    if (nodes) notices.push(notice(`Removed ${nodes} ${nodes === 1 ? 'item' : 'items'} that Wireflow can't show.`));
-    if (parents) notices.push(notice(`Took ${parents} ${parents === 1 ? 'item' : 'items'} out of a group that was broken.`));
+    notices.push(...droppedNotices(loaded.dropped));
+  } else if (loaded.status === 'empty' && local) {
+    // The previous editor (gg-editor) autosaved to localStorage['data']. Bring that
+    // diagram over once; the old entry is left as it is.
+    const old = parseLegacyStorage(local.getItem(LEGACY_STORAGE_KEY) ?? 'null');
+    if (old && writeDiagram(local, serialize(old))) {
+      initial = old;
+      notices.push(notice('Brought over the diagram from the previous Wireflow editor in this browser.'));
+    }
   } else if (loaded.status === 'newer') {
     initial = loaded.diagram;
     readOnly = true;
@@ -178,15 +200,52 @@ function Editor() {
   );
 
   const exportJson = useCallback(() => {
-    const blob = new Blob([JSON.stringify(store.diagram(), null, 2)], { type: 'application/json' });
+    const blob = new Blob([serializeFile(store.diagram())], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'wireflow.json';
+    a.download = FILE_NAME;
     a.click();
     // Revoking at once can cancel the download in some browsers.
     setTimeout(() => URL.revokeObjectURL(url), 30_000);
   }, [store]);
+
+  // Open file: check the file, ask before replacing a diagram, then replace it as
+  // one undo step. If the browser can't store it, the current diagram stays.
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [pendingOpen, setPendingOpen] = useState<{ name: string; diagram: Diagram; dropped: Dropped } | null>(null);
+  const say = useCallback((n: Notice) => setNotices((ns) => [...ns.slice(-3), n]), []);
+
+  const replaceWith = useCallback(
+    ({ name, diagram, dropped }: { name: string; diagram: Diagram; dropped: Dropped }) => {
+      setPendingOpen(null);
+      if (!store.replace(diagram, 'open')) {
+        say(notice(`Couldn't open ${name}. It's too big to keep in this browser's storage, so your diagram is unchanged.`, 'error'));
+        return;
+      }
+      setNotices((ns) => [...ns.slice(-2), notice(`Opened ${name}.`), ...droppedNotices(dropped)]);
+      setTimeout(() => fitView({ padding: 0.2, duration: 250 }), 60);
+    },
+    [store, say, fitView],
+  );
+
+  const openFile = useCallback(
+    async (file: File) => {
+      let parsed;
+      try {
+        if (file.size > MAX_FILE_BYTES) throw new DiagramFileError("It's too big to be a Wireflow diagram.");
+        parsed = { name: file.name, ...parseFile(await file.text()) };
+      } catch (err) {
+        const reason = err instanceof DiagramFileError ? err.message : "It couldn't be read.";
+        say(notice(`Couldn't open ${file.name}. ${reason}`, 'error'));
+        return;
+      }
+      if (store.getState().nodes.length) setPendingOpen(parsed);
+      else replaceWith(parsed);
+    },
+    [store, say, replaceWith],
+  );
+  const chooseFile = useCallback(() => fileInput.current?.click(), []);
 
   const clearCanvas = useCallback(() => {
     if (store.getState().nodes.length === 0) return;
@@ -216,7 +275,26 @@ function Editor() {
             <span className={`text-xs ${saveFailed ? 'font-semibold text-rose-600' : 'text-ink-soft'}`} role="status">
               {saveFailed ? 'Not saved in this browser' : 'All changes saved'}
             </span>
-            <button onClick={exportJson} className="rounded-md bg-wire-blue px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-wire-blue-dark">
+            <button
+              onClick={chooseFile}
+              title="Open a wireflow.json file"
+              className="rounded-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-wire-blue ring-1 ring-wire-blue/40 transition hover:bg-wire-lavender"
+            >
+              Open file
+            </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".json,application/json"
+              hidden
+              aria-label="Diagram file to open"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = '';
+                if (file) void openFile(file);
+              }}
+            />
+            <button onClick={exportJson} title="Save the diagram as wireflow.json" className="rounded-md bg-wire-blue px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-wire-blue-dark">
               Export JSON
             </button>
           </div>
@@ -250,6 +328,15 @@ function Editor() {
               <MiniMap pannable zoomable maskColor="rgba(240,242,245,0.8)" nodeStrokeWidth={0} />
             </ReactFlow>
             <Notices notices={notices} onDismiss={dismiss} />
+            <ConfirmDialog
+              open={!!pendingOpen}
+              title="Replace the current diagram?"
+              confirmLabel="Replace"
+              onConfirm={() => pendingOpen && replaceWith(pendingOpen)}
+              onCancel={() => setPendingOpen(null)}
+            >
+              {pendingOpen?.name} will replace what is on the canvas. You can undo this.
+            </ConfirmDialog>
             {(canGroupNow || groupSelected) && (
               <div className="absolute bottom-20 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl bg-white px-2 py-1.5 text-xs font-semibold shadow-[0_8px_30px_rgba(29,28,40,0.15)] ring-1 ring-wire-border">
                 {canGroupNow && (
@@ -272,6 +359,7 @@ function Editor() {
               <ToolbarButton label="Zoom in" onClick={() => zoomIn({ duration: 150 })} />
               <ToolbarButton label="Fit view" onClick={() => fitView({ duration: 250, padding: 0.2 })} />
               <span className="mx-1 h-5 w-px bg-wire-border" />
+              <ToolbarButton label="Open file" onClick={chooseFile} />
               <ToolbarButton label="Export JSON" onClick={exportJson} />
               <ToolbarButton label="Clear canvas" onClick={clearCanvas} />
             </div>
