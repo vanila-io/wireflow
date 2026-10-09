@@ -12,6 +12,7 @@ import FlowDetailPanel from '../../components/FlowDetailPanel';
 import FlowMiniMap from '../../components/FlowMiniMap';
 import ExportCanvas from '../../components/ExportCanvas';
 import AiChat from '../../components/AiChat';
+import UpdatePrompt from '../../components/UpdatePrompt';
 import { saveData } from '../../utils/saveData';
 
 GGEditor.setTrackable(false);
@@ -59,7 +60,7 @@ const App = () => {
         onBeforeCommandExecute={onBeforeCommandExecute}
       >
         <FlowItemPanel />
-        <Row style={{ marginLeft: 112 }}>
+        <Row style={{ marginLeft: 'var(--sidebar-width)' }}>
           <Col span={19} className='text-center'>
             <ExportCanvas />
             <FlowToolbar />
@@ -74,6 +75,7 @@ const App = () => {
         <NodeRegisteWithHeader />
         <NodeRegisteWithoutHeader />
       </GGEditor>
+      <UpdatePrompt />
     </Layout>
   );
 };
