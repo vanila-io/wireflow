@@ -2,22 +2,23 @@ import { useState, useEffect } from 'react';
 import { Flow } from 'gg-editor';
 import './style.css';
 import { dataMapToData } from '../../utils/dataMapToData';
-import { saveData } from '../../utils/saveData';
+import { normalize, saveData } from '../../utils/saveData';
+import { currentImg } from '../../utils/templates';
+import { removeDanglingEdges } from '../../utils/removeDanglingEdges';
 
-// Diagrams saved by the old Create React App build point at template images as
-// /static/media/<file>.<hash>.svg, which the Vite build no longer serves.
-// Re-point them at the current URL of the same template file.
-const templateUrls = Object.fromEntries(
-  Object.entries(
-    import.meta.glob('../../assets/images/*/*.svg', { eager: true, import: 'default' })
-  ).map(([path, url]) => [path.split('/').pop(), url])
-);
-
-const data = JSON.parse(localStorage.getItem('data'));
-data?.nodes?.forEach((node) => {
-  const legacy = /\/static\/media\/(.+)\.[0-9a-f]{8}\.svg$/.exec(node.img);
-  if (legacy && templateUrls[`${legacy[1]}.svg`]) node.img = templateUrls[`${legacy[1]}.svg`];
+// Template image URLs change when an SVG or the bundler changes (they moved from
+// /static/media/ when the app left Create React App), so re-point saved nodes at this
+// build's URL of their template.
+const stored = JSON.parse(localStorage.getItem('data'));
+stored?.nodes?.forEach((node) => {
+  if (node.img) node.img = currentImg(node.img);
 });
+
+// Older builds could save edges that don't connect two items. G6 can't draw an
+// edge to a missing item (the app would not start), so drop them before the
+// first draw and store the cleaned diagram.
+const data = removeDanglingEdges(stored);
+if (data !== stored) saveData(data);
 
 const FlowCanvas = () => {
   const [edge, setEdge] = useState({});
@@ -57,17 +58,22 @@ const FlowCanvas = () => {
         setEdge(item);
       }}
       onAfterChange={(e) => {
-        // `changeData` is caused by setData and allowing `group` causes some error
-        if (
-          e.action === 'changeData' ||
-          (e.item.type === 'group' && e.action !== 'remove')
-        ) {
+        // `changeData` comes from page.read(), which is how undo of a snapshot
+        // command (delete, groups, AI edits) restores the canvas. It has no `item`,
+        // but carries the restored data, so save that. (Redo runs the command again.)
+        if (e.action === 'changeData') {
+          if (e.data) saveData(normalize(e.data));
           return;
         }
+        // allowing `group` causes some error
+        if (e.item.type === 'group' && e.action !== 'remove') return;
 
         saveData(dataMapToData(e.item && e.item.dataMap, e.item.itemMap));
       }}
       data={data}
+      // gg-editor's Flow defaults to `noEndEdge: true`: a new edge, or a dragged edge
+      // end, dropped on empty canvas ends at that canvas point. Cancel such drops.
+      noEndEdge={false}
       onBeforeItemUnselected={() => setEdge({})}
       onMouseEnter={mouseEvent}
       onMouseLeave={mouseEvent}

@@ -4,7 +4,14 @@ import globals from 'globals';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['build/', 'test-results/', 'playwright-report/', 'blob-report/']),
+  globalIgnores([
+    'build/',
+    'test-results/',
+    'playwright-report/',
+    'blob-report/',
+    // Vendored, minified iconfont.cn symbol script.
+    'src/components/IconFont/iconfont.js',
+  ]),
   {
     files: ['**/*.{js,jsx}'],
     extends: [js.configs.recommended, reactHooks.configs.flat.recommended],
@@ -17,5 +24,9 @@ export default defineConfig([
     // Tooling configs and Playwright specs run in Node.
     files: ['*.config.js', 'e2e/**/*.js'],
     languageOptions: { globals: globals.node },
+  },
+  {
+    files: ['src/service-worker.js'],
+    languageOptions: { globals: globals.serviceworker },
   },
 ]);

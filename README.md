@@ -3,7 +3,6 @@
 </p>
 
 <p align="center">
-  <a href="https://app.netlify.com/sites/wireflow-app/deploys"><img src="https://api.netlify.com/api/v1/badges/15abd946-68e7-4cdb-8d9e-4930d5a2191c/deploy-status" alt="Netlify status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
   <a href="#backers"><img src="https://opencollective.com/wireflow/backers/badge.svg" alt="OpenCollective backers"></a>
   <a href="#sponsors"><img src="https://opencollective.com/wireflow/sponsors/badge.svg" alt="OpenCollective sponsors"></a>
@@ -11,11 +10,10 @@
 
 <p align="center">
   <a href="https://wireflow.co"><b>Website</b></a> ·
-  <a href="https://wireflow-app.netlify.app"><b>Live demo</b></a> ·
   <a href="https://www.producthunt.com/posts/wireflow">Product Hunt</a>
 </p>
 
-Wireflow is a free, open-source tool for sketching user flows. Drag wireframe screens onto a canvas, connect them, and export the result as an image. It runs entirely in the browser: no account, no backend.
+Wireflow is a free, open-source tool for sketching user flows. Drag wireframe screens onto a canvas, connect them, and export the result as an image or save it to a file you can open again. It runs entirely in the browser: no account, no backend.
 
 Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automatio.ai).
 
@@ -31,7 +29,10 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 - **Edit history**: undo, redo, copy, paste, and delete.
 - **Navigate**: zoom in and out, fit to screen, actual size, and a minimap.
 - **Export** the canvas to a JPEG with one click.
+- **Save and open files**: download the diagram as `wireflow.json` and open it again later, here or in another browser.
 - **Autosave**: every change is saved to your browser's `localStorage`.
+- **AI assistant** (optional, bring your own Anthropic API key): describe a flow or a change in plain language and Claude edits the diagram. Each change is one undo step.
+- **Works offline and installs as an app** (PWA) on desktop browsers.
 
 ## How it works
 
@@ -41,7 +42,17 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 
 1. **Drag a screen.** Pick a template from the left sidebar and drop it on the canvas.
 2. **Connect the flow.** Hover a screen to show its anchor points, then drag from an anchor to another screen. Select a node, edge, or group to edit it in the right-hand panel.
-3. **Export.** Click the round button in the top-left corner of the canvas to download `wireflow.jpg`. You don't need to save; the diagram is stored in your browser as you work.
+3. **Export.** Click the first round button in the top-left corner of the canvas to download `wireflow.jpg`. You don't need to save; the diagram is stored in your browser as you work. To keep an editable copy or move it to another browser, use the buttons next to it: **Save to file** downloads `wireflow.json` and **Open file** loads one back.
+
+## Offline and install
+
+After your first visit, Wireflow keeps working without a network connection: a service worker stores the app and all screen templates in the browser. To get a window of its own, install it from the browser (in Chrome or Edge, the install icon in the address bar, or **Install Wireflow** in the menu).
+
+When a new version is deployed, Wireflow notices it the next time you open it, or within an hour in a tab you keep open, and shows an **Update available** notice. Until you click **Reload**, the version you have keeps working, offline too. Clicking it reloads every open Wireflow tab into the new version; your diagram is autosaved, so nothing is lost.
+
+Only production builds served over HTTPS or from `localhost` register the service worker (`pnpm preview`, Docker, deployments). `pnpm dev` never does.
+
+Editing on phones isn't supported yet: the diagram engine only handles mouse input ([#60](https://github.com/vanila-io/wireflow/issues/60)).
 
 ## Quick start
 
@@ -80,7 +91,14 @@ pnpm exec playwright install chromium      # first run only: download the test b
 pnpm test:e2e                              # end-to-end tests (Playwright, Chromium)
 ```
 
-Unit tests are `*.test.js` / `*.test.jsx` files under `src/`. The end-to-end specs live in `e2e/` and are configured in `playwright.config.js`. `pnpm test:e2e` builds the app and serves it on port 4179 by itself, so you don't need a running dev server (the port must be free).
+Unit tests are `*.test.js` / `*.test.jsx` files under `src/`. The end-to-end specs live in `e2e/` and are configured in `playwright.config.js`. `pnpm test:e2e` builds the app and serves it on port 4179 by itself, so you don't need a running dev server (the port must be free; set `E2E_PORT` to use another one).
+
+The AI tests run against a mocked API. A few also run against the real one when you set `AI_LIVE=1` and put a key in `.env` as `ANTHROPIC_API_KEY` (each run costs a fraction of a cent):
+
+```bash
+AI_LIVE=1 pnpm vitest run src/__tests__/ai/live.test.js
+AI_LIVE=1 pnpm test:e2e e2e/ai-chat.spec.js -g live
+```
 
 ## Docker
 
@@ -89,6 +107,39 @@ docker compose up -d --build
 ```
 
 Then open http://localhost:8083. The image builds the app in a Node 24 stage and serves the static `build/` output with nginx. Stop it with `docker compose down`.
+
+## Deploy
+
+The app is a static site, so any static host can serve `build/`.
+
+Every build includes the offline service worker at `/service-worker.js`, the URL the old Create React App build used, so browsers that still run that build switch to the new one by themselves. Keep that file in every deployment. If it's missing, browsers that installed the app keep running their cached copy, because the check for a new worker fails (Cloudflare answers the missing file with `index.html`, nginx with a 404). To switch offline support off for everyone, add `selfDestroying: true` to the `VitePWA` options in `vite.config.js` and deploy: the new worker removes itself and its caches and reloads open tabs. No cache headers are needed: browsers bypass the HTTP cache when they check for a new worker.
+
+### Cloudflare Workers (staging)
+
+`wrangler.jsonc` serves `build/` as [Workers static assets](https://developers.cloudflare.com/workers/static-assets/), with no Worker script. Its `staging` environment deploys to a separate Worker, `wireflow-staging`, at `https://wireflow-staging.<your-subdomain>.workers.dev`. Per-version preview URLs are turned off.
+
+Deploy the `staging` branch from your machine:
+
+```bash
+pnpm exec wrangler login                  # first time only
+git switch staging
+pnpm install
+pnpm build
+pnpm exec wrangler dev --env staging      # optional: try it at http://localhost:8787
+pnpm exec wrangler deploy --env staging
+```
+
+Production will be the `wireflow` Worker, deployed from `main` with `pnpm build && pnpm exec wrangler deploy`. It isn't set up yet.
+
+To deploy on every push to `staging` instead, connect the repository in the Cloudflare dashboard (**Workers & Pages** → `wireflow-staging` → **Settings** → **Builds** → **Connect**) and use these settings:
+
+| Setting               | Value                                                             |
+| --------------------- | ----------------------------------------------------------------- |
+| Git branch            | `staging`                                                         |
+| Build command         | `pnpm build`                                                      |
+| Deploy command        | `pnpm exec wrangler deploy --env staging`                         |
+| Enable Preview Builds | Off, so pull requests and other branches never build or deploy    |
+| Build variable        | `PNPM_VERSION` = `12.10.1` (the build image defaults to pnpm 10)  |
 
 ## Keyboard shortcuts
 
@@ -102,13 +153,16 @@ Then open http://localhost:8083. The image builds the app in a Node 24 stage and
 
 ## Data and privacy
 
-- Your diagram is saved automatically to your browser's `localStorage` (key `data`) on every change. Nothing is sent to a server, and there are no accounts or analytics.
-- The diagram only exists in the browser where you made it. Clearing site data deletes it, and you can't move the editable diagram to another browser yet. JPEG export saves an image of the canvas, not an editable file.
-- The toolbar icon font is loaded from Alibaba's iconfont CDN (`at.alicdn.com`).
+- Your diagram is saved automatically to your browser's `localStorage` (key `data`) on every change. Unless you use the AI assistant, nothing is sent to a server, and there are no accounts or analytics.
+- The AI assistant is optional. When you use it, your messages and the current diagram (screen labels, template names, positions, connections and groups) go from your browser straight to Anthropic's API under your own API key, so Anthropic's terms and your organization's data settings apply. There is no Wireflow server in between. The chat is kept in memory only; a reload clears it.
+- Your API key stays in memory unless you tick "Remember on this device", which stores it unencrypted in this browser's `localStorage` (key `wireflow-ai`), where any script running on the page could read it. Use a dedicated key with an expiry and a spend limit. "Forget key" removes it.
+- The autosaved diagram only exists in the browser where you made it, and clearing site data deletes it. To keep it or move it to another browser, click **Save to file** and later **Open file**. Opening a file replaces the diagram on the canvas and clears the undo history (Wireflow asks first if the canvas isn't empty). JPEG export saves an image of the canvas, not an editable file.
+- A saved file is JSON: `{ "format": "wireflow", "version": 1, "diagram": { "nodes": [...], "edges": [...], "groups": [...] } }`. Nodes name their screen template (`"template": "E-Commerce/Cart"`) instead of an image URL, so files keep working across Wireflow releases. **Open file** also accepts the plain `{ nodes, edges, groups }` object stored in `localStorage`. The format is documented in `src/utils/diagramFile.js`.
+- Apart from the AI assistant's calls to `api.anthropic.com` (only when you use it), the app makes no third-party requests: the toolbar icons (from iconfont.cn) are bundled with the app.
 
 ## Tech stack
 
-[React 19](https://react.dev/) · [Vite 8](https://vite.dev/) · [Ant Design 6](https://ant.design/) · [GGEditor 2](https://github.com/alibaba/GGEditor) (built on G6) · [html-to-image](https://github.com/bubkoo/html-to-image) · [react-colorful](https://github.com/omgovich/react-colorful) · [Vitest](https://vitest.dev/) · [Playwright](https://playwright.dev/) · [ESLint](https://eslint.org/)
+[React 19](https://react.dev/) · [Vite 8](https://vite.dev/) · [Ant Design 6](https://ant.design/) · [GGEditor 2](https://github.com/alibaba/GGEditor) (built on G6) · [html-to-image](https://github.com/bubkoo/html-to-image) · [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (Workbox) · [Vitest](https://vitest.dev/) · [Playwright](https://playwright.dev/) · [ESLint](https://eslint.org/)
 
 ## Project structure
 
@@ -116,18 +170,21 @@ Then open http://localhost:8083. The image builds the app in a Node 24 stage and
 .
 ├── docs/                 README images (animated SVGs, screenshot)
 ├── e2e/                  Playwright end-to-end specs
-├── public/               static files copied as-is (icons, manifest, Netlify _redirects)
+├── public/               static files copied as-is (icons, web app manifest)
 ├── src/
+│   ├── ai/               AI assistant: template catalog, diagram edits and layout checks, agent loop, providers
 │   ├── assets/images/    wireframe screen templates (SVG), one folder per category
-│   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export button
+│   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export/save/open buttons, AI panel
 │   ├── containers/       app layout and custom node shapes
-│   └── utils/            localStorage persistence helpers
+│   ├── utils/            persistence helpers: localStorage, the file format, template keys
+│   └── service-worker.js offline cache (built to build/service-worker.js)
 ├── index.html            Vite entry page
 ├── vite.config.js        Vite + Vitest config (build output: build/)
 ├── playwright.config.js  Playwright config
 ├── eslint.config.js      ESLint flat config
 ├── Dockerfile            Node 24 build stage + nginx runtime
-└── docker-compose.yml    serves the app on port 8083
+├── docker-compose.yml    serves the app on port 8083
+└── wrangler.jsonc        Cloudflare Workers config (staging environment)
 ```
 
 ## Contributing

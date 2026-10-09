@@ -1,24 +1,38 @@
 {
+  "id": "/",
   "short_name": "Wireflow",
   "name": "Wireflow",
+  "description": "Free, open-source user-flow and wireframe flowchart tool",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "src": "/favicon.ico",
+      "sizes": "48x48 32x32 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "mstile-150x150.png",
-      "type": "image/png",
-      "sizes": "150x150"
-    },
-    {
-      "src": "android-chrome-96x96.png",
+      "src": "/android-chrome-96x96.png",
       "type": "image/png",
       "sizes": "96x96"
+    },
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "theme_color": "#ffffff",
   "background_color": "#ffffff"
