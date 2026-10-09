@@ -270,6 +270,40 @@ test('keyboard shortcuts hide/show the node header and delete the node', async (
   await expect.poll(async () => (await saved(page)).nodes).toEqual([]);
 });
 
+test('header shortcuts change the selected node once and never an edge', async ({ page }) => {
+  await openEditor(page);
+  const a = await onCanvas(page, 300, 300);
+  const b = await onCanvas(page, 650, 300);
+  await dropTemplate(page, 0, a);
+  await dropTemplate(page, 19, b);
+  await expect.poll(async () => (await saved(page))?.nodes.length).toBe(2);
+  await connect(page, a, b);
+  await expect.poll(async () => (await saved(page)).edges).toMatchObject([{ shape: 'flow-polyline-round' }]);
+
+  // Showing the Node panel several times must not stack up shortcut handlers.
+  for (const [at, label] of [[a, 'Article'], [b, 'Cart'], [a, 'Article']]) {
+    await page.mouse.click(at.x, at.y);
+    await expect(nodeLabelInput(page)).toHaveValue(label);
+  }
+  await page.keyboard.press('Control+h');
+  await expect.poll(async () => (await saved(page)).nodes[0].shape).toBe('node-image-without-header');
+
+  // So one Undo brings the header back. Undo is not autosaved: rename to save.
+  await command(page, 'undo').click();
+  await nodeLabelInput(page).fill('Landing');
+  await nodeLabelInput(page).blur();
+  await expect.poll(async () => (await saved(page)).nodes[0]).toMatchObject({ label: 'Landing', shape: 'node-image-header', size: [96, 88] });
+
+  // With the edge selected the shortcut does nothing; the label edit saves the edge.
+  await page.mouse.click((a.x + b.x) / 2, a.y);
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+  await page.keyboard.press('Control+h');
+  const edgeLabel = page.locator('.details').getByLabel('Label');
+  await edgeLabel.fill('Next');
+  await edgeLabel.blur();
+  await expect.poll(async () => (await saved(page)).edges).toMatchObject([{ label: 'Next', shape: 'flow-polyline-round' }]);
+});
+
 test('a diagram saved by the pre-Vite app still loads, with its template images', async ({ page }) => {
   // Saved by the Create React App build: same data shape, but images live under /static/media/.
   const legacy = {

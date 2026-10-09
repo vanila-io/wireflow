@@ -93,10 +93,16 @@ class DetailForm extends Component {
   componentDidMount() {
     this.page = this.props.propsAPI.currentPage;
     this.page.on('afteritemselected', this.refresh);
+    // Only this panel's instance listens, and only while it is mounted, i.e.
+    // while a single node is selected.
+    if (this.props.type === 'node') {
+      document.addEventListener('keydown', this.handleNodeShortcut, true);
+    }
   }
 
   componentWillUnmount() {
     this.page.off('afteritemselected', this.refresh);
+    document.removeEventListener('keydown', this.handleNodeShortcut, true);
   }
 
   refresh = () => this.forceUpdate();
@@ -145,30 +151,26 @@ class DetailForm extends Component {
     });
   };
 
+  handleNodeShortcut = (e) => {
+    const { ctrlKey, key } = e;
+
+    if (ctrlKey && key === 'h') {
+      this.handleFieldChange({
+        shape: 'node-image-without-header',
+        size: [96, 78],
+      });
+    }
+
+    if (ctrlKey && key === 'k') {
+      this.handleFieldChange({
+        shape: 'node-image-header',
+        size: [96, 88],
+      });
+    }
+  };
+
   renderNodeDetail = () => {
     const { label } = this.item.getModel();
-
-    document.addEventListener(
-      'keydown',
-      (e) => {
-        const { ctrlKey, key } = e;
-
-        if (ctrlKey && key === 'h') {
-          this.handleFieldChange({
-            shape: 'node-image-without-header',
-            size: [96, 78],
-          });
-        }
-
-        if (ctrlKey && key === 'k') {
-          this.handleFieldChange({
-            shape: 'node-image-header',
-            size: [96, 88],
-          });
-        }
-      },
-      true
-    );
 
     return (
       <>
