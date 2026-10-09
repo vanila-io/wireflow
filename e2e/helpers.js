@@ -30,6 +30,9 @@ export const template = (page, category, label) =>
     .getByRole('img', { name: label, exact: true });
 export const panelTitle = (page) => page.locator('.details .ant-card-head-title');
 export const nodeLabelInput = (page) => page.locator('.details input[name=title]');
+export const colorTrigger = (page) => page.locator('.details .ant-color-picker-trigger');
+// The open color picker popover (antd keeps closed popovers in the DOM, hidden).
+export const colorPicker = (page) => page.locator('.ant-popover.ant-color-picker:visible');
 export const command = (page, name) => page.locator(`.toolbar .command[data-command="${name}"]`);
 
 export async function openEditor(page) {
@@ -55,12 +58,20 @@ export async function dropTemplate(page, which, at) {
   await page.mouse.up();
 }
 
-// Templates are 96 px wide. G6 shows anchors only while the node is hovered and
-// hit-tests on every mousemove, so approach the anchor and drag in small steps.
+// Templates are 96 px wide, so a node's left and right anchors are 48 px from its centre.
+export const leftAnchor = (at) => ({ x: at.x - 48, y: at.y });
+export const rightAnchor = (at) => ({ x: at.x + 48, y: at.y });
+
+// Press at `from`, move to `to` and let go. G6 hit-tests on every mousemove, so move in small steps.
+export async function drag(page, from, to) {
+  await page.mouse.move(from.x, from.y, { steps: 10 });
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 40 });
+  await page.mouse.up();
+}
+
+// G6 shows a node's anchors only while the node is hovered, so hover `from` first.
 export async function connect(page, from, to) {
   await page.mouse.move(from.x, from.y, { steps: 5 });
-  await page.mouse.move(from.x + 48, from.y, { steps: 10 }); // right anchor of `from`
-  await page.mouse.down();
-  await page.mouse.move(to.x - 48, to.y, { steps: 40 }); // left anchor of `to`
-  await page.mouse.up();
+  await drag(page, rightAnchor(from), leftAnchor(to));
 }
