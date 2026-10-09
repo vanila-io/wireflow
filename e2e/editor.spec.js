@@ -65,8 +65,11 @@ test('sidebar groups named templates under category headings that collapse and s
 
   await expect(categoryNames(page)).toHaveText(CATEGORIES);
   await expect(page.locator('.sidebar-category-count')).toHaveText(['6', '12', '12', '6', '6', '6', '24', '12', '6', '12']);
-  // Every thumbnail is named.
-  await expect(page.locator('.sidebar-item-label')).toHaveCount(total);
+  // Every thumbnail is named by its alt text and, for the mouse, its tile's tooltip.
+  const unnamed = await templates(page).evaluateAll((imgs) =>
+    imgs.filter((img) => !img.alt || img.closest('.sidebar-item').title !== img.alt).map((img) => img.src),
+  );
+  expect(unnamed).toEqual([]);
   await expect(template(page, 'E-Commerce', 'Checkout Delivery')).toBeVisible();
 
   const blog = categoryToggle(page, 'Blog');
@@ -97,8 +100,8 @@ test('sidebar search matches template and category names across categories', asy
   // Matches show even inside a collapsed category; categories without matches are hidden.
   await search.fill('cart');
   await expect(categoryNames(page)).toHaveText(['E-Commerce']);
-  await expect(page.locator('.sidebar-item-label')).toHaveText(['Cart pop up', 'Cart']);
   await expect(templates(page)).toHaveCount(2);
+  expect(await templates(page).evaluateAll((imgs) => imgs.map((img) => img.alt))).toEqual(['Cart pop up', 'Cart']);
 
   await search.fill('multimedia');
   await expect(categoryNames(page)).toHaveText(['Multimedia']);
@@ -116,19 +119,46 @@ test('sidebar search matches template and category names across categories', asy
   await expect(templates(page)).toHaveCount(total - 12);
 });
 
-test('dropping a template from a later category adds a node with that template image', async ({ page }) => {
+test('the sidebar is as compact as before the categories: ten whole templates fit on a 900px-tall screen', async ({ page }) => {
   await openEditor(page);
-  await categoryToggle(page, 'Article').click();
-  const chat = template(page, 'Socials', 'Chat');
-  const img = await chat.getAttribute('src');
-  const at = await onCanvas(page, 400, 300);
 
-  await dropTemplate(page, chat, at);
+  const whole = await templates(page).evaluateAll((imgs) =>
+    imgs.filter((img) => {
+      const { top, bottom } = img.closest('.sidebar-item').getBoundingClientRect();
+      return top >= 0 && bottom <= window.innerHeight;
+    }).length,
+  );
+  expect(whole).toBeGreaterThanOrEqual(10);
+});
 
-  await expect
-    .poll(() => saved(page))
-    .toMatchObject({ nodes: [{ type: 'node', shape: 'node-image-header', label: 'Chat', img, x: 400, y: 300 }] });
-  expect(img).toMatch(/Chat/);
+test('a template drags from anywhere on its tile, in the first, a middle and the last category', async ({ page }) => {
+  await openEditor(page);
+  // Socials starts collapsed, so its tiles mount after the editor exists and still have to start drags.
+  await categoryToggle(page, 'Socials').click();
+  await page.reload();
+  await expect(page.locator('#canvas_1')).toBeVisible();
+  await categoryToggle(page, 'Socials').click();
+
+  const picks = [template(page, 'Article', 'Article').first(), template(page, 'Misc', 'Team'), template(page, 'Socials', 'User').last()];
+  const expected = [];
+  for (const [i, img] of picks.entries()) {
+    await img.scrollIntoViewIfNeeded();
+    // Press in the tile's padding, 4px inside its left edge, not on the thumbnail itself.
+    const grab = await img.evaluate((el) => {
+      const tile = el.closest('.sidebar-item').getBoundingClientRect();
+      return { x: tile.x + 4, y: tile.y + tile.height / 2 };
+    });
+    const at = await onCanvas(page, 200 + 250 * i, 300);
+    await page.mouse.move(grab.x, grab.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x, at.y, { steps: 15 });
+    await page.mouse.up();
+    expected.push({ label: await img.getAttribute('alt'), img: await img.getAttribute('src'), x: 200 + 250 * i, y: 300 });
+  }
+
+  // Saved nodes are not in drop order (G6 ids that look like integers sort first), so order them by x.
+  await expect.poll(async () => (await saved(page))?.nodes.toSorted((a, b) => a.x - b.x)).toMatchObject(expected);
+  expect(expected.map((node) => node.label)).toEqual(['Article', 'Team', 'User']);
 });
 
 test('dropping a template adds a saved node and selecting it opens the Node panel', async ({ page }) => {

@@ -22,14 +22,12 @@ export const templates = (page) => page.locator('.sidebar img');
 export const categoryNames = (page) => page.locator('.sidebar-category-name');
 export const categoryToggle = (page, name) =>
   page.locator('.sidebar-category-toggle').filter({ has: page.getByText(name, { exact: true }) });
-// The `<img>` of the sidebar template labelled `label` in category `category`.
+// The `<img>` of the sidebar template named `label` (its alt text) in category `category`.
 export const template = (page, category, label) =>
   page
     .locator('.sidebar-category')
     .filter({ has: categoryToggle(page, category) })
-    .locator('.sidebar-item')
-    .filter({ has: page.getByText(label, { exact: true }) })
-    .locator('img');
+    .getByRole('img', { name: label, exact: true });
 export const panelTitle = (page) => page.locator('.details .ant-card-head-title');
 export const nodeLabelInput = (page) => page.locator('.details input[name=title]');
 export const command = (page, name) => page.locator(`.toolbar .command[data-command="${name}"]`);

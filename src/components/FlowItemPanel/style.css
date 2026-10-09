@@ -25,7 +25,6 @@
   background: #ffffff;
 
   z-index: 1000;
-  text-align: center;
 }
 
 /* The search box and the current category heading stay pinned while scrolling. */
@@ -92,15 +91,19 @@
 .sidebar-item {
   position: relative;
   z-index: 0;
-  padding: 4px 16px;
   background: #ffffff;
-  transition: all 0.1s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 .sidebar-item:hover {
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
   transform: scale(1.15);
   /* Above the other items, below the pinned headings. */
   z-index: 1;
+}
+/* gg-editor's Item, the <div> that starts a drag on mousedown. The padding goes on it
+   rather than on .sidebar-item, so pressing anywhere on the tile starts a drag. */
+.sidebar-item > div {
+  padding: 4px 16px;
 }
 .sidebar-item img {
   display: block;
@@ -111,16 +114,6 @@
   object-fit: cover;
   object-position: 50% 80%;
   pointer-events: none;
-}
-.sidebar-item-label {
-  display: block;
-  margin-top: 2px;
-  overflow: hidden;
-  color: rgba(0, 0, 0, 0.65);
-  font-size: 10px;
-  line-height: 14px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .sidebar .sidebar-empty {
