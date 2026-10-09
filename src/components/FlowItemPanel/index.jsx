@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { ItemPanel } from 'gg-editor';
 import { Card, Empty, Input } from 'antd';
@@ -32,6 +32,7 @@ function storeCollapsed(categories) {
 const FlowItemPanel = () => {
   const [keyword, setKeyword] = useState('');
   const [collapsed, setCollapsed] = useState(loadCollapsed);
+  const list = useRef(null);
   const groups = useMemo(() => groupTemplates(nodes, keyword), [keyword]);
   // While searching, every matching template is shown, even in collapsed categories.
   const searching = keyword.trim() !== '';
@@ -55,9 +56,13 @@ const FlowItemPanel = () => {
           placeholder='Search'
           allowClear
           size='small'
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            setKeyword(e.target.value);
+            // Show new results from the top, not from wherever the old list was scrolled to.
+            list.current.scrollTop = 0;
+          }}
         />
-        <div className='sidebar-list'>
+        <div className='sidebar-list' ref={list}>
           {groups.map(({ category, items }) => {
             const expanded = searching || !collapsed.includes(category);
             const id = `sidebar-category-${category.replace(/\W+/g, '-')}`;

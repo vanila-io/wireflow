@@ -142,6 +142,15 @@ test('sidebar search matches template and category names across categories', asy
   await expect(categoryNames(page)).toHaveText(['E-Commerce']);
   await expect(templates(page)).toHaveCount(2);
   expect(await templates(page).evaluateAll((imgs) => imgs.map((img) => img.alt))).toEqual(['Cart pop up', 'Cart']);
+  await expect(categoryToggle(page, 'E-Commerce')).toBeDisabled();
+
+  // New results start at the top of the list, wherever it was scrolled to.
+  const list = page.locator('.sidebar-list');
+  await search.fill('');
+  await list.evaluate((el) => (el.scrollTop = el.scrollHeight));
+  await search.fill('video');
+  await expect(categoryNames(page)).toHaveText(['Blog', 'Header', 'Multimedia']);
+  expect(await list.evaluate((el) => el.scrollTop)).toBe(0);
 
   await search.fill('multimedia');
   await expect(categoryNames(page)).toHaveText(['Multimedia']);
