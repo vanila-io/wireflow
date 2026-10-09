@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="t d">
 <title id="t">How Wireflow works</title>
-<desc id="d">Three animated steps: drag a screen template from the sidebar onto the canvas, connect two screens by dragging from an anchor, then export the canvas as a JPEG while work autosaves in the browser.</desc>
+<desc id="d">Three animated steps: drag a screen template from the sidebar onto the canvas, connect two screens by dragging from a handle, then save the diagram as wireflow.json while work autosaves in the browser.</desc>
 <style>
 .f{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
 .ln{fill:#BCC2C6}
@@ -55,8 +55,8 @@
   <g fill="#BCC2C6"><circle cx="54" cy="227" r="12"/><circle cx="450" cy="227" r="12"/><circle cx="846" cy="227" r="12"/></g>
   <g fill="#22A6EF"><circle class="p1" cx="54" cy="227" r="12"/><circle class="p2" cx="450" cy="227" r="12"/><circle class="p3" cx="846" cy="227" r="12"/></g>
   <g font-size="13" font-weight="700" fill="#fff" text-anchor="middle"><text x="54" y="231.5">1</text><text x="450" y="231.5">2</text><text x="846" y="231.5">3</text></g>
-  <g font-size="16" font-weight="600" fill="#34495E"><text x="76" y="233">Drag a screen</text><text x="472" y="233">Connect the flow</text><text x="868" y="233">Export &amp; autosave</text></g>
-  <g font-size="13" fill="#6b7b8b"><text x="76" y="257">Pick from 100+ templates in the sidebar.</text><text x="472" y="257">Drag from an anchor to link two screens.</text><text x="868" y="257">Download a JPEG. Work autosaves locally.</text></g>
+  <g font-size="16" font-weight="600" fill="#34495E"><text x="76" y="233">Drag a screen</text><text x="472" y="233">Connect the flow</text><text x="868" y="233">Save >Export &amp; autosave<amp; autosave</text></g>
+  <g font-size="13" fill="#6b7b8b"><text x="76" y="257">Pick from 100+ templates in the sidebar.</text><text x="472" y="257">Drag from a handle to link two screens.</text><text x="868" y="257">Save wireflow.json. Work autosaves locally.</text></g>
 </g>
 
 <!-- Step 1: sidebar + drop -->
@@ -115,7 +115,7 @@
 <g class="fc f">
   <rect x="840.5" y="148.5" width="128" height="31" rx="8" fill="#fff" stroke="#d8dee4"/>
   <rect class="o" x="850" y="156" width="18" height="15" rx="2" fill="#39D4FF"/><use href="#mt" transform="translate(859,165) scale(.55)" class="o" fill="#22A6EF"/>
-  <text x="876" y="168.5" font-size="12" font-weight="600" fill="#34495E">wireflow.jpg</text>
+  <text x="876" y="168.5" font-size="12" font-weight="600" fill="#34495E">wireflow.json</text>
 </g>
 <g class="f">
   <rect x="1006.5" y="151.5" width="146" height="26" rx="13" fill="#e9f8f5" stroke="#bfe6dd"/>

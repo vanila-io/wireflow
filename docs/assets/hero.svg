@@ -58,7 +58,7 @@
     <rect x="174" y="224" width="122" height="28" rx="14" fill="#f0f2f5" stroke="#d8dee4"/>
     <text x="235" y="243" fill="#34495E">Local autosave</text>
     <rect x="304" y="224" width="102" height="28" rx="14" fill="#f0f2f5" stroke="#d8dee4"/>
-    <text x="355" y="243" fill="#34495E">JPEG export</text>
+    <text x="355" y="243" fill="#34495E">Works offline</text>
   </g>
   <text x="48" y="292" font-size="13" fill="#8796a5">Open source (MIT) · runs entirely in your browser</text>
 </g>
