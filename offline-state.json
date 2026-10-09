@@ -1,0 +1,64 @@
+{
+  "navigator.onLine": false,
+  "serviceWorker": {
+    "scope": "http://localhost:4351/",
+    "scriptURL": "http://localhost:4351/service-worker.js",
+    "state": "activated"
+  },
+  "controller": "http://localhost:4351/service-worker.js",
+  "caches": [
+    "wireflow-precache-v2-http://localhost:4351/"
+  ],
+  "precachedEntries": 118,
+  "sidebarTemplates": 102,
+  "brokenTemplateImages": 0,
+  "savedDiagram": {
+    "nodes": [
+      {
+        "type": "node",
+        "size": [
+          96,
+          88
+        ],
+        "img": "/assets/Cart-DUKob1Ja.svg",
+        "label": "Cart",
+        "x": 330,
+        "y": 300,
+        "id": "ccc6d9b5",
+        "shape": "node-image-header"
+      },
+      {
+        "type": "node",
+        "size": [
+          96,
+          88
+        ],
+        "img": "/assets/Checkout-kzvmV1f0.svg",
+        "label": "Checkout",
+        "x": 620,
+        "y": 300,
+        "id": "d4556271",
+        "shape": "node-image-header"
+      }
+    ],
+    "edges": [
+      {
+        "source": "ccc6d9b5",
+        "sourceAnchor": 1,
+        "target": "d4556271",
+        "targetAnchor": 3,
+        "shape": "flow-polyline-round",
+        "color": "#a4b2c0",
+        "style": {
+          "lineWidth": 2
+        },
+        "id": "7ea89b03"
+      }
+    ],
+    "groups": []
+  },
+  "previewServerReachable": false,
+  "responsesDuringOfflineReload": 108,
+  "responsesNotFromServiceWorker": [],
+  "consoleErrors": []
+}

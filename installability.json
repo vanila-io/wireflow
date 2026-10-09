@@ -1,0 +1,47 @@
+{
+  "url": "http://localhost:4351/",
+  "Page.getInstallabilityErrors": {
+    "installabilityErrors": []
+  },
+  "Page.getAppManifest errors": [],
+  "manifestUrl": "http://localhost:4351/manifest.json",
+  "manifest": {
+    "id": "/",
+    "short_name": "Wireflow",
+    "name": "Wireflow",
+    "description": "Free, open-source user-flow and wireframe flowchart tool",
+    "icons": [
+      {
+        "src": "/favicon.ico",
+        "sizes": "48x48 32x32 16x16",
+        "type": "image/x-icon"
+      },
+      {
+        "src": "/android-chrome-96x96.png",
+        "type": "image/png",
+        "sizes": "96x96"
+      },
+      {
+        "src": "/icon-192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "/icon-512.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      },
+      {
+        "src": "/icon-maskable-512.png",
+        "type": "image/png",
+        "sizes": "512x512",
+        "purpose": "maskable"
+      }
+    ],
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "theme_color": "#ffffff",
+    "background_color": "#ffffff"
+  }
+}
