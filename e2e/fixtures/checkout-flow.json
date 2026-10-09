@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    { "type": "node", "size": [96, 88], "shape": "node-image-header", "img": "/static/media/Sign in 1.a1b484ff.svg", "label": "Sign in", "x": 150, "y": 160, "id": "signin01" },
+    { "type": "node", "size": [96, 88], "shape": "node-image-header", "img": "/static/media/Products 1.5c2e9d70.svg", "label": "Products", "x": 400, "y": 160, "id": "product1" },
+    { "type": "node", "size": [96, 78], "shape": "node-image-without-header", "img": "/static/media/Cart.2ae03932.svg", "label": "Cart", "x": 400, "y": 420, "id": "cart0001", "parent": "group001" },
+    { "type": "node", "size": [96, 88], "shape": "node-image-header", "img": "/static/media/Checkout.0b7f1c3e.svg", "label": "Checkout", "x": 640, "y": 420, "id": "checkout", "parent": "group001" },
+    { "type": "node", "size": [96, 88], "shape": "node-image-header", "img": "/static/media/Complete.e4d1a9b2.svg", "label": "Order complete", "x": 880, "y": 420, "id": "complete" }
+  ],
+  "edges": [
+    { "source": "signin01", "sourceAnchor": 1, "target": "product1", "targetAnchor": 3, "shape": "flow-polyline-round", "color": "#a4b2c0", "style": { "lineWidth": 2 }, "label": "Log in", "id": "edge0001" },
+    { "source": "product1", "sourceAnchor": 2, "target": "cart0001", "targetAnchor": 0, "shape": "flow-smooth", "color": "#1890ff", "style": { "lineWidth": 4 }, "label": "Add to cart", "id": "edge0002" },
+    { "source": "cart0001", "sourceAnchor": 1, "target": "checkout", "targetAnchor": 3, "shape": "flow-polyline", "color": "#f5222d", "style": { "lineWidth": 3 }, "id": "edge0003" },
+    { "source": "checkout", "sourceAnchor": 1, "target": "complete", "targetAnchor": 3, "shape": "flow-polyline-round", "color": "#52c41a", "style": { "lineWidth": 2 }, "label": "Pay", "id": "edge0004" }
+  ],
+  "groups": [
+    { "id": "group001", "label": "Payment", "x": 351.5, "y": 364.5 }
+  ]
+}

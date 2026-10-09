@@ -1,0 +1,197 @@
+/* React Flow proof of concept (?engine=rf). Colors and sizes follow gg-editor 2's
+   defaults so both engines draw the same diagram alike. */
+
+.rf-canvas {
+  position: relative;
+  height: 100vh;
+}
+
+.rf-canvas .react-flow {
+  background: #f0f2f5;
+}
+
+/* Template sidebar: same look as FlowItemPanel, plus touch-friendly dragging. */
+.sidebar .rf-template {
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.rf-drag-ghost {
+  position: fixed;
+  z-index: 2000;
+  width: 96px;
+  height: 88px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Screen node: flow-rect (stroke #CED4D9, white, radius 4, soft shadow) + image. */
+.rf-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border: 1px solid #ced4d9;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(13, 26, 38, 0.08);
+  box-sizing: border-box;
+}
+
+.rf-screen--selected {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.25);
+}
+
+.rf-screen__img {
+  position: absolute;
+  left: 0.5px;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* The header band gg-editor draws behind the image (#EBEFF0, stroke #BCC2C6). */
+.rf-screen__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 11px;
+  background: #ebeff0;
+  border-bottom: 1px solid #bcc2c6;
+  border-radius: 3px 3px 0 0;
+}
+
+.rf-screen__label {
+  z-index: 2;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  line-height: 11px;
+  /* G6's 10px canvas text renders narrower than 10px DOM text. */
+  font-size: 9px;
+  font-weight: 600;
+  color: #94a4a5;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Group frame: G6 `common` group (fill #F2F4F5, stroke #CED4D9, radius 4). */
+.rf-group {
+  width: 100%;
+  height: 100%;
+  background: rgba(242, 244, 245, 0.92);
+  border: 1px solid #ced4d9;
+  border-radius: 4px;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.rf-group--selected {
+  border-color: #1890ff;
+}
+
+.react-flow__node.rf-drop-target .rf-group {
+  border: 2px dashed #1890ff;
+  background: rgba(24, 144, 255, 0.08);
+}
+
+.rf-group__label {
+  padding: 14px 0 0 40px;
+  font-size: 12px;
+  color: #000;
+}
+
+/* React Flow gives group-type nodes a default frame of its own; ours draws it. */
+.react-flow__node-group {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.react-flow__node-group.selected,
+.react-flow__node-group.selectable:hover,
+.react-flow__node-group.selectable.selected {
+  box-shadow: none;
+}
+
+/* Handles: hidden until the node is hovered or selected, like gg-editor's anchors. */
+.rf-canvas .react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border: 1px solid #1890ff;
+  opacity: 0;
+}
+
+.rf-canvas .react-flow__node:hover .react-flow__handle,
+.rf-canvas .react-flow__node.selected .react-flow__handle,
+.rf-canvas .react-flow.rf-connecting .react-flow__handle,
+.rf-canvas .react-flow__handle.connectingfrom,
+.rf-canvas .react-flow__handle.connectingto {
+  opacity: 1;
+}
+
+/* Fingers need bigger targets; there is no hover, so show the handles. */
+@media (pointer: coarse) {
+  .rf-canvas .react-flow__handle {
+    width: 16px;
+    height: 16px;
+    opacity: 1;
+  }
+}
+
+.rf-canvas .react-flow__edge.selected .react-flow__edge-path {
+  filter: drop-shadow(0 0 2px #1890ff);
+}
+
+/* Toolbar: FlowToolbar's look, with buttons instead of gg-editor's Command divs. */
+.toolbar .rf-command {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+}
+
+.toolbar .rf-command.disable span {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.toolbar .rf-command--active span {
+  color: #1890ff;
+}
+
+.rf-details .ant-card-body {
+  text-align: left;
+}
+
+.rf-details__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rf-details__row > span {
+  flex: 0 0 56px;
+}
+
+.rf-details__note {
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+}
+
+.rf-minimap.react-flow__panel {
+  position: static;
+  margin: 0;
+}
+
+.rf-minimap svg {
+  width: 100%;
+  height: 200px;
+}
