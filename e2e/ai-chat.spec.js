@@ -270,6 +270,28 @@ test('a layout that hides a screen behind a group is applied with warnings for t
   ]);
 });
 
+test('Ctrl+H and Ctrl+K typed in the AI panel leave the selected node alone', async ({ page }) => {
+  await mockAnthropic(page, []);
+  await openEditor(page);
+  const at = await onCanvas(page, 300, 300);
+  await dropTemplate(page, 0, at);
+  await page.mouse.click(at.x, at.y);
+  await page.locator('.ai-toggle').click();
+  await panel(page).getByLabel('API key').fill('sk-ant-test-key');
+  await panel(page).getByRole('button', { name: /check & use key/i }).click();
+  const header = async () => (await saved(page)).nodes[0].shape;
+
+  await panel(page).getByLabel('Message').press('Control+h');
+  expect(await header()).toBe('node-image-header');
+
+  // On the canvas the shortcut still works; then Ctrl+K in the panel must not undo it.
+  await page.mouse.click(at.x, at.y);
+  await page.keyboard.press('Control+h');
+  await expect.poll(header).toBe('node-image-without-header');
+  await panel(page).getByLabel('Message').press('Control+k');
+  expect(await header()).toBe('node-image-without-header');
+});
+
 test.describe('when requests fail', () => {
   // Chromium logs every failed or refused request as a console error.
   test.use({ allowErrors: [/Failed to load resource/] });

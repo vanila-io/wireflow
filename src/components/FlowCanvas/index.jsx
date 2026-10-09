@@ -57,9 +57,9 @@ const FlowCanvas = () => {
         setEdge(item);
       }}
       onAfterChange={(e) => {
-        // `changeData` comes from page.read(), which is how undo/redo of snapshot
-        // commands (delete, groups, AI edits) restore the canvas. It has no `item`,
-        // but carries the restored data, so save that.
+        // `changeData` comes from page.read(), which is how undo of a snapshot
+        // command (delete, groups, AI edits) restores the canvas. It has no `item`,
+        // but carries the restored data, so save that. (Redo runs the command again.)
         if (e.action === 'changeData') {
           if (e.data) saveData(normalize(e.data));
           return;

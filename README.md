@@ -30,6 +30,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 - **Navigate**: zoom in and out, fit to screen, actual size, and a minimap.
 - **Export** the canvas to a JPEG with one click.
 - **Autosave**: every change is saved to your browser's `localStorage`.
+- **AI assistant** (optional, bring your own Anthropic API key): describe a flow or a change in plain language and Claude edits the diagram. Each change is one undo step.
 
 ## How it works
 
@@ -78,7 +79,14 @@ pnpm exec playwright install chromium      # first run only: download the test b
 pnpm test:e2e                              # end-to-end tests (Playwright, Chromium)
 ```
 
-Unit tests are `*.test.js` / `*.test.jsx` files under `src/`. The end-to-end specs live in `e2e/` and are configured in `playwright.config.js`. `pnpm test:e2e` builds the app and serves it on port 4179 by itself, so you don't need a running dev server (the port must be free).
+Unit tests are `*.test.js` / `*.test.jsx` files under `src/`. The end-to-end specs live in `e2e/` and are configured in `playwright.config.js`. `pnpm test:e2e` builds the app and serves it on port 4179 by itself, so you don't need a running dev server (the port must be free; set `E2E_PORT` to use another one).
+
+The AI tests run against a mocked API. A few also run against the real one when you set `AI_LIVE=1` and put a key in `.env` as `ANTHROPIC_API_KEY` (each run costs a fraction of a cent):
+
+```bash
+AI_LIVE=1 pnpm vitest run src/__tests__/ai/live.test.js
+AI_LIVE=1 pnpm test:e2e e2e/ai-chat.spec.js -g live
+```
 
 ## Docker
 
@@ -131,7 +139,9 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 
 ## Data and privacy
 
-- Your diagram is saved automatically to your browser's `localStorage` (key `data`) on every change. Nothing is sent to a server, and there are no accounts or analytics.
+- Your diagram is saved automatically to your browser's `localStorage` (key `data`) on every change. Unless you use the AI assistant, nothing is sent to a server, and there are no accounts or analytics.
+- The AI assistant is optional. When you use it, your messages and the current diagram (screen labels, template names, positions, connections and groups) go from your browser straight to Anthropic's API under your own API key, so Anthropic's terms and your organization's data settings apply. There is no Wireflow server in between. The chat is kept in memory only; a reload clears it.
+- Your API key stays in memory unless you tick "Remember on this device", which stores it unencrypted in this browser's `localStorage` (key `wireflow-ai`), where any script running on the page could read it. Use a dedicated key with an expiry and a spend limit. "Forget key" removes it.
 - The diagram only exists in the browser where you made it. Clearing site data deletes it, and you can't move the editable diagram to another browser yet. JPEG export saves an image of the canvas, not an editable file.
 - The toolbar icon font is loaded from Alibaba's iconfont CDN (`at.alicdn.com`).
 
@@ -147,8 +157,9 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 ├── e2e/                  Playwright end-to-end specs
 ├── public/               static files copied as-is (icons, manifest, service worker)
 ├── src/
+│   ├── ai/               AI assistant: template catalog, diagram edits and layout checks, agent loop, providers
 │   ├── assets/images/    wireframe screen templates (SVG), one folder per category
-│   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export button
+│   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export button, AI panel
 │   ├── containers/       app layout and custom node shapes
 │   └── utils/            localStorage persistence helpers
 ├── index.html            Vite entry page
