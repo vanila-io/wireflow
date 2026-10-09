@@ -23,7 +23,7 @@ describe("removeDanglingEdges", () => {
         expect(removeDanglingEdges(data)).toBe(data);
     });
 
-    it("should drop edges with a canvas point or an unknown id as an end and keep the rest", () => {
+    it("should drop edges with a canvas point, an unknown id or an edge's id as an end and keep the rest", () => {
         const data = {
             nodes,
             edges: [
@@ -32,6 +32,7 @@ describe("removeDanglingEdges", () => {
                 { id: "e3", source: { x: 10, y: 20 }, target: "n2" },
                 { id: "e4", source: "n2", target: "deleted" },
                 { id: "e5", source: "n2" },
+                { id: "e6", source: "n2", target: "e1" },
             ],
             groups,
         };
@@ -40,7 +41,7 @@ describe("removeDanglingEdges", () => {
 
         expect(result).toEqual({ nodes, edges: [edge], groups });
         expect(result.nodes).toBe(nodes);
-        expect(data.edges).toHaveLength(5); // the input is not mutated
+        expect(data.edges).toHaveLength(6); // the input is not mutated
     });
 
     it("should drop every edge when the diagram has no nodes", () => {

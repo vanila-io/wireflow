@@ -20,7 +20,9 @@ stored?.nodes?.forEach((node) => {
   if (legacy && templateUrls[`${legacy[1]}.svg`]) node.img = templateUrls[`${legacy[1]}.svg`];
 });
 
-// Drop edges saved with a loose end (see removeDanglingEdges) and save the result.
+// Older builds could save edges that don't connect two items. G6 can't draw an
+// edge to a missing item (the app would not start), so drop them before the
+// first draw and store the cleaned diagram.
 const data = removeDanglingEdges(stored);
 if (data !== stored) saveData(data);
 
@@ -73,8 +75,8 @@ const FlowCanvas = () => {
         saveData(dataMapToData(e.item && e.item.dataMap, e.item.itemMap));
       }}
       data={data}
-      // gg-editor's Flow defaults to `noEndEdge: true`, which saves an edge dropped
-      // on empty canvas with a canvas point as its end. Cancel such drops instead.
+      // gg-editor's Flow defaults to `noEndEdge: true`: a new edge, or a dragged edge
+      // end, dropped on empty canvas ends at that canvas point. Cancel such drops.
       noEndEdge={false}
       onBeforeItemUnselected={() => setEdge({})}
       onMouseEnter={mouseEvent}
