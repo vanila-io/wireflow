@@ -14,7 +14,7 @@ const entries = Object.entries(files).map(([path, url]) => {
   return { category, name, url, label: labelByUrl[url] ?? name };
 });
 
-// A few file names (Error, Steps) exist in two folders; prefix those with the folder.
+// File names are unique today; if one ever appears in two folders, prefix both with the folder.
 const counts = {};
 entries.forEach((e) => (counts[slug(e.name)] = (counts[slug(e.name)] || 0) + 1));
 entries.forEach((e) => {
