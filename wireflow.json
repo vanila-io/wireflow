@@ -1,0 +1,106 @@
+{
+  "format": "wireflow",
+  "version": 1,
+  "diagram": {
+    "nodes": [
+      {
+        "type": "node",
+        "size": [
+          96,
+          88
+        ],
+        "label": "Product Item",
+        "x": 170,
+        "y": 330,
+        "id": "3a85f3e3",
+        "shape": "node-image-header",
+        "index": 0,
+        "template": "E-Commerce/Item 2"
+      },
+      {
+        "type": "node",
+        "size": [
+          96,
+          88
+        ],
+        "label": "Cart",
+        "x": 410,
+        "y": 330,
+        "id": "24e3e373",
+        "shape": "node-image-header",
+        "index": 1,
+        "template": "E-Commerce/Cart"
+      },
+      {
+        "type": "node",
+        "size": [
+          96,
+          88
+        ],
+        "label": "Checkout Delivery",
+        "x": 650,
+        "y": 330,
+        "id": "bddd15a1",
+        "shape": "node-image-header",
+        "index": 2,
+        "template": "E-Commerce/Delivery"
+      },
+      {
+        "type": "node",
+        "size": [
+          96,
+          88
+        ],
+        "label": "Order placed",
+        "x": 890,
+        "y": 330,
+        "id": "f955e97c",
+        "shape": "node-image-header",
+        "index": 3,
+        "template": "E-Commerce/Complete"
+      }
+    ],
+    "edges": [
+      {
+        "source": "3a85f3e3",
+        "sourceAnchor": 1,
+        "target": "24e3e373",
+        "targetAnchor": 3,
+        "shape": "flow-polyline-round",
+        "color": "#a4b2c0",
+        "style": {
+          "lineWidth": 2
+        },
+        "id": "13396ba6",
+        "index": 4
+      },
+      {
+        "source": "24e3e373",
+        "sourceAnchor": 1,
+        "target": "bddd15a1",
+        "targetAnchor": 3,
+        "shape": "flow-polyline-round",
+        "color": "#a4b2c0",
+        "style": {
+          "lineWidth": 2
+        },
+        "id": "719a2f9c",
+        "index": 5
+      },
+      {
+        "source": "bddd15a1",
+        "sourceAnchor": 1,
+        "target": "f955e97c",
+        "targetAnchor": 3,
+        "shape": "flow-polyline-round",
+        "color": "#a4b2c0",
+        "style": {
+          "lineWidth": 2
+        },
+        "id": "be55e9c4",
+        "index": 6
+      }
+    ],
+    "groups": []
+  }
+}
