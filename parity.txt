@@ -1,0 +1,14 @@
+Production (https://wireflow.co, captured 2026-10-10) vs this branch (OpenNext build in workerd, `opennextjs-cloudflare preview`).
+Chromium (Playwright 1.63), fresh contexts, deviceScaleFactor 1, analytics and sponsor avatars blocked on both sides.
+"exact" = any RGBA difference; "pixelmatch" = pixelmatch default threshold 0.1.
+
+landing-desktop.png       1440x900   exact 0.00% (0 px)       pixelmatch 0.00%
+landing-desktop-full.png  1440x5977  exact 0.00% (0 px)       pixelmatch 0.00%
+landing-mobile.png        390x844    exact 0.00% (0 px)       pixelmatch 0.00%
+landing-mobile-full.png   504x14018  exact 0.00% (0 px)       pixelmatch 0.00%
+app-desktop.png           1440x900   exact 3.15% (40858 px)   pixelmatch 0.91%
+    outside the three intended changes (header buttons, toolbar, shortcuts panel): exact 0.00% (39 px, max channel delta 2)
+app-mobile.png            390x844    exact 28.65%             pixelmatch 9.74%   (intended: phone layout, #93)
+
+First commit of the branch (production's code as reconstructed, before any port):
+all six captures 0.00% (app-desktop: 28 px with channel delta <= 2 in one sidebar thumbnail row).
