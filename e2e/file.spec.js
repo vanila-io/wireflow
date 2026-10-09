@@ -54,9 +54,9 @@ const loneCheckout = {
 
 test('save and open buttons sit next to the export button', async ({ page }) => {
   await openEditor(page);
-  const exportBox = await page.getByRole('button', { name: 'Export as JPEG' }).boundingBox();
-  const saveBox = await saveButton(page).boundingBox();
-  const openBox = await openButton(page).boundingBox();
+  const boxes = () =>
+    Promise.all([page.getByRole('button', { name: 'Export as JPEG' }), saveButton(page), openButton(page)].map((b) => b.boundingBox()));
+  const [exportBox, saveBox, openBox] = await boxes();
 
   expect(saveBox.y).toBe(exportBox.y);
   expect(openBox.y).toBe(exportBox.y);
@@ -64,6 +64,11 @@ test('save and open buttons sit next to the export button', async ({ page }) => 
   expect(openBox.x).toBeGreaterThan(saveBox.x + saveBox.width);
   await expect(saveButton(page)).toHaveClass(/ant-btn-circle/);
   await expect(openButton(page)).toHaveClass(/ant-btn-circle/);
+
+  // The buttons sit in gg-editor's context menu, which moves to the pointer on a right-click.
+  const at = await onCanvas(page, 600, 500);
+  await page.mouse.click(at.x, at.y, { button: 'right' });
+  expect(await boxes()).toEqual([exportBox, saveBox, openBox]);
 });
 
 test('a diagram saved to a file opens again in a fresh browser and survives a reload', async ({ page }) => {
