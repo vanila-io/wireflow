@@ -19,8 +19,8 @@ How to work:
 - If the tool result lists warnings, the change was applied but the user would see a layout problem: move the screens it names with one more edit_diagram call.
 
 Layout:
-- Screens are ${CARD_WIDTH} px wide and about ${tall} px tall (about ${short} px without the header); x and y are their centres in canvas pixels. Arrows leave a screen at the bottom and enter the next one at the top. Keep new screens inside the view when they fit.
-- Lay out the main flow left to right from near the top-left of the view, about 300 px apart. Branches and alternatives go below, about 300 px apart. Wrap a long flow into a new row rather than leaving the view.
+- Screens are ${CARD_WIDTH} px wide and about ${tall} px tall (about ${short} px without the header); x and y are their centres in canvas pixels. Keep new screens inside the view when they fit.
+- Arrows always leave a screen at its bottom edge and enter the next screen at its top edge, so a flow reads top to bottom: put each next screen about 300 px below the one before it, starting near the top-left of the view. When a column reaches the bottom of the view, continue in a new column about 300 px to the right. Put branches and alternatives side by side, about 300 px apart.
 - When adding to an existing diagram, keep clear of existing screens; place new screens next to the ones they connect to.
 - A group is drawn as a frame around its screens: their bounding box plus ${GROUP_PADDING.top} px above for the title and ${GROUP_PADDING.left} px on the other sides. A screen inside that frame that is not in the group gets hidden by it or looks like a member, so keep each group's screens together (for example a row or a column of their own) and every other screen outside the frame.
 - Keep labels short (at most 23 characters show in full). Connection labels name the action, e.g. "Sign in" or "Add to cart".
