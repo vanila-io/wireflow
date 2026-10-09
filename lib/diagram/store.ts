@@ -59,19 +59,22 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
   /** The current diagram as stored (through the rules). */
   const current = () => enforceRules(live()).diagram;
 
-  // The save boundary. `kind` labels the undo step this change makes.
-  function commit(next: Partial<Pick<StoreState, 'nodes' | 'edges' | 'dropTarget'>>, kind?: string) {
+  // The save boundary. `kind` labels the undo step this change makes. Returns the
+  // id of the step it recorded, or null if the stored diagram didn't change.
+  function commit(next: Partial<Pick<StoreState, 'nodes' | 'edges' | 'dropTarget'>>, kind?: string): number | null {
     state = { ...state, ...next };
+    let recorded: number | null = null;
     if (!state.nodes.some((n) => n.dragging)) {
       const json = serialize(live());
       if (json !== history.present.json) {
         state.saveFailed = !save(json);
         history = record(history, json, kind);
+        recorded = history.present.id;
       }
     }
     state = { ...state, canUndo: canUndo(history), canRedo: canRedo(history) };
     emit();
-    return history.present.id;
+    return recorded;
   }
 
   // Show a stored diagram, keeping the selection and React Flow's measurements
@@ -117,7 +120,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     return selected.length === 1 && isGroup(selected[0]) ? selected[0].id : null;
   };
 
-  /** Apply a batch of changes as one undo step. Returns the step's id. */
+  /** Apply a batch of changes as one undo step. Returns the step's id (null: nothing changed). */
   const apply = (change: (d: Diagram) => Diagram, { kind, select }: { kind?: string; select?: string[] } = {}) =>
     commit(show(enforceRules(change(current())).diagram, select), kind);
 

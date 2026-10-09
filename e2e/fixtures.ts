@@ -3,13 +3,13 @@ import { test as base, expect, type Page } from '@playwright/test';
 export { expect };
 
 // Every test fails if the page logs a console error or throws an uncaught
-// error. `allowErrors` (set with test.use) lists errors a test causes on purpose.
-export const test = base.extend<{ allowErrors: RegExp[] }>({
-  allowErrors: [[], { option: true }],
+// error. `allowErrors` (set with test.use) matches errors a test causes on purpose.
+export const test = base.extend<{ allowErrors: RegExp | null }>({
+  allowErrors: [null, { option: true }],
   page: async ({ page, allowErrors }, runTest) => {
     const errors: string[] = [];
     page.on('console', (msg) => {
-      if (msg.type() === 'error' && !allowErrors.some((re) => re.test(msg.text()))) errors.push(msg.text());
+      if (msg.type() === 'error' && !allowErrors?.test(msg.text())) errors.push(msg.text());
     });
     page.on('pageerror', (error) => errors.push(error.message));
     await runTest(page);

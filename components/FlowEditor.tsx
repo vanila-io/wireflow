@@ -22,6 +22,7 @@ import { readDiagram, readHistory, writeDiagram, writeHistory, BACKUP_KEY } from
 import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, parseLegacyStorage, serializeFile } from '@/lib/diagram/file';
 import { serialize, type Dropped } from '@/lib/diagram/rules';
 import ConfirmDialog from './editor/ConfirmDialog';
+import { LOAD_FAILED, PanelBoundary, useAiPanel } from './ai/useAiPanel';
 import EdgePanel from './editor/EdgePanel';
 import FlowNode from './editor/FlowNode';
 import GroupNode from './editor/GroupNode';
@@ -130,6 +131,7 @@ function Editor() {
   );
 
   const dismiss = useCallback((id: number) => setNotices((ns) => ns.filter((n) => n.id !== id)), []);
+  const ai = useAiPanel();
 
   const addCard = useCallback(
     (g: Graphic, at?: { x: number; y: number }) => {
@@ -303,6 +305,18 @@ function Editor() {
               {saveFailed ? 'Not saved in this browser' : 'All changes saved'}
             </span>
             <button
+              onClick={() => void ai.toggle()}
+              aria-expanded={ai.open}
+              aria-label={ai.failed ? LOAD_FAILED : "AI assistant"}
+              title={ai.failed ? LOAD_FAILED : "AI assistant (your own Anthropic key)"}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 transition ${ai.failed ? "text-rose-600 ring-rose-300" : "text-wire-blue ring-wire-blue/40 hover:bg-wire-lavender"}`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9z" />
+              </svg>
+              AI
+            </button>
+            <button
               onClick={chooseFile}
               title="Open a wireflow.json file"
               className="rounded-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-wire-blue ring-1 ring-wire-blue/40 transition hover:bg-wire-lavender"
@@ -355,6 +369,11 @@ function Editor() {
               <Controls position="bottom-left" showInteractive={false} />
               <MiniMap pannable zoomable maskColor="rgba(240,242,245,0.8)" nodeStrokeWidth={0} />
             </ReactFlow>
+            {ai.Panel && (
+              <PanelBoundary>
+                <ai.Panel open={ai.open} onClose={ai.close} />
+              </PanelBoundary>
+            )}
             <Notices notices={notices} onDismiss={dismiss} />
             <ConfirmDialog
               open={!!pendingOpen}

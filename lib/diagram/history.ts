@@ -33,6 +33,20 @@ export function redo(h: History): History {
   return { past: [...h.past, h.present], present: h.future[0], future: h.future.slice(1) };
 }
 
+/**
+ * Where step `id` stands: "latest" (it is the current state), "applied" (later
+ * steps came after it), "replaced" (a later, still applied step opened a file
+ * over it), "undone", or "unknown" (no longer in the history).
+ */
+export function stepState(h: History, id: number): 'latest' | 'applied' | 'replaced' | 'undone' | 'unknown' {
+  if (h.present.id === id) return 'latest';
+  if (h.future.some((s) => s.id === id)) return 'undone';
+  const index = h.past.findIndex((s) => s.id === id);
+  if (index < 0) return 'unknown';
+  const later = [...h.past.slice(index + 1), h.present];
+  return later.some((s) => s.kind === 'open') ? 'replaced' : 'applied';
+}
+
 // A history read back from session storage, if it is well-formed.
 export function parseHistory(value: unknown): History | null {
   const isStep = (s: unknown): s is Step =>

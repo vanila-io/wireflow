@@ -97,6 +97,15 @@ describe('diagram store', () => {
     expect(JSON.parse(saves[2]).nodes).toHaveLength(1);
   });
 
+  // An AI batch that changes nothing must not claim the user's previous step
+  // (the panel's Undo would then undo the user's own change).
+  it('returns the id of the step a batch recorded, or null when nothing changed', () => {
+    const { store } = setup();
+    const id = store.apply((d) => ({ ...d, edges: [edge('ab', 'a', 'b')] }), { kind: 'ai' });
+    expect(id).toBe(store.history().present.id);
+    expect(store.apply((d) => d, { kind: 'ai' })).toBeNull();
+  });
+
   it('keeps the selection by id across undo and redo', () => {
     const { store } = setup({ nodes: [card('a'), card('b', 400)], edges: [edge('e', 'a', 'b')] });
     store.onEdgesChange([{ type: 'select', id: 'e', selected: true }]);
