@@ -97,3 +97,16 @@
   color: var(--color-ink-soft);
   cursor: text;
 }
+
+/* ---- Added after production: a template dragged with a finger ---- */
+.touch-drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  width: 110px;
+  pointer-events: none;
+  opacity: 0.85;
+  border-radius: 6px;
+  box-shadow: 0 8px 30px rgb(29 28 40 / 0.25);
+}

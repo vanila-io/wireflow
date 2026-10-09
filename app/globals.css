@@ -37,3 +37,8 @@ body {
   border: none;
   border-bottom: 1px solid #eee;
 }
+
+/* Added after production: the editor sidebar's width, in one place (#108). */
+:root {
+  --sidebar-width: 16rem;
+}

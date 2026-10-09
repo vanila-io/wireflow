@@ -187,6 +187,18 @@ function Editor() {
     return () => window.removeEventListener('keydown', onKey);
   }, [store]);
 
+  // A template dragged with a finger from the sidebar (HTML drag and drop is mouse-only).
+  const canvas = useRef<HTMLDivElement>(null);
+  const touchDrop = useCallback(
+    (g: Graphic, point: { x: number; y: number }) => {
+      const r = canvas.current?.getBoundingClientRect();
+      if (!r || point.x < r.left || point.x > r.right || point.y < r.top || point.y > r.bottom) return;
+      const p = screenToFlowPosition(point);
+      addCard(g, { x: p.x - 120, y: p.y - 100 });
+    },
+    [addCard, screenToFlowPosition],
+  );
+
   const onDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -300,8 +312,9 @@ function Editor() {
           </div>
         </header>
         <div className="flex min-h-0 flex-1">
-          <Sidebar onAddCard={(g) => addCard(g)} />
+          <Sidebar onAddCard={(g) => addCard(g)} onTouchDrop={touchDrop} />
           <div
+            ref={canvas}
             className="relative min-w-0 flex-1"
             onDrop={onDrop}
             onDragOver={(e) => {
