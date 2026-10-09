@@ -19,7 +19,6 @@
     "gg-editor": "^2.0.4",
     "html-to-image": "^1.11.13",
     "react": "^19.3.0",
-    "react-colorful": "^5.8.1",
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
