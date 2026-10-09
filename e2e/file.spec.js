@@ -232,7 +232,8 @@ test('a diagram too big for browser storage is not opened', async ({ page }) => 
   await expect(toast(page)).toHaveText("Couldn't open huge.json. It's too big to keep in this browser's storage.");
   await expect(confirmDialog(page)).toHaveCount(0);
 
-  expect(await saved(page)).toEqual(before);
+  // Still the previous diagram (re-saving it after the rollback may add gg-editor's `index` fields).
+  expect(await saved(page)).toMatchObject(before);
   await page.mouse.click(at.x, at.y);
   await expect(nodeLabelInput(page)).toHaveValue('Cart');
 });
