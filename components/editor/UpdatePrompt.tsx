@@ -28,11 +28,12 @@ export default function UpdatePrompt() {
     loaded
       .then(() => navigator.serviceWorker.register('/sw.js', { scope: '/app' }))
       .then((registration) => {
+        const track = (worker: ServiceWorker | null) => worker?.addEventListener('statechange', () => worker.state === 'installed' && offer(worker));
         offer(registration.waiting);
-        registration.addEventListener('updatefound', () => {
-          const worker = registration.installing;
-          worker?.addEventListener('statechange', () => worker.state === 'installed' && offer(worker));
-        });
+        // The browser may already have found the update (it checks on navigation)
+        // before this ran, in which case 'updatefound' has fired already.
+        track(registration.installing);
+        registration.addEventListener('updatefound', () => track(registration.installing));
         // A tab kept open notices a new deploy within the hour.
         timer = setInterval(() => registration.update().catch(() => {}), HOUR);
       })
