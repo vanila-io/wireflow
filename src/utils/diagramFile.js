@@ -1,6 +1,6 @@
 import { currentImg, templateKey, templateUrl } from './templates';
 
-// "Save file" writes the diagram as JSON in this format:
+// "Save to file" writes the diagram as JSON in this format:
 //
 //   {
 //     "format": "wireflow",
@@ -11,8 +11,8 @@ import { currentImg, templateKey, templateUrl } from './templates';
 // `diagram` holds the same items as gg-editor's save() and localStorage['data'], with
 // one change: a node that shows a template screen stores the template's key
 // ("template": "E-Commerce/Cart", see ./templates.js) instead of its "img" URL, which
-// changes between builds. "Open file" also accepts a plain { nodes, edges, groups }
-// object, i.e. the contents of localStorage['data'].
+// belongs to one build of the app. "Open file" also accepts a plain
+// { nodes, edges, groups } object, i.e. the contents of localStorage['data'].
 export const FILE_FORMAT = 'wireflow';
 export const FILE_VERSION = 1;
 export const FILE_NAME = 'wireflow.json';

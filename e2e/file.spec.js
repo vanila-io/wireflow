@@ -94,7 +94,7 @@ test('a diagram saved to a file opens again in a fresh browser and survives a re
     { id: before.nodes[0].id, label: 'Landing page', template: 'Article/Article 1', x: 300, y: 300 },
     { id: before.nodes[1].id, label: 'Cart', template: 'E-Commerce/Cart', x: 650, y: 300 },
   ]);
-  expect(text).not.toContain('/assets/'); // hashed image URLs change with every build
+  expect(text).not.toContain('/assets/'); // image URLs belong to one build
   expect(file.diagram.edges).toMatchObject(before.edges);
 
   // Start over with an empty editor, as in another browser.
@@ -235,4 +235,25 @@ test('a diagram too big for browser storage is not opened', async ({ page }) => 
   expect(await saved(page)).toEqual(before);
   await page.mouse.click(at.x, at.y);
   await expect(nodeLabelInput(page)).toHaveValue('Cart');
+});
+
+test('a diagram autosaved by a build with other template URLs gets this build\'s images', async ({ page }) => {
+  await openEditor(page);
+  const current = await templates(page).nth(CART).getAttribute('src');
+  // The same file under another content hash, as after an SVG or bundler change.
+  const older = current.replace(/-[\w-]{8}\.svg$/, '-0ldBu1ld.svg');
+  expect(older).not.toBe(current);
+  await page.evaluate((img) => {
+    const cart = { type: 'node', size: [96, 88], shape: 'node-image-header', img, label: 'Cart', x: 400, y: 300, id: 'ca57ca57' };
+    localStorage.setItem('data', JSON.stringify({ nodes: [cart], edges: [], groups: [] }));
+  }, older);
+  await page.reload();
+  await expect(page.locator('#canvas_1')).toBeVisible();
+
+  // FlowCanvas re-points the node when it loads; the next edit saves it.
+  const cart = await onCanvas(page, 400, 300);
+  await page.mouse.click(cart.x, cart.y);
+  await nodeLabelInput(page).fill('Basket');
+  await nodeLabelInput(page).blur();
+  await expect.poll(async () => (await saved(page)).nodes).toMatchObject([{ id: 'ca57ca57', label: 'Basket', img: current }]);
 });

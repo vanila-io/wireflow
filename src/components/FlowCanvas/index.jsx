@@ -5,8 +5,9 @@ import { dataMapToData } from '../../utils/dataMapToData';
 import { saveData } from '../../utils/saveData';
 import { currentImg } from '../../utils/templates';
 
-// Template image URLs change between builds (and moved from /static/media/ when the app
-// left Create React App), so re-point saved nodes at this build's URL of their template.
+// Template image URLs change when an SVG or the bundler changes (they moved from
+// /static/media/ when the app left Create React App), so re-point saved nodes at this
+// build's URL of their template.
 const data = JSON.parse(localStorage.getItem('data'));
 data?.nodes?.forEach((node) => {
   if (node.img) node.img = currentImg(node.img);

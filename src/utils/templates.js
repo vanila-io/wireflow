@@ -1,7 +1,8 @@
 // Template screens are bundled by Vite, so their URLs carry a content hash
-// (/assets/Cart-BfX1a2b3.svg) that changes from one build to the next. Anything that
-// must outlive a build, such as a saved file, refers to a template by a stable key
-// instead: "<folder>/<file name without .svg>", e.g. "E-Commerce/Cart".
+// (/assets/Cart-BfX1a2b3.svg). A URL changes whenever its SVG or the bundler's file
+// naming changes; the Create React App build served /static/media/Cart.2ae03932.svg.
+// Anything that must outlive a build, such as a saved file, refers to a template by a
+// stable key instead: "<folder>/<file name without .svg>", e.g. "E-Commerce/Cart".
 const files = import.meta.glob('../assets/images/*/*.svg', { eager: true, import: 'default' });
 
 const urlByKey = new Map();

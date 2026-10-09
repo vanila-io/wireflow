@@ -29,7 +29,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 - **Edit history**: undo, redo, copy, paste, and delete.
 - **Navigate**: zoom in and out, fit to screen, actual size, and a minimap.
 - **Export** the canvas to a JPEG with one click.
-- **Save and open files**: download the diagram as `wireflow.json` and open it again later, in any browser.
+- **Save and open files**: download the diagram as `wireflow.json` and open it again later, here or in another browser.
 - **Autosave**: every change is saved to your browser's `localStorage`.
 
 ## How it works
@@ -133,7 +133,7 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 ## Data and privacy
 
 - Your diagram is saved automatically to your browser's `localStorage` (key `data`) on every change. Nothing is sent to a server, and there are no accounts or analytics.
-- The autosaved diagram only exists in the browser where you made it, and clearing site data deletes it. To keep it or move it to another browser, click **Save to file** and later **Open file**. Opening a file replaces the diagram on the canvas (Wireflow asks first if the canvas isn't empty). JPEG export saves an image of the canvas, not an editable file.
+- The autosaved diagram only exists in the browser where you made it, and clearing site data deletes it. To keep it or move it to another browser, click **Save to file** and later **Open file**. Opening a file replaces the diagram on the canvas and clears the undo history (Wireflow asks first if the canvas isn't empty). JPEG export saves an image of the canvas, not an editable file.
 - A saved file is JSON: `{ "format": "wireflow", "version": 1, "diagram": { "nodes": [...], "edges": [...], "groups": [...] } }`. Nodes name their screen template (`"template": "E-Commerce/Cart"`) instead of an image URL, so files keep working across Wireflow releases. **Open file** also accepts the plain `{ nodes, edges, groups }` object stored in `localStorage`. The format is documented in `src/utils/diagramFile.js`.
 - The toolbar icon font is loaded from Alibaba's iconfont CDN (`at.alicdn.com`).
 

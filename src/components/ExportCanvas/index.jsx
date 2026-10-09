@@ -30,7 +30,9 @@ const ExportCanvas = ({ propsAPI }) => {
     const blob = new Blob([serializeDiagram(propsAPI.save())], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     download(FILE_NAME, url);
-    setTimeout(() => URL.revokeObjectURL(url));
+    // The download may read the URL after click() returns. FileSaver.js and
+    // browser-fs-access also wait tens of seconds before revoking it.
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
   }
 
   function load(diagram, name) {
