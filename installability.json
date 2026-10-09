@@ -1,10 +1,11 @@
 {
-  "url": "http://localhost:4351/",
+  "url": "http://127.0.0.1:4351/",
+  "chromium": "156.0.8078.4",
   "Page.getInstallabilityErrors": {
     "installabilityErrors": []
   },
   "Page.getAppManifest errors": [],
-  "manifestUrl": "http://localhost:4351/manifest.json",
+  "manifestUrl": "http://127.0.0.1:4351/manifest.json",
   "manifest": {
     "id": "/",
     "short_name": "Wireflow",

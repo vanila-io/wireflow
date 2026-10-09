@@ -1,0 +1,41 @@
+Review pass of PR #110 (offline-pwa), branch head 229fc10. Chromium 156, Firefox 157.
+
+Suite
+  pnpm lint                                              clean
+  pnpm test                                              5 passed
+  E2E_PORT=4350 pnpm test:e2e                            16 passed (9 editor + 7 offline)
+  E2E_PORT=4350 pnpm test:e2e --repeat-each 3            48 passed
+  playwright test e2e/offline.spec.js --repeat-each 10 --workers 4    70 passed
+
+Do the new tests catch the bugs? Each line: test, run against a changed source, outcome.
+  PR's original worker  + "a new deploy is offered..." (now with a foreign cache)   FAILED: no prompt, the tab was reloaded without asking
+  PR's original worker  + "an install that gets the SPA fallback page..."           FAILED: the install succeeded with index.html cached as the main script
+  PR's original prompt  + "reloading into an update in one tab reloads the other"   FAILED: the second tab never reloaded
+  PR's original worker  + "the old CRA service worker is replaced..."               passed (CRA handover behaviour kept)
+  PR's original worker  + "a CRA precache left behind by the old kill switch..."    passed (kept)
+  new worker without skipWaiting() for CRA          + CRA test                       FAILED
+  new worker without reloading the CRA tabs         + CRA test                       FAILED
+  new worker with matchAll() after claim()          + kill-switch leftovers test     FAILED: the fresh page was reloaded
+  new worker without the SPA fallback guard         + SPA fallback test              FAILED
+  new worker that always skips waiting              + update test                    FAILED
+
+Cloudflare (wrangler dev 4.148.0, workerd, env staging) -> review-pass.json "cloudflare"
+  /index.html is a 307 to /; Workbox stores a non-redirected copy (118 entries).
+  A missing /assets/*.js or *.js is answered with index.html, 200, text/html.
+  /service-worker.js: text/javascript, Cache-Control: public, max-age=0, must-revalidate.
+  Offline reload: 106 responses, all from the service worker; a deep link shows the editor; no console errors.
+
+Real deploys, Chromium and Firefox (no request routing) -> review-pass.json "deploys"
+  Two tabs on the previous build, new build deployed, Reload clicked in one tab while offline: both tabs reload into it.
+  CRA worker deployed, then this build: the CRA tab is reloaded once by the worker; only wireflow-* caches remain.
+  selfDestroying build deployed over this one: no registration, no caches, the tab reloads once, no loop.
+
+Firefox, repo e2e spec (Playwright Firefox):
+  passed: "after the first visit the editor works offline" (every response fromServiceWorker),
+          "a CRA precache left behind by the old kill switch..."
+  not runnable there: the installability test (CDP), and the tests that route the worker script or
+          worker-initiated requests (Chromium-only Playwright features); covered above with real deploys.
+WebKit: not run (the host lacks WebKit's system libraries; needs sudo).
+
+pnpm dev (Vite dev server): no service worker registration, 14/14 toolbar icons resolve, no third-party
+requests, no console errors.

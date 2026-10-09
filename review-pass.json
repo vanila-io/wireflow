@@ -1,0 +1,249 @@
+{
+  "pr": 110,
+  "commit": "229fc10",
+  "generatedBy": "evidence.mjs (review pass), Playwright 1.64",
+  "browsers": {
+    "chromium": "156.0.8078.4",
+    "firefox": "157.0"
+  },
+  "cloudflare": {
+    "server": "wrangler dev 4.148.0 (workerd), wrangler.jsonc env staging, serving build/",
+    "headers": [
+      {
+        "path": "/",
+        "status": 200,
+        "location": null,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "path": "/index.html",
+        "status": 307,
+        "location": "/",
+        "contentType": null,
+        "cacheControl": null
+      },
+      {
+        "path": "/service-worker.js",
+        "status": 200,
+        "location": null,
+        "contentType": "text/javascript; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "path": "/manifest.json",
+        "status": 200,
+        "location": null,
+        "contentType": "application/json",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "path": "/assets/missing-AbCdEf12.js",
+        "status": 200,
+        "location": null,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "path": "/missing-worker.js",
+        "status": 200,
+        "location": null,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      }
+    ],
+    "firstVisit": {
+      "cache": "wireflow-precache-v2-http://127.0.0.1:4352/",
+      "entries": 118,
+      "shellKey": "http://127.0.0.1:4352/index.html?__WB_REVISION__=f3f280be9f81c70fc25029de5c3989f4",
+      "shellStoredAsRedirect": false,
+      "shellContentType": "text/html; charset=utf-8"
+    },
+    "offlineReload": {
+      "onLine": false,
+      "responses": 106,
+      "notFromServiceWorker": [],
+      "templatesLoaded": 102,
+      "deepLinkShowsEditor": true
+    },
+    "consoleErrors": []
+  },
+  "deploys": {
+    "server": "switch-server.mjs: serves one build directory at a time; a missing file gets index.html with 200, like Cloudflare",
+    "note": "Firefox's offline mode (Playwright setOffline) still serves navigations from its HTTP cache, even for a page that never had a service worker; Chromium's doesn't. That is why rollbackSelfDestroying.after5s.offlineVisit differs.",
+    "chromium": {
+      "updateTwoTabsOffline": {
+        "beforeClick": {
+          "waiting": true,
+          "bothTabsStillOnOldBuild": true
+        },
+        "afterClick": {
+          "offline": true,
+          "tabsReloaded": [
+            true,
+            true
+          ],
+          "promptsLeft": [
+            false,
+            false
+          ],
+          "worker": {
+            "registrations": [
+              {
+                "scope": "http://127.0.0.1:4351/",
+                "active": "http://127.0.0.1:4351/service-worker.js",
+                "waiting": false
+              }
+            ],
+            "controller": "http://127.0.0.1:4351/service-worker.js",
+            "caches": [
+              "wireflow-precache-v2-http://127.0.0.1:4351/"
+            ]
+          }
+        },
+        "consoleErrors": []
+      },
+      "craTakeover": {
+        "before": {
+          "legacyShellShown": true,
+          "registrations": [
+            {
+              "scope": "http://127.0.0.1:4351/",
+              "active": "http://127.0.0.1:4351/service-worker.js",
+              "waiting": false
+            }
+          ],
+          "controller": "http://127.0.0.1:4351/service-worker.js",
+          "caches": [
+            "workbox-precache-v2-http://127.0.0.1:4351/"
+          ]
+        },
+        "after": {
+          "editorShown": true,
+          "mainFrameNavigationsAfterOurReload": 2,
+          "registrations": [
+            {
+              "scope": "http://127.0.0.1:4351/",
+              "active": "http://127.0.0.1:4351/service-worker.js",
+              "waiting": false
+            }
+          ],
+          "controller": "http://127.0.0.1:4351/service-worker.js",
+          "caches": [
+            "wireflow-precache-v2-http://127.0.0.1:4351/"
+          ]
+        },
+        "consoleErrors": []
+      },
+      "rollbackSelfDestroying": {
+        "before": {
+          "registrations": [
+            {
+              "scope": "http://127.0.0.1:4351/",
+              "active": "http://127.0.0.1:4351/service-worker.js",
+              "waiting": false
+            }
+          ],
+          "controller": "http://127.0.0.1:4351/service-worker.js",
+          "caches": [
+            "wireflow-precache-v2-http://127.0.0.1:4351/"
+          ]
+        },
+        "after5s": {
+          "mainFrameNavigationsAfterOurReload": 2,
+          "registrations": [],
+          "controller": null,
+          "caches": [],
+          "offlineVisit": "fails (net::ERR_INTERNET_DISCONNECTED at http://127.0.0.1:4351/)"
+        }
+      }
+    },
+    "firefox": {
+      "updateTwoTabsOffline": {
+        "beforeClick": {
+          "waiting": true,
+          "bothTabsStillOnOldBuild": true
+        },
+        "afterClick": {
+          "offline": true,
+          "tabsReloaded": [
+            true,
+            true
+          ],
+          "promptsLeft": [
+            false,
+            false
+          ],
+          "worker": {
+            "registrations": [
+              {
+                "scope": "http://127.0.0.1:4351/",
+                "active": "http://127.0.0.1:4351/service-worker.js",
+                "waiting": false
+              }
+            ],
+            "controller": "http://127.0.0.1:4351/service-worker.js",
+            "caches": [
+              "wireflow-precache-v2-http://127.0.0.1:4351/"
+            ]
+          }
+        },
+        "consoleErrors": []
+      },
+      "craTakeover": {
+        "before": {
+          "legacyShellShown": true,
+          "registrations": [
+            {
+              "scope": "http://127.0.0.1:4351/",
+              "active": "http://127.0.0.1:4351/service-worker.js",
+              "waiting": false
+            }
+          ],
+          "controller": "http://127.0.0.1:4351/service-worker.js",
+          "caches": [
+            "workbox-precache-v2-http://127.0.0.1:4351/"
+          ]
+        },
+        "after": {
+          "editorShown": true,
+          "mainFrameNavigationsAfterOurReload": 2,
+          "registrations": [
+            {
+              "scope": "http://127.0.0.1:4351/",
+              "active": "http://127.0.0.1:4351/service-worker.js",
+              "waiting": false
+            }
+          ],
+          "controller": "http://127.0.0.1:4351/service-worker.js",
+          "caches": [
+            "wireflow-precache-v2-http://127.0.0.1:4351/"
+          ]
+        },
+        "consoleErrors": []
+      },
+      "rollbackSelfDestroying": {
+        "before": {
+          "registrations": [
+            {
+              "scope": "http://127.0.0.1:4351/",
+              "active": "http://127.0.0.1:4351/service-worker.js",
+              "waiting": false
+            }
+          ],
+          "controller": "http://127.0.0.1:4351/service-worker.js",
+          "caches": [
+            "wireflow-precache-v2-http://127.0.0.1:4351/"
+          ]
+        },
+        "after5s": {
+          "mainFrameNavigationsAfterOurReload": 2,
+          "registrations": [],
+          "controller": null,
+          "caches": [],
+          "offlineVisit": "loaded (from the browser HTTP cache: no worker or Cache Storage is left)"
+        }
+      }
+    }
+  }
+}
