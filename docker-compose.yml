@@ -2,4 +2,4 @@ services:
   web:
     build: .
     ports:
-      - "8083:80"
+      - "8083:3000"

@@ -1,0 +1,58 @@
+/* Recovered verbatim (de-minified) from production chunk 400pl2v_ab6-v.css, after @xyflow/react/dist/style.css. */
+.flow-node {
+  background: #fff;
+  border: 1px solid #bcc2c6;
+  border-radius: 6px;
+  outline: 2px solid #0000;
+  width: 220px;
+  transition: outline-color 0.12s;
+}
+.flow-node.selected {
+  outline-color: var(--color-wire-blue);
+}
+.flow-node-header {
+  background: #ebeff0;
+  border-bottom: 1px solid #ebeff0;
+  border-radius: 5px 5px 0 0;
+  justify-content: center;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  display: flex;
+  position: relative;
+}
+.flow-node-header button {
+  cursor: text;
+}
+.flow-node-img {
+  border-radius: 0 0 5px 5px;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.react-flow__handle {
+  opacity: 1;
+  pointer-events: all;
+  z-index: 10;
+  background: #7a869a;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  width: 9px;
+  height: 9px;
+}
+.flow-node-dots {
+  pointer-events: none;
+  gap: 3px;
+  display: flex;
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  transform: translateY(-50%);
+}
+.flow-node-dots i {
+  background: #c4cbd1;
+  border-radius: 50%;
+  width: 4px;
+  height: 4px;
+  display: block;
+}

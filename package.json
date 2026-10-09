@@ -1,41 +1,42 @@
 {
   "name": "wireflow",
-  "version": "0.0.4",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Flowchart collaboration App",
-  "packageManager": "pnpm@12.10.1",
+  "description": "Free, open source user flow and wireflow designer",
+  "packageManager": "pnpm@12.7.0",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy:staging": "opennextjs-cloudflare build && opennextjs-cloudflare deploy --env staging",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@ant-design/icons": "^6.3.4",
-    "@anthropic-ai/sdk": "^0.132.1",
-    "antd": "^6.6.5",
-    "gg-editor": "^2.0.4",
-    "html-to-image": "^1.11.13",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "@xyflow/react": "12.12.0",
+    "next": "16.3.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.64.0",
-    "@vitejs/plugin-react": "^6.1.2",
-    "eslint": "^10.12.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^17.13.0",
-    "vite": "^8.3.3",
-    "vite-plugin-pwa": "1.3.0",
-    "vitest": "^5.0.3",
-    "workbox-core": "7.4.1",
-    "workbox-precaching": "7.4.1",
-    "workbox-routing": "7.4.1",
-    "workbox-window": "7.4.1",
-    "wrangler": "^4.148.0"
+    "@opennextjs/cloudflare": "1.20.8",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "24.13.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.6",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3",
+    "vitest": "5.0.2",
+    "wrangler": "4.140.0"
   }
 }

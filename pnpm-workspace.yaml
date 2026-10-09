@@ -1,15 +1,28 @@
-# core-js's postinstall only prints a funding banner; nothing depends on it running.
-# esbuild and workerd (via wrangler) get their native binary from a per-platform
-# optional dependency; their postinstall is only a download fallback/optimization.
-allowBuilds:
-  core-js: false
-  esbuild: false
-  workerd: false
+# Only install releases that are at least 14 days old (in minutes), so a freshly
+# published compromised version can't reach a lockfile. Exceptions, each a security
+# release: next 16.3.8 fixes the critical/high advisories that affect 16.2.x (see
+# README "Dependencies"); its own binaries and the OpenNext adapter that supports
+# it follow it.
+minimumReleaseAge: 20160
+minimumReleaseAgeExclude:
+  - next
+  - '@next/*'
+  - '@opennextjs/*'
+  - source-map-js
 
-# gg-editor 2.x imports @babel/runtime (Babel 7) helpers without declaring the
-# dependency. Declare it for gg-editor itself instead of relying on whichever
-# runtime copy antd's sub-dependencies happen to hoist (both 7.x and 8.x exist).
-packageExtensions:
-  gg-editor@2:
-    dependencies:
-      '@babel/runtime': ^7.0.0
+# Native binaries come from per-platform optional dependencies; their install
+# scripts are only download fallbacks, so none of them needs to run.
+allowBuilds:
+  esbuild: false
+  sharp: false
+  workerd: false
+  unrs-resolver: false
+
+# Next.js only needs sharp for its image optimizer, which this app turns off
+# (images.unoptimized), and Cloudflare Workers can't run it.
+ignoredOptionalDependencies:
+  - sharp
+
+# Security fix (GHSA advisory 1241209, event-loop DoS); postcss pins an older 1.x.
+overrides:
+  source-map-js: 1.2.2

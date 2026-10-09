@@ -1,21 +1,36 @@
-// Cloudflare Workers: serve the Vite build (`pnpm build` -> build/) as static
-// assets. No Worker script, so requests never invoke billable Worker code.
-// https://developers.cloudflare.com/workers/static-assets/
+// Cloudflare Worker for the OpenNext build (`opennextjs-cloudflare build`
+// writes .open-next/). See README "Deploy".
+//
+// The top level is what `opennextjs-cloudflare preview` and a plain
+// `wrangler deploy` use. It is named after the STAGING Worker on purpose, so a
+// deploy without `--env` can never replace production.
 {
-  // Production Worker (`wrangler deploy`).
-  "name": "wireflow",
-  "compatibility_date": "2026-10-06",
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wireflow-staging",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-20",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
-    "directory": "./build",
-    "not_found_handling": "single-page-application"
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
   },
   // Serve on <worker>.<subdomain>.workers.dev, but no public per-version URLs.
   "workers_dev": true,
   "preview_urls": false,
   "env": {
-    // Staging Worker (`wrangler deploy --env staging`); inherits everything above.
+    // pnpm deploy:staging (opennextjs-cloudflare deploy --env staging)
     "staging": {
       "name": "wireflow-staging"
+    },
+    // OWNER TODO before the first production deploy: the Worker that serves
+    // wireflow.co today was not created from this repo, and its name, routes
+    // and the /blog/* route to Ghost could not be seen from outside. Check them
+    // in the Cloudflare dashboard, set "name" to that Worker (if it is not
+    // "wireflow") and add its routes here. Deploy only with an explicit
+    // `opennextjs-cloudflare deploy --env production`.
+    "production": {
+      "name": "wireflow",
+      "workers_dev": false
     }
   }
 }

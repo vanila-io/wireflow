@@ -112,3 +112,8 @@ blob-report/
 
 # Cloudflare Wrangler local state
 .wrangler/
+
+# Next.js / OpenNext
+next-env.d.ts
+.open-next/
+.dev.vars*

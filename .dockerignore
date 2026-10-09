@@ -1,6 +1,8 @@
 # Installed/built inside the image
 node_modules
-build
+.next
+.open-next
+.wrangler
 
 # VCS, CI, editor and OS files
 .git
