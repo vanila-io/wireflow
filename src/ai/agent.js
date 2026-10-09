@@ -1,25 +1,22 @@
-import { EDIT_DIAGRAM_TOOL, planOps } from './diagram';
+import { EDIT_DIAGRAM_TOOL, planOps, snapshot } from './diagram';
 
 const MAX_STEPS = 6;
 
 export const TOOLS = [EDIT_DIAGRAM_TOOL];
 
-const diagramBlock = (snap) => `<diagram>${JSON.stringify(snap)}</diagram>`;
+const diagramBlock = (state) => `<diagram>${JSON.stringify(snapshot(state))}</diagram>`;
 
 /**
  * Run one user request to completion: send, apply tool calls, send results, repeat.
  * Provider-neutral; `chat` comes from provider.createChat().
  *
- * editor: { read() -> {data, selected}, apply(actions) -> data, snapshot(data, selected) }
+ * editor: { read() -> { data, selected, view? }, apply(actions) }
  * onEvent({ type: 'text' | 'thinking' | 'applied' | 'tool_error' | 'step', ... })
- * Returns { status, usage: {usd, ...} } with usage summed over all steps.
+ * Returns { status, refusal, usage: {usd, ...} } with usage summed over all steps.
  */
 export async function runRequest({ chat, text, editor, onEvent = () => {}, signal }) {
   const total = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0, usd: 0 };
-  const add = (u) => Object.keys(total).forEach((k) => (total[k] += u[k] ?? 0));
-
-  const { data, selected } = editor.read();
-  let input = { text: [text, diagramBlock(editor.snapshot(data, selected))] };
+  let input = { text: [text, diagramBlock(editor.read())] };
 
   for (let step = 0; step < MAX_STEPS; step++) {
     onEvent({ type: 'step', step });
@@ -28,7 +25,7 @@ export async function runRequest({ chat, text, editor, onEvent = () => {}, signa
       onText: (delta) => onEvent({ type: 'text', delta }),
       onThinking: (delta) => onEvent({ type: 'thinking', delta }),
     });
-    add(turn.usage);
+    Object.keys(total).forEach((k) => (total[k] += turn.usage[k] ?? 0));
 
     if (turn.status !== 'tool_use') return { status: turn.status, refusal: turn.refusal, usage: total };
     // Out of steps: leave these calls unapplied (the provider reports them as such next time).
@@ -47,7 +44,7 @@ export async function runRequest({ chat, text, editor, onEvent = () => {}, signa
         return {
           id: call.id,
           isError: true,
-          content: JSON.stringify({ ok: false, applied: 0, errors: plan.errors, diagram: editor.snapshot(live.data, live.selected) }),
+          content: JSON.stringify({ ok: false, applied: 0, errors: plan.errors, diagram: snapshot(live) }),
         };
       }
       try {
@@ -56,10 +53,16 @@ export async function runRequest({ chat, text, editor, onEvent = () => {}, signa
         onEvent({ type: 'tool_error', errors: [{ index: -1, op: null, message: err.message }] });
         return { id: call.id, isError: true, content: JSON.stringify({ ok: false, applied: 0, errors: [{ message: `Editor error: ${err.message}` }] }) };
       }
-      onEvent({ type: 'applied', count: plan.actions.length, summary: plan.summary });
+      const applied = call.input.operations.length;
+      onEvent({ type: 'applied', count: applied, summary: plan.summary });
       return {
         id: call.id,
-        content: JSON.stringify({ ok: true, applied: plan.actions.length, ...(Object.keys(plan.placed).length ? { placed: plan.placed } : {}) }),
+        content: JSON.stringify({
+          ok: true,
+          applied,
+          ...(Object.keys(plan.placed).length ? { placed: plan.placed } : {}),
+          ...(plan.warnings.length ? { warnings: plan.warnings } : {}),
+        }),
       };
     });
 

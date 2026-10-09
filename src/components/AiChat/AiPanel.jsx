@@ -4,12 +4,13 @@ import { Alert, Button, Checkbox, Drawer, Input, Select, Space, Typography } fro
 
 import { providers, getProvider } from '../../ai/providers';
 import { runRequest, TOOLS } from '../../ai/agent';
-import { applyActions, normalize, snapshot } from '../../ai/diagram';
+import { applyActions } from '../../ai/diagram';
 import { systemPrompt } from '../../ai/prompt';
-import { saveData } from '../../utils/saveData';
+import { normalize, saveData } from '../../utils/saveData';
 import './style.css';
 
 const SETTINGS = 'wireflow-ai';
+const PANEL_WIDTH = 420;
 
 // Remembered settings live in this browser only. The key is stored only when the
 // user ticks "Remember on this device".
@@ -36,6 +37,18 @@ const STATUS_NOTE = {
   truncated: 'The response was cut off; nothing more was applied.',
   step_limit: 'Stopped after too many steps.',
 };
+
+// The part of the canvas the user can see, in canvas coordinates: the canvas minus
+// what the open panel covers. Sent to the model so it places screens in view.
+function visibleArea(graph) {
+  const box = graph.getGraphContainer().getBoundingClientRect();
+  const from = graph.getPointByClient({ x: box.left, y: box.top });
+  const to = graph.getPointByClient({
+    x: Math.max(box.left, Math.min(box.right, window.innerWidth - PANEL_WIDTH)),
+    y: Math.max(box.top, Math.min(box.bottom, window.innerHeight)),
+  });
+  return { x: Math.round(from.x), y: Math.round(from.y), width: Math.round(to.x - from.x), height: Math.round(to.y - from.y) };
+}
 
 let nextId = 0;
 
@@ -86,13 +99,10 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
     read: () => ({
       data: normalize(propsAPI.save()),
       selected: propsAPI.getSelected().map((item) => item.id),
+      view: visibleArea(propsAPI.currentPage.getGraph()),
     }),
-    snapshot,
-    apply: (actions) => {
-      const data = applyActions(propsAPI, actions);
-      saveData(data);
-      return data;
-    },
+    // The command saves the diagram itself, so a redo of it is saved as well.
+    apply: (actions) => applyActions(propsAPI, actions, saveData),
   };
 
   const update = (id, fn) => setMessages((ms) => ms.map((m) => (m.id === id ? fn(m) : m)));
@@ -214,7 +224,7 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
       title='AI assistant'
       extra={header}
       placement='right'
-      size={420}
+      size={PANEL_WIDTH}
       mask={false}
       open={open}
       onClose={onClose}

@@ -1,4 +1,5 @@
 import { templateIdForImg, templateUrl } from './catalog';
+import { layoutIssues } from './layout';
 import { normalize } from '../utils/saveData';
 
 // The diagram layer the AI talks to. Pure functions over gg-editor's saved data
@@ -12,16 +13,17 @@ const MAX_NODES = 300;
 const ID_RE = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/;
 const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 const LINES = ['smooth', 'polyline', 'polyline-round'];
-
-export { normalize };
+const MAX_WARNINGS = 10;
 
 const round = (n) => Math.round(n);
 
-// Compact view of the diagram sent to the model with every user message.
-export function snapshot(data, selected = []) {
+// Compact view of the diagram sent to the model with every user message. `view` is the
+// part of the canvas the user can see, when the caller knows it.
+export function snapshot({ data, selected = [], view }) {
   const { nodes, edges, groups } = normalize(data);
   return {
     selected,
+    ...(view ? { view } : {}),
     screens: nodes.map((n) => ({
       id: n.id,
       template: templateIdForImg(n.img),
@@ -156,12 +158,13 @@ const ALLOWED = {
   remove: ['ids'],
 };
 
-// Anchors on flow nodes: 0 top, 1 right, 2 bottom, 3 left.
+// Anchors on flow nodes: 0 top, 1 right, 2 bottom, 3 left. The arrow leaves `a` on
+// the side facing `b`.
 function anchors(a, b) {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
-  if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? [1, 3] : [3, 1];
-  return dy >= 0 ? [2, 0] : [0, 2];
+  const [sourceAnchor, targetAnchor] = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? [1, 3] : [3, 1]) : dy >= 0 ? [2, 0] : [0, 2];
+  return { sourceAnchor, targetAnchor };
 }
 
 const nodeShape = (header) => ({
@@ -169,10 +172,15 @@ const nodeShape = (header) => ({
   size: header ? NODE_SIZE.header : NODE_SIZE.plain,
 });
 
+const sizeOf = (node) =>
+  Array.isArray(node.size) && node.size.length === 2 ? node.size : nodeShape(node.shape !== 'node-image-without-header').size;
+
 /**
  * Validate a tool input against the live diagram and turn it into concrete
  * gg-editor actions. Returns {errors} (non-empty means nothing may be applied)
- * or {actions, placed, summary}.
+ * or {actions, placed, summary, warnings}. Warnings name layout problems the batch
+ * creates (overlapping screens, a screen inside another group's box); the batch is
+ * still valid, and the model can move things in a follow-up call.
  */
 export function planOps(input, data) {
   const errors = [];
@@ -186,10 +194,11 @@ export function planOps(input, data) {
 
   // Working copy of the graph so each op sees the effect of the previous ones.
   const { nodes, edges, groups } = normalize(data);
-  const N = new Map(nodes.map((n) => [n.id, { x: n.x, y: n.y, parent: n.parent ?? null }]));
+  const N = new Map(nodes.map((n) => [n.id, { x: n.x, y: n.y, size: sizeOf(n), parent: n.parent ?? null }]));
   const E = new Map(edges.map((e) => [e.id, { source: e.source, target: e.target }]));
   const G = new Map(groups.map((g) => [g.id, { parent: g.parent ?? null }]));
   const exists = (id) => N.has(id) || E.has(id) || G.has(id);
+  const layoutBefore = input.operations[0]?.op === 'clear' ? new Map() : layoutIssues(N, G);
 
   const removeNode = (id) => {
     N.delete(id);
@@ -214,6 +223,7 @@ export function planOps(input, data) {
 
   const actions = [];
   const placed = {};
+  const moved = new Set(); // screens this batch moves
 
   input.operations.forEach((o, i) => {
     const name = o?.op;
@@ -256,11 +266,12 @@ export function planOps(input, data) {
           y = has(o, 'y') ? y : p.y;
           placed[o.id] = [x, y];
         }
-        N.set(o.id, { x, y, parent: null });
+        const shape = nodeShape(o.header !== false);
+        N.set(o.id, { x, y, size: shape.size, parent: null });
         actions.push({
           kind: 'add',
           type: 'node',
-          model: { id: o.id, type: 'node', ...nodeShape(o.header !== false), img: templateUrl(o.template), label: cleanLabel(o.label), x, y },
+          model: { id: o.id, type: 'node', ...shape, img: templateUrl(o.template), label: cleanLabel(o.label), x, y },
         });
         return;
       }
@@ -277,7 +288,11 @@ export function planOps(input, data) {
         if (has(o, 'y')) model.y = o.y;
         if (has(o, 'header')) Object.assign(model, nodeShape(o.header));
         if (!Object.keys(model).length) return fail(i, name, 'nothing to update');
-        Object.assign(N.get(o.id), 'x' in model ? { x: model.x } : {}, 'y' in model ? { y: model.y } : {});
+        const screen = N.get(o.id);
+        if ('x' in model) screen.x = model.x;
+        if ('y' in model) screen.y = model.y;
+        if (model.size) screen.size = model.size;
+        if ('x' in model || 'y' in model) moved.add(o.id);
         actions.push({ kind: 'update', id: o.id, model });
         return;
       }
@@ -287,8 +302,7 @@ export function planOps(input, data) {
         if (!N.has(o.to)) return fail(i, name, `no screen "${o.to}"`);
         if (o.from === o.to) return fail(i, name, 'a screen cannot connect to itself');
         if (has(o, 'label') && typeof o.label !== 'string') return fail(i, name, 'label must be a string');
-        const [sourceAnchor, targetAnchor] = anchors(N.get(o.from), N.get(o.to));
-        E.set(o.id, { source: o.from, target: o.to });
+        E.set(o.id, { source: o.from, target: o.to, added: true });
         actions.push({
           kind: 'add',
           type: 'edge',
@@ -296,8 +310,7 @@ export function planOps(input, data) {
             id: o.id,
             source: o.from,
             target: o.to,
-            sourceAnchor,
-            targetAnchor,
+            // sourceAnchor and targetAnchor: set below, from the final positions
             ...(has(o, 'label') && o.label ? { label: cleanLabel(o.label) } : {}),
             shape: 'flow-polyline-round',
             color: '#a4b2c0',
@@ -368,7 +381,21 @@ export function planOps(input, data) {
 
   if (!errors.length && N.size > MAX_NODES) errors.push({ index: -1, op: null, message: `diagram would exceed ${MAX_NODES} screens` });
   if (errors.length) return { errors };
-  return { actions, placed, summary: typeof input.summary === 'string' ? input.summary : '' };
+
+  // Arrows leave and enter on the sides that face each other after the whole batch:
+  // new connections get their anchors here, and existing ones follow screens that moved.
+  const aim = (e) => anchors(N.get(e.source), N.get(e.target));
+  for (const a of actions) {
+    if (a.kind === 'add' && a.type === 'edge' && E.has(a.model.id)) Object.assign(a.model, aim(E.get(a.model.id)));
+  }
+  for (const [id, e] of E) {
+    if (!e.added && (moved.has(e.source) || moved.has(e.target))) actions.push({ kind: 'update', id, model: aim(e) });
+  }
+
+  // Only problems this batch creates; the user's own layout is not the model's to fix.
+  const warnings = [...layoutIssues(N, G)].filter(([key]) => !layoutBefore.has(key)).map(([, message]) => message);
+  if (warnings.length > MAX_WARNINGS) warnings.splice(MAX_WARNINGS, Infinity, `and ${warnings.length - MAX_WARNINGS} more`);
+  return { actions, placed, summary: typeof input.summary === 'string' ? input.summary : '', warnings };
 }
 
 // --- Apply -------------------------------------------------------------------
@@ -406,20 +433,21 @@ function run(page, action) {
 
 /**
  * Apply planned actions as ONE gg-editor command (one undo step). Redo re-runs
- * the closure, so it only reads the precomputed `actions`.
- * Returns the saved diagram after the change.
+ * the closure, so it only reads the precomputed `actions`, and it hands the
+ * resulting diagram to `onChange` each time it runs: after the change and after a
+ * redo, which not every action reports through gg-editor's change events (clear).
  */
-export function applyActions(propsAPI, actions) {
+export function applyActions(propsAPI, actions, onChange) {
   const before = propsAPI.editor.getCurrentCommand();
   try {
     propsAPI.executeCommand(() => {
       const page = propsAPI.currentPage;
       actions.forEach((a) => run(page, a));
+      onChange(normalize(page.save()));
     });
   } catch (err) {
     // The command was queued before it threw; roll back whatever it did.
     if (propsAPI.editor.getCurrentCommand() !== before) propsAPI.executeCommand('undo');
     throw err;
   }
-  return normalize(propsAPI.save());
 }

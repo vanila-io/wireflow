@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { templates, templateUrl, templateIdForImg, catalogText } from '../../ai/catalog';
+import { buildCatalog, templates, templateUrl, templateIdForImg, catalogText } from '../../ai/catalog';
 import { planOps, snapshot } from '../../ai/diagram';
 
 const url = (id) => templateUrl(id);
@@ -21,16 +21,35 @@ describe('catalog', () => {
     expect(catalogText().split('\n')).toHaveLength(102);
   });
 
-  it('maps legacy CRA urls back to a template', () => {
-    expect(templateIdForImg('/static/media/Cart.0123abcd.svg')).toBe('cart');
+  it('does not map unknown urls to a template', () => {
     expect(templateIdForImg('https://evil.example/x.svg')).toBeNull();
+  });
+
+  // A production build emits identical files once ("Sign in 1" and "Sign Up 1" share a URL).
+  it('lists a shared image once, under its first file and first sidebar label', () => {
+    const files = {
+      '../assets/images/Sign in/Sign Up 1.svg': '/assets/shared.svg',
+      '../assets/images/Sign in/Sign in 1.svg': '/assets/shared.svg',
+      '../assets/images/E-Commerce/Cart.svg': '/assets/cart.svg',
+    };
+    const sidebar = [
+      { img: '/assets/shared.svg', label: 'Sign In' },
+      { img: '/assets/shared.svg', label: 'Sign Up' },
+      { img: '/assets/cart.svg', label: 'Cart' },
+    ];
+    expect(buildCatalog(files, sidebar).map(({ id, category, label, url }) => ({ id, category, label, url }))).toEqual([
+      { id: 'cart', category: 'E-Commerce', label: 'Cart', url: '/assets/cart.svg' },
+      { id: 'sign-in-1', category: 'Sign in', label: 'Sign In', url: '/assets/shared.svg' },
+    ]);
   });
 });
 
 describe('snapshot', () => {
   it('is compact and uses template ids', () => {
-    const s = snapshot(diagram, ['a']);
+    const view = { x: 0, y: 0, width: 900, height: 800 };
+    const s = snapshot({ data: diagram, selected: ['a'], view });
     expect(s.selected).toEqual(['a']);
+    expect(s.view).toEqual(view);
     expect(s.screens[1]).toEqual({ id: 'b', template: 'checkout', label: 'Checkout', x: 300, y: 100, header: false, group: 'g' });
     expect(s.connections).toEqual([{ id: 'e1', from: 'a', to: 'b', label: '' }]);
   });

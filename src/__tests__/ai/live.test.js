@@ -6,11 +6,16 @@ import process from 'node:process';
 import { describe, expect, it } from 'vitest';
 import { getProvider } from '../../ai/providers';
 import { runRequest, TOOLS } from '../../ai/agent';
-import { normalize, snapshot } from '../../ai/diagram';
+import { snapshot } from '../../ai/diagram';
+import { layoutIssues } from '../../ai/layout';
 import { systemPrompt } from '../../ai/prompt';
+import { normalize } from '../../utils/saveData';
 
 const live = !!process.env.AI_LIVE;
 if (live && !process.env.ANTHROPIC_API_KEY && existsSync('.env')) process.loadEnvFile('.env');
+
+// The canvas a 1440 x 900 window shows next to the open panel.
+const VIEW = { x: 0, y: 0, width: 908, height: 900 };
 
 // Applies planned actions to plain data the way gg-editor would.
 function memoryEditor(initial = {}) {
@@ -25,8 +30,7 @@ function memoryEditor(initial = {}) {
     data.edges = data.edges.filter((e) => data.nodes.some((n) => n.id === e.source) && data.nodes.some((n) => n.id === e.target));
   };
   return {
-    read: () => ({ data: structuredClone(data), selected: [] }),
-    snapshot,
+    read: () => ({ data: structuredClone(data), selected: [], view: VIEW }),
     apply(actions) {
       for (const a of actions) {
         if (a.kind === 'clear') data = normalize({});
@@ -44,7 +48,6 @@ function memoryEditor(initial = {}) {
           data.groups = data.groups.filter((g) => g.id !== a.id);
         }
       }
-      return data;
     },
     get data() {
       return data;
@@ -83,12 +86,16 @@ describe.skipIf(!live)('live: anthropic', () => {
 
     const before = editor.data.nodes.length;
     const r2 = await runRequest({ chat, editor, onEvent, text: 'Add a login screen before the cart and connect it. Rename the cart screen to "My Bag".' });
-    console.log('turn 2', r2, JSON.stringify(snapshot(editor.data)));
+    console.log('turn 2', r2, JSON.stringify(snapshot({ data: editor.data })));
     expect(r2.status).toBe('done');
     expect(editor.data.nodes.length).toBe(before + 1);
     expect(editor.data.nodes.some((n) => n.label === 'My Bag')).toBe(true);
     // The system prompt + tools (thousands of tokens) were cached on turn 1 and read back on turn 2.
     expect(r2.usage.cacheRead).toBeGreaterThan(2000);
+    // No screen ends up stacked on another or inside a group it is not in.
+    const { nodes, groups } = editor.data;
+    const screens = new Map(nodes.map((n) => [n.id, { x: n.x, y: n.y, size: n.size, parent: n.parent ?? null }]));
+    expect([...layoutIssues(screens, new Map(groups.map((g) => [g.id, { parent: g.parent ?? null }]))).values()]).toEqual([]);
     console.log(`total cost $${(r1.usage.usd + r2.usage.usd).toFixed(4)}`);
   });
 });
