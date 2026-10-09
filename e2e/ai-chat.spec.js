@@ -54,20 +54,30 @@ function textTurn(text) {
 
 const cors = { 'access-control-allow-origin': '*' };
 
-async function mockAnthropic(page, turns) {
+// Each request to /v1/messages gets the next turn: an SSE body, or a number for an
+// HTTP error. `slow` holds back the reply to the request with that index (0-based).
+async function mockAnthropic(page, turns, { slow } = {}) {
   const requests = [];
   await page.route(`${API}/v1/models/**`, (route) =>
     route.fulfill({ headers: cors, json: { id: 'claude-haiku-5-5', type: 'model', display_name: 'Claude Haiku 5.5', created_at: '2026-01-01T00:00:00Z' } }),
   );
-  await page.route(`${API}/v1/messages**`, (route) => {
+  await page.route(`${API}/v1/messages**`, async (route) => {
     const req = route.request();
     requests.push({ headers: req.headers(), body: req.postDataJSON() });
-    const turn = turns[requests.length - 1];
-    if (typeof turn === 'number') return route.fulfill({ status: turn, headers: cors, json: { type: 'error', error: { type: 'error', message: `mock ${turn}` } } });
-    route.fulfill({ headers: { ...cors, 'content-type': 'text/event-stream' }, body: turn });
+    const index = requests.length - 1;
+    const turn = turns[index];
+    if (index === slow) await new Promise((resolve) => setTimeout(resolve, 3000));
+    // The SDK retries 429s; make its backoff 1 ms.
+    const reply =
+      typeof turn === 'number'
+        ? { status: turn, headers: { ...cors, 'retry-after-ms': '1' }, json: { type: 'error', error: { type: 'error', message: `mock ${turn}` } } }
+        : { headers: { ...cors, 'content-type': 'text/event-stream' }, body: turn };
+    await route.fulfill(reply).catch(() => {}); // the request may have been stopped meanwhile
   });
   return requests;
 }
+
+const userTexts = (body) => body.messages.filter((m) => m.role === 'user').flatMap((m) => m.content.filter((b) => b.type === 'text').map((b) => b.text));
 
 const flow = {
   summary: 'Added a login flow.',
@@ -146,8 +156,24 @@ test('an invalid batch is reported back to the model and nothing is applied', as
   expect((await saved(page))?.nodes ?? []).toEqual([]);
 });
 
-test.describe('API errors', () => {
+test.describe('when requests fail', () => {
+  // Chromium logs every failed or refused request as a console error.
   test.use({ allowErrors: [/Failed to load resource/] });
+
+  test('a stopped or failed request is not sent again with the next one', async ({ page }) => {
+    const requests = await mockAnthropic(page, [textTurn('slow'), 400, textTurn('Added.')], { slow: 0 });
+    await openPanel(page, 'sk-ant-test-key');
+
+    await ask(page, 'Delete every screen');
+    await panel(page).getByRole('button', { name: 'Stop' }).click();
+    await expect(panel(page).locator('.ai-messages').getByText('Stopped.')).toBeVisible();
+    await ask(page, 'Rename everything to X');
+    await expect(panel(page).locator('.ant-alert-error')).toHaveText(/mock 400/);
+
+    await ask(page, 'Add a login screen');
+    await expect(panel(page).locator('.ai-text').last()).toHaveText('Added.');
+    expect(userTexts(requests[2].body).filter((t) => !t.startsWith('<diagram>'))).toEqual(['Add a login screen']);
+  });
 
   test('a rejected key and a rate limit show a clear message', async ({ page }) => {
     await page.route(`${API}/v1/models/**`, (route) =>
@@ -160,11 +186,12 @@ test.describe('API errors', () => {
     await expect(panel(page).locator('.ant-alert-error')).toHaveText(/rejected this key/);
 
     await page.unroute(`${API}/v1/models/**`);
-    await mockAnthropic(page, [429, 429, 429]);
+    const requests = await mockAnthropic(page, [429, 429, 429]);
     await panel(page).getByLabel('API key').fill('sk-ant-ok');
     await panel(page).getByRole('button', { name: /check & use key/i }).click();
     await ask(page, 'hello');
-    await expect(panel(page).locator('.ant-alert-error')).toHaveText(/Rate limited/, { timeout: 15_000 });
+    await expect(panel(page).locator('.ant-alert-error')).toHaveText(/Rate limited/);
+    expect(requests).toHaveLength(3); // the SDK retried twice
   });
 });
 

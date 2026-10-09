@@ -6,8 +6,8 @@ import anthropic from './anthropic';
  *   id, label, keyHint, keyUrl
  *   models: [{ id, label, price: { input, output, cacheWrite, cacheRead } }]  (USD per MTok)
  *   defaultModel
- *   validateKey({ apiKey, model, baseURL? }) -> Promise<void>, throws AiError
- *   createChat({ apiKey, model, system, tools, baseURL? }) -> { send }
+ *   validateKey({ apiKey, model }) -> Promise<void>, throws AiError
+ *   createChat({ apiKey, model, system, tools }) -> { send }
  *
  * `tools` are provider-neutral: [{ name, description, parameters: JSONSchema }].
  * The chat keeps its own history in whatever format the provider needs.
@@ -19,8 +19,10 @@ import anthropic from './anthropic';
  *          usage: { input, output, cacheWrite, cacheRead, usd } }
  *     throws AiError
  *
- * Tool calls a provider returned but that were never answered must be closed out
- * by the provider on the next send (the agent may stop between steps).
+ * A request joins the history only once it is answered: after a stop, an error or a
+ * refusal, the next send continues from the last answered turn. Tool calls that were
+ * never answered are closed out by the provider on the next send (the agent may stop
+ * between steps), and tool results it could not deliver are sent again.
  */
 export const providers = [anthropic];
 
