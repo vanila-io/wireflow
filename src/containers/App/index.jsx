@@ -11,6 +11,7 @@ import FlowItemPanel from '../../components/FlowItemPanel';
 import FlowDetailPanel from '../../components/FlowDetailPanel';
 import FlowMiniMap from '../../components/FlowMiniMap';
 import ExportCanvas from '../../components/ExportCanvas';
+import AiChat from '../../components/AiChat';
 import { saveData } from '../../utils/saveData';
 
 GGEditor.setTrackable(false);
@@ -71,6 +72,7 @@ const App = () => {
         </Row>
         <NodeRegisteWithHeader />
         <NodeRegisteWithoutHeader />
+        <AiChat />
       </GGEditor>
     </Layout>
   );

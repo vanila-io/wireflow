@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Flow } from 'gg-editor';
 import './style.css';
 import { dataMapToData } from '../../utils/dataMapToData';
-import { saveData } from '../../utils/saveData';
+import { normalize, saveData } from '../../utils/saveData';
 
 // Diagrams saved by the old Create React App build point at template images as
 // /static/media/<file>.<hash>.svg, which the Vite build no longer serves.
@@ -57,13 +57,15 @@ const FlowCanvas = () => {
         setEdge(item);
       }}
       onAfterChange={(e) => {
-        // `changeData` is caused by setData and allowing `group` causes some error
-        if (
-          e.action === 'changeData' ||
-          (e.item.type === 'group' && e.action !== 'remove')
-        ) {
+        // `changeData` comes from page.read(), which is how undo/redo of snapshot
+        // commands (delete, groups, AI edits) restore the canvas. It has no `item`,
+        // but carries the restored data, so save that.
+        if (e.action === 'changeData') {
+          if (e.data) saveData(normalize(e.data));
           return;
         }
+        // allowing `group` causes some error
+        if (e.item.type === 'group' && e.action !== 'remove') return;
 
         saveData(dataMapToData(e.item && e.item.dataMap, e.item.itemMap));
       }}

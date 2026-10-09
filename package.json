@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.4",
+    "@anthropic-ai/sdk": "^0.132.1",
     "antd": "^6.6.5",
     "gg-editor": "^2.0.4",
     "html-to-image": "^1.11.13",
