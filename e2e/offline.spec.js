@@ -142,6 +142,40 @@ test('reloading into an update in one tab reloads the other open tabs too', asyn
   expect(errors).toEqual([]);
 });
 
+test('an install that gets the SPA fallback page instead of a file fails rather than caching it', async ({
+  page,
+  context,
+}) => {
+  // Cloudflare static assets (SPA not_found_handling) answer a file missing from
+  // the deployment with index.html and 200, e.g. when a deploy lands mid-install.
+  const shell = await (await context.request.get('/')).text();
+  let answeredWithShell = 0;
+  await context.route(/\/assets\/index-[^/]+\.js$/, (route) => {
+    if (!route.request().serviceWorker()) return route.continue();
+    answeredWithShell += 1;
+    return route.fulfill({ contentType: 'text/html; charset=utf-8', body: shell });
+  });
+  await openEditor(page);
+
+  // The failed first install leaves no registration behind, and the main script
+  // isn't in any cache as HTML.
+  await expect
+    .poll(
+      async () =>
+        answeredWithShell > 0 &&
+        (await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => r === undefined))),
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+  const script = await page.locator('script[type=module]').getAttribute('src');
+  expect(await page.evaluate((src) => caches.match(src).then((r) => r?.headers.get('content-type') ?? null), script)).toBe(
+    null,
+  );
+  // The app still loads from the network; the next visit tries the install again.
+  await page.reload();
+  await expect(page.locator('#canvas_1')).toBeVisible();
+});
+
 // Returning visitors of the old Create React App build have a Workbox 4 worker
 // at /service-worker.js. This stand-in behaves like the one react-scripts 3.4
 // generated: a precache named with Workbox's default prefix, clients.claim(),

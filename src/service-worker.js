@@ -12,7 +12,7 @@
 // Updates between our own builds wait for the user: the app shows an "Update
 // available" prompt (src/components/UpdatePrompt) that sends SKIP_WAITING. The
 // CRA worker is the exception, see the install and activate handlers below.
-import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
+import { addPlugins, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { setCacheNameDetails } from 'workbox-core';
 
@@ -21,6 +21,23 @@ import { setCacheNameDetails } from 'workbox-core';
 // told apart from ours below.
 setCacheNameDetails({ prefix: 'wireflow' });
 const CRA_PRECACHE = `workbox-precache-v2-${self.registration.scope}`;
+
+// Cloudflare (static assets with SPA not_found_handling) and `vite preview`
+// answer a request for a file the deployment doesn't have with index.html and
+// status 200. An install that races a deploy would then store that page under
+// the URL of a script or image of the build it is installing, and once it took
+// over, the app would break (a blank page if it was the main script). Fail the
+// install instead; the browser tries again later. This replaces Workbox's
+// default check, which only rejects error statuses, so it rejects those too.
+addPlugins([
+  {
+    cacheWillUpdate: async ({ request, response }) => {
+      const isHtml = /^text\/html\b/i.test(response.headers.get('content-type'));
+      const htmlExpected = new URL(request.url).pathname.endsWith('.html');
+      return response.ok && (!isHtml || htmlExpected) ? response : null;
+    },
+  },
+]);
 
 // Workbox keeps one precache across our builds and drops files a new build no
 // longer lists when it activates. No cleanupOutdatedCaches(): the only other
