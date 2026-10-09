@@ -3,8 +3,12 @@
 // it) above the graphic, a target handle on top and a source handle below.
 import { useEffect, useRef, useState } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import type { CardNode } from '@/lib/diagram/model';
+import { cardSize, CARD_WIDTH, type CardNode } from '@/lib/diagram/model';
 import { useStore } from './StoreContext';
+
+// The graphic's drawn size inside the card's 1px border.
+const IMG_WIDTH = CARD_WIDTH - 2;
+const imgHeight = (graphicId: string) => Math.round(cardSize({ graphicId, showHeader: false }).height - 2);
 
 export default function FlowNode({ id, data }: NodeProps<CardNode>) {
   const store = useStore();
@@ -67,7 +71,9 @@ export default function FlowNode({ id, data }: NodeProps<CardNode>) {
           </span>
         </div>
       )}
-      <img src={data.src} alt={data.label} draggable={false} className="flow-node-img" />
+      {/* Its size is known before it loads (width/height set the aspect ratio), so the card
+          and its handles never move when the image arrives. */}
+      <img src={data.src} alt={data.label} draggable={false} className="flow-node-img" width={IMG_WIDTH} height={imgHeight(data.graphicId)} />
     </div>
   );
 }
