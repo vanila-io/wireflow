@@ -212,9 +212,9 @@ test('a hand-made file with loose edges, edges without a style and odd keys open
   const b = await onCanvas(page, 650, 300);
   await page.mouse.click((a.x + b.x) / 2, a.y); // the edge panel used to crash on an edge without a style
   await expect(panelTitle(page)).toHaveText(['Edge']);
-  await page.mouse.click(a.x, a.y + 180);
+  await page.mouse.click(a.x, a.y + 180); // the loose edge is drawn too
   await expect(panelTitle(page)).toHaveText(['Edge']);
-  expect((await saved(page)).edges.map((edge) => edge.target)).toEqual(['b', { x: 300, y: 560 }]);
+  expect((await saved(page)).edges).toContainEqual({ id: 'plain', source: 'a', sourceAnchor: 1, target: 'b', targetAnchor: 3 });
 });
 
 test('a diagram too big for browser storage is not opened', async ({ page }) => {
