@@ -32,6 +32,9 @@ test('the editor fits a phone screen: no sideways scrolling, every toolbar butto
   // The sidebar leaves most of the screen to the canvas.
   const side = (await page.getByRole('complementary', { name: 'Screen templates' }).boundingBox())!;
   expect(side.width).toBeLessThan(innerWidth / 2);
+  // The category chips are one row that scrolls sideways, so the templates start near the top.
+  const tops = await page.getByRole('group', { name: 'Categories' }).getByRole('button').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
+  expect(new Set(tops).size).toBe(1);
 });
 
 test('a tap adds a template; a sideways swipe drags one onto the canvas; an up-down swipe scrolls', async ({ page }) => {

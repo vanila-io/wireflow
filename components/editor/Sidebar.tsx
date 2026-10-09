@@ -63,7 +63,7 @@ export default function Sidebar({ onAddCard, onTouchDrop }: Props) {
             className="w-full rounded-md border border-wire-border bg-wire-canvas/60 px-3 py-2 pl-8 text-sm outline-none placeholder:text-ink-soft focus:border-wire-blue focus:bg-white"
           />
         </div>
-        <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Categories">
+        <div className="mt-3 flex flex-wrap gap-1.5 max-sm:-mx-3 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-3 max-sm:pb-1" role="group" aria-label="Categories">
           {[{ slug: 'all', label: 'All' }, ...categoryLabels].map((c) => (
             <button
               key={c.slug}
@@ -72,7 +72,7 @@ export default function Sidebar({ onAddCard, onTouchDrop }: Props) {
                 setQuery('');
                 setCategory(c.slug);
               }}
-              className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide transition ${shown === c.slug ? 'bg-wire-blue text-white' : 'bg-wire-canvas text-ink-soft hover:text-wire-blue'}`}
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide transition ${shown === c.slug ? 'bg-wire-blue text-white' : 'bg-wire-canvas text-ink-soft hover:text-wire-blue'}`}
             >
               {c.label}
             </button>
