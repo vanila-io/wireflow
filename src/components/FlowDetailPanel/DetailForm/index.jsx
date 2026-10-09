@@ -108,12 +108,24 @@ class DetailForm extends Component {
     if (this.props.type === 'node') {
       document.addEventListener('keydown', this.handleNodeShortcut, true);
     }
+    this.shown = this.item && this.values;
   }
 
-  // A Form reads initialValues only when it mounts, so show the selected
-  // item's current values (after an undo, for example).
+  // A Form reads initialValues only when it mounts. When the selected item's
+  // values change afterwards (on undo, for example), copy just the changed ones
+  // into the form: a change to something else must not reset a label being
+  // typed or a color being dragged.
   componentDidUpdate() {
-    if (this.item) this.form.current?.setFieldsValue(this.values);
+    const previous = this.shown;
+    this.shown = this.item && this.values;
+    if (!previous || !this.shown) return;
+
+    const changed = Object.entries(this.shown).filter(
+      ([name, value]) => value !== previous[name]
+    );
+    if (changed.length) {
+      this.form.current?.setFieldsValue(Object.fromEntries(changed));
+    }
   }
 
   componentWillUnmount() {

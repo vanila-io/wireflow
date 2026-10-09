@@ -239,8 +239,12 @@ test('the Node panel follows Undo and Redo, and leaving the label unchanged keep
   await expect.poll(async () => (await saved(page))?.nodes.length).toBe(1);
   await page.mouse.click(at.x, at.y);
   await nodeLabelInput(page).fill('Landing');
+  // A command that changes something else (the header) keeps the typed label.
+  await page.keyboard.press('Control+h');
   await nodeLabelInput(page).blur();
-  await expect.poll(async () => (await saved(page)).nodes[0].label).toBe('Landing');
+  await expect
+    .poll(async () => (await saved(page)).nodes[0])
+    .toMatchObject({ label: 'Landing', shape: 'node-image-without-header' });
 
   await command(page, 'undo').click();
   await expect(nodeLabelInput(page)).toHaveValue('Article');
