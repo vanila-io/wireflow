@@ -15,8 +15,8 @@ import {
 import type { Graphic } from '@/lib/graphics';
 import { fitGroups } from './groups';
 import { canRedo, canUndo, createHistory, record, redo, undo, type History } from './history';
-import { ARROW, makeCard, type Diagram, type DiagramEdge, type DiagramNode } from './model';
-import { removeItems, setHeaderText, toggleHeaders } from './ops';
+import { ARROW, isGroup, makeCard, newId, type Diagram, type DiagramEdge, type DiagramNode } from './model';
+import { canGroup, copyItems, dropTargets, groupItems, pasteItems, removeItems, setGroupLabel, setHeaderText, setParents, toggleHeaders, ungroupItem, type Clip } from './ops';
 import { enforceRules, serialize } from './rules';
 
 export type StoreState = {
@@ -26,6 +26,8 @@ export type StoreState = {
   canRedo: boolean;
   /** The last save failed (storage full or blocked); the diagram is only in memory. */
   saveFailed: boolean;
+  /** While a card is dragged: the group it would join if dropped now. */
+  dropTarget: string | null;
 };
 
 export type StoreOptions = {
@@ -46,8 +48,11 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     canUndo: canUndo(history),
     canRedo: canRedo(history),
     saveFailed: false,
+    dropTarget: null,
   };
   const listeners = new Set<() => void>();
+  let clipboard: Clip | null = null;
+  let pastes = 0;
   const emit = () => listeners.forEach((l) => l());
 
   const live = (): Diagram => ({ nodes: state.nodes, edges: state.edges });
@@ -55,7 +60,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
   const current = () => enforceRules(live()).diagram;
 
   // The save boundary. `kind` labels the undo step this change makes.
-  function commit(next: Partial<Pick<StoreState, 'nodes' | 'edges'>>, kind?: string) {
+  function commit(next: Partial<Pick<StoreState, 'nodes' | 'edges' | 'dropTarget'>>, kind?: string) {
     state = { ...state, ...next };
     if (!state.nodes.some((n) => n.dragging)) {
       const json = serialize(live());
@@ -101,6 +106,17 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     return !!c.source && !!c.target && ids.has(c.source) && ids.has(c.target);
   };
 
+  /** Selected nodes that can be grouped (two or more in the same group, or in none). */
+  const groupable = () => {
+    const ids = state.nodes.filter((n) => n.selected).map((n) => n.id);
+    return canGroup(current(), ids) ? ids : null;
+  };
+  /** The one selected node, if it is a group. */
+  const selectedGroup = () => {
+    const selected = state.nodes.filter((n) => n.selected);
+    return selected.length === 1 && isGroup(selected[0]) ? selected[0].id : null;
+  };
+
   /** Apply a batch of changes as one undo step. Returns the step's id. */
   const apply = (change: (d: Diagram) => Diagram, { kind, select }: { kind?: string; select?: string[] } = {}) =>
     commit(show(enforceRules(change(current())).diagram, select), kind);
@@ -119,9 +135,19 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
 
     onNodesChange(changes: NodeChange<DiagramNode>[]) {
       let nodes = applyNodeChanges(changes, state.nodes);
-      // A drag ended: frames wrap their members again.
-      if (changes.some((c) => c.type === 'position' && c.dragging === false)) nodes = fitGroups(nodes);
-      commit({ nodes });
+      const moving = changes.filter((c) => c.type === 'position');
+      const ended = moving.filter((c) => c.dragging === false).map((c) => c.id);
+      let dropTarget: string | null = null;
+      if (ended.length) {
+        // A drag ended: a card dropped into a frame joins that group, one dragged
+        // out leaves it, and frames wrap their members again.
+        const parents = dropTargets(nodes, ended);
+        nodes = Object.keys(parents).length ? (setParents({ nodes, edges: state.edges }, parents).nodes as DiagramNode[]) : fitGroups(nodes);
+      } else if (moving.some((c) => c.dragging)) {
+        // While dragging, highlight the group the card would join.
+        dropTarget = Object.values(dropTargets(nodes, moving.map((c) => c.id))).find((id) => id !== undefined) ?? null;
+      }
+      commit({ nodes, dropTarget });
     },
     onEdgesChange(changes: EdgeChange<DiagramEdge>[]) {
       commit({ edges: applyEdgeChanges(changes, state.edges) });
@@ -146,6 +172,37 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     },
     clear() {
       if (state.nodes.length) apply(() => ({ nodes: [], edges: [] }));
+    },
+
+    groupable,
+    group() {
+      const ids = groupable();
+      if (!ids) return;
+      const id = newId('group');
+      apply((d) => groupItems(d, ids, { id }), { select: [id] });
+    },
+    selectedGroup,
+    ungroup() {
+      const id = selectedGroup();
+      if (id) apply((d) => ungroupItem(d, id), { select: state.nodes.filter((n) => n.parentId === id).map((n) => n.id) });
+    },
+    setGroupLabel(id: string, value: string) {
+      apply((d) => setGroupLabel(d, id, value));
+    },
+    /** Copy the selected nodes (and the edges between them). Returns false if nothing is selected. */
+    copy() {
+      const ids = state.nodes.filter((n) => n.selected).map((n) => n.id);
+      if (!ids.length) return false;
+      clipboard = copyItems(current(), ids);
+      pastes = 0;
+      return true;
+    },
+    /** Paste with new ids, a little further down each time, and select the copy. */
+    paste() {
+      if (!clipboard) return;
+      pastes += 1;
+      const { diagram, ids } = pasteItems(current(), clipboard, { x: 20 * pastes, y: 20 * pastes });
+      apply(() => diagram, { select: ids });
     },
     undo: () => travel(undo),
     redo: () => travel(redo),

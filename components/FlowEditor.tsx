@@ -20,12 +20,13 @@ import { isCard, type Diagram } from '@/lib/diagram/model';
 import { createDiagramStore, type DiagramStore } from '@/lib/diagram/store';
 import { readDiagram, readHistory, writeDiagram, writeHistory, BACKUP_KEY } from '@/lib/diagram/storage';
 import FlowNode from './editor/FlowNode';
+import GroupNode from './editor/GroupNode';
 import Notices, { notice, type Notice } from './editor/Notices';
 import Sidebar, { DRAG_TYPE } from './editor/Sidebar';
 import { StoreContext, useStoreState } from './editor/StoreContext';
 import ToolbarButton from './editor/ToolbarButton';
 
-const nodeTypes = { flow: FlowNode };
+const nodeTypes = { flow: FlowNode, group: GroupNode };
 
 // localStorage / sessionStorage, or null where the browser blocks them.
 function browserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | null {
@@ -87,6 +88,9 @@ function Editor() {
   const { nodes, edges, saveFailed } = useStoreState(store);
   const { screenToFlowPosition, zoomIn, zoomOut, fitView } = useReactFlow();
   const cards = nodes.filter(isCard).length;
+  // Selection actions (recomputed on every store change, which includes selection).
+  const canGroupNow = !!store.groupable();
+  const groupSelected = !!store.selectedGroup();
 
   const dismiss = useCallback((id: number) => setNotices((ns) => ns.filter((n) => n.id !== id)), []);
 
@@ -144,6 +148,17 @@ function Editor() {
       } else if ((k === 'z' && e.shiftKey) || k === 'y') {
         e.preventDefault();
         store.redo();
+      } else if (k === 'g') {
+        e.preventDefault();
+        if (e.shiftKey) store.ungroup();
+        else store.group();
+      } else if (k === 'c') {
+        // Leave text selections to the browser.
+        if (window.getSelection()?.toString()) return;
+        if (store.copy()) e.preventDefault();
+      } else if (k === 'v') {
+        e.preventDefault();
+        store.paste();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -235,6 +250,20 @@ function Editor() {
               <MiniMap pannable zoomable maskColor="rgba(240,242,245,0.8)" nodeStrokeWidth={0} />
             </ReactFlow>
             <Notices notices={notices} onDismiss={dismiss} />
+            {(canGroupNow || groupSelected) && (
+              <div className="absolute bottom-20 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl bg-white px-2 py-1.5 text-xs font-semibold shadow-[0_8px_30px_rgba(29,28,40,0.15)] ring-1 ring-wire-border">
+                {canGroupNow && (
+                  <button onClick={store.group} className="rounded-md px-3 py-1.5 text-ink hover:bg-wire-canvas hover:text-wire-blue">
+                    Group
+                  </button>
+                )}
+                {groupSelected && (
+                  <button onClick={store.ungroup} className="rounded-md px-3 py-1.5 text-ink hover:bg-wire-canvas hover:text-wire-blue">
+                    Ungroup
+                  </button>
+                )}
+              </div>
+            )}
             <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl bg-white px-2 py-1.5 shadow-[0_8px_30px_rgba(29,28,40,0.15)] ring-1 ring-wire-border">
               <ToolbarButton label="Undo" onClick={store.undo} />
               <ToolbarButton label="Redo" onClick={store.redo} />
@@ -257,6 +286,8 @@ function Editor() {
                   ['Toggle header', 'H'],
                   ['Edit header', 'Double-click'],
                   ['Delete selected', 'Backspace'],
+                  ['Group / ungroup', 'Ctrl + G / ⇧G'],
+                  ['Copy / paste', 'Ctrl + C / V'],
                 ].map(([k, v]) => (
                   <div key={k} className="flex items-center justify-between">
                     <dt className="text-ink-soft">{k}</dt>
