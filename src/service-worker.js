@@ -6,54 +6,53 @@
 // App build registered its own Workbox worker at that URL, and the browsers of
 // returning visitors keep checking that URL for updates. A browser allows one
 // registration per scope, so serving the new worker at the same URL makes it a
-// regular update of that registration: no second script URL, no
-// unregister/re-register race, and one URL to keep forever. (Until this change
-// the URL served a kill switch that only unregistered the CRA worker.)
-// The CRA worker is replaced like this:
-//   1. install: if a worker is active and caches that aren't ours exist, that
-//      worker is CRA's (ours deletes such caches when it activates), so skip
-//      waiting instead of queueing behind a worker that never asks for an update.
-//   2. activate: delete every cache that isn't ours (CRA's Workbox precache and
-//      runtime caches), take control of open tabs and reload them, because they
-//      are still running the stale CRA bundle.
-// Updates between our own builds don't skip waiting: the app shows an "update
-// available" prompt (src/components/UpdatePrompt) and the user reloads into it.
-import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
+// regular update of that registration: no second script URL and no
+// unregister/re-register race.
+//
+// Updates between our own builds wait for the user: the app shows an "Update
+// available" prompt (src/components/UpdatePrompt) that sends SKIP_WAITING. The
+// CRA worker is the exception, see the install and activate handlers below.
+import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { setCacheNameDetails } from 'workbox-core';
 
-const PREFIX = 'wireflow';
-const isOurs = (cacheName) => cacheName.startsWith(`${PREFIX}-`);
+// Our caches are named wireflow-*. Don't drop this prefix: the CRA build's
+// Workbox used the default one ('workbox'), and that is how its precache is
+// told apart from ours below.
+setCacheNameDetails({ prefix: 'wireflow' });
+const CRA_PRECACHE = `workbox-precache-v2-${self.registration.scope}`;
 
-setCacheNameDetails({ prefix: PREFIX });
+// Workbox keeps one precache across our builds and drops files a new build no
+// longer lists when it activates. No cleanupOutdatedCaches(): the only other
+// precache that can exist here is CRA's, and activate below must be the one
+// that deletes it, because it acts on whether it was there.
 precacheAndRoute(self.__WB_MANIFEST);
-cleanupOutdatedCaches(); // precaches of our previous builds
 // The editor is a single page: answer every navigation with the cached shell.
 registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')));
 
-let replacingForeignWorker = false;
-
+// Replacing the CRA worker: it is still active and its precache is still here.
+// Its page never sends SKIP_WAITING, so without this its open tabs would keep
+// the old build until every one of them is closed. Take over now.
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.keys().then((names) => {
-      replacingForeignWorker = Boolean(self.registration.active) && names.some((name) => !isOurs(name));
-      if (replacingForeignWorker) return self.skipWaiting();
-    }),
-  );
+  if (!self.registration.active) return; // first install: nothing to replace
+  event.waitUntil(caches.has(CRA_PRECACHE).then((found) => found && self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((names) => Promise.all(names.filter((name) => !isOurs(name)).map((name) => caches.delete(name))))
-      .then(() => self.clients.claim())
-      .then(() => (replacingForeignWorker ? self.clients.matchAll({ type: 'window' }) : []))
-      .then((clients) => {
-        // Not awaited: the reload is answered by this worker, which can't handle
-        // fetches until activation (this waitUntil) has finished.
-        clients.forEach((client) => client.navigate(client.url).catch(() => {}));
-      }),
+    (async () => {
+      // True if the CRA precache was here: we replaced the CRA worker, or the
+      // old kill switch unregistered it and left its cache behind.
+      const hadCraPrecache = await caches.delete(CRA_PRECACHE);
+      // Before claim(), these are the tabs the replaced worker controlled (none
+      // for a first install). If that was the CRA worker, they still run the
+      // CRA bundle.
+      const craTabs = hadCraPrecache ? await self.clients.matchAll({ type: 'window' }) : [];
+      await self.clients.claim();
+      // Reload them. Not awaited: this worker answers the reload, and it can't
+      // handle fetches until activation (this waitUntil) has finished.
+      craTabs.forEach((tab) => tab.navigate(tab.url).catch(() => {}));
+    })(),
   );
 });
 

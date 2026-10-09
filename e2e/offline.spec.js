@@ -18,6 +18,9 @@ const missingIcons = (page) =>
       uses.map((use) => use.getAttribute('xlink:href')).filter((href) => !document.getElementById(href.slice(1))),
     );
 
+const origin = (page) => new URL(page.url()).origin;
+const cacheNames = (page) => page.evaluate(() => caches.keys());
+
 // Open the editor under a worker with different bytes, standing in for the
 // previous deploy; the real worker then arrives as an update. (Playwright can
 // route the first fetch of a worker script, not the browser's update checks.)
@@ -90,6 +93,9 @@ test('after the first visit the editor works offline', async ({ page, context })
 
 test('a new deploy is offered as an update and reloading switches to it', async ({ page, context }) => {
   await openPreviousBuild(page, context);
+  // A cache the app doesn't own (another feature, a library) is left alone and
+  // doesn't make the update skip the prompt.
+  await page.evaluate(() => caches.open('not-wireflow').then(() => {}));
   await page.evaluate(() => (window.beforeUpdate = true));
   await checkForUpdate(page);
 
@@ -110,6 +116,7 @@ test('a new deploy is offered as an update and reloading switches to it', async 
     await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => [Boolean(r.waiting), r.active.state])),
   ).toEqual([false, 'activated']);
   await expect(prompt).toHaveCount(0);
+  expect(await cacheNames(page)).toContain('not-wireflow');
 });
 
 test('reloading into an update in one tab reloads the other open tabs too', async ({ page, context }) => {
@@ -135,22 +142,30 @@ test('reloading into an update in one tab reloads the other open tabs too', asyn
   expect(errors).toEqual([]);
 });
 
-// Returning visitors of the old Create React App build have a Workbox worker
-// registered at /service-worker.js that serves a cached CRA shell.
-const LEGACY_CACHE = 'workbox-precache-v2-legacy';
+// Returning visitors of the old Create React App build have a Workbox 4 worker
+// at /service-worker.js. This stand-in behaves like the one react-scripts 3.4
+// generated: a precache named with Workbox's default prefix, clients.claim(),
+// no skipWaiting() (only on a SKIP_WAITING message, which the CRA page never
+// sent), and navigations answered with the cached CRA shell.
 const LEGACY_SHELL = `<!doctype html><title>Legacy CRA shell</title><p id="legacy">old build</p>
-<script>navigator.serviceWorker.register('/service-worker.js');</script>`;
+<script>addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js'));</script>`;
 const LEGACY_WORKER = `
+const PRECACHE = 'workbox-precache-v2-' + self.registration.scope;
+const SHELL = '/index.html?__WB_REVISION__=legacy';
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open('${LEGACY_CACHE}').then((cache) =>
-    cache.put('/index.html', new Response(${JSON.stringify(LEGACY_SHELL)}, { headers: { 'content-type': 'text/html' } }))));
+  event.waitUntil(caches.open(PRECACHE).then((cache) =>
+    cache.put(SHELL, new Response(${JSON.stringify(LEGACY_SHELL)}, { headers: { 'content-type': 'text/html' } }))));
 });
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
 self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate') event.respondWith(caches.match('/index.html'));
+  if (event.request.mode === 'navigate') event.respondWith(caches.open(PRECACHE).then((cache) => cache.match(SHELL)));
 });`;
+const legacyPrecache = (page) => `workbox-precache-v2-${origin(page)}/`;
 
-test('the old CRA service worker is replaced by the new one', async ({ page, context }) => {
+test('the old CRA service worker is replaced and its open tab reloaded', async ({ page, context }) => {
   await context.route('**/service-worker.js', (route) =>
     route.fulfill({ contentType: 'text/javascript', body: LEGACY_WORKER }),
   );
@@ -159,21 +174,38 @@ test('the old CRA service worker is replaced by the new one', async ({ page, con
   await waitForOfflineReady(page);
   await page.reload();
   await expect(page.locator('#legacy')).toBeVisible(); // served by the legacy worker
-  expect(await page.evaluate(() => caches.keys())).toEqual([LEGACY_CACHE]);
+  expect(await cacheNames(page)).toEqual([legacyPrecache(page)]);
 
-  // The new build is deployed. The stale shell re-registers /service-worker.js,
-  // which makes the browser fetch the new worker; it takes over and reloads the tab.
+  // The new build is deployed. Opening the app still shows the CRA shell (the
+  // CRA worker answers the navigation), but the browser then fetches
+  // /service-worker.js, and the new worker takes over and reloads the tab.
   await context.unrouteAll();
+  const navigations = [];
+  page.on('framenavigated', (frame) => frame === page.mainFrame() && navigations.push(frame.url()));
   await page.reload();
   await expect(page.locator('#canvas_1')).toBeVisible({ timeout: 15_000 });
   await expect.poll(() => brokenImages(page)).toBe(0);
+  expect(navigations).toHaveLength(2); // our reload, then the worker's
 
   const registrations = await page.evaluate(() =>
     navigator.serviceWorker.getRegistrations().then((rs) => rs.map((r) => [r.scope, r.active?.scriptURL, Boolean(r.waiting)])),
   );
-  const origin = new URL(page.url()).origin;
-  expect(registrations).toEqual([[`${origin}/`, `${origin}/service-worker.js`, false]]);
-  const cacheNames = await page.evaluate(() => caches.keys());
-  expect(cacheNames.length).toBeGreaterThan(0);
-  expect(cacheNames.filter((name) => !name.startsWith('wireflow-'))).toEqual([]);
+  expect(registrations).toEqual([[`${origin(page)}/`, `${origin(page)}/service-worker.js`, false]]);
+  expect(await cacheNames(page)).toEqual([`wireflow-precache-v2-${origin(page)}/`]);
+});
+
+test('a CRA precache left behind by the old kill switch is deleted without reloading the page', async ({ page }) => {
+  // The kill switch unregistered the CRA worker but kept its caches. Seed one
+  // from a page that registers no worker.
+  await page.route('**/seed', (route) => route.fulfill({ contentType: 'text/html', body: '<title>seed</title>' }));
+  await page.goto('/seed');
+  await page.evaluate((name) => caches.open(name).then((c) => c.put('/index.html', new Response('old'))), legacyPrecache(page));
+
+  const navigations = [];
+  page.on('framenavigated', (frame) => frame === page.mainFrame() && navigations.push(frame.url()));
+  await openEditor(page);
+  await waitForOfflineReady(page);
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  expect(await cacheNames(page)).toEqual([`wireflow-precache-v2-${origin(page)}/`]);
+  expect(navigations).toHaveLength(1); // only openEditor's
 });
