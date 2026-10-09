@@ -214,7 +214,18 @@ function Editor() {
             <Details store={store} state={state} />
           </div>
           <Card type='inner' size='small' title='Minimap' variant='borderless'>
-            <MiniMap className='rf-minimap' pannable zoomable nodeColor='#ced4d9' nodeStrokeColor='#a3b1bf' />
+            {/* Outside <ReactFlow>, React Flow's CSS color variables don't apply: pass the colors. */}
+            <MiniMap
+              className='rf-minimap'
+              pannable
+              zoomable
+              bgColor='#fff'
+              maskColor='rgba(240, 242, 245, 0.7)'
+              maskStrokeColor='#1890ff'
+              maskStrokeWidth={2}
+              nodeColor='#ced4d9'
+              nodeStrokeColor='#a3b1bf'
+            />
           </Card>
         </Col>
       </Row>
