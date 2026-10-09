@@ -4,6 +4,9 @@ import {
   expect,
   saved,
   templates,
+  categoryNames,
+  categoryToggle,
+  template,
   panelTitle,
   nodeLabelInput,
   command,
@@ -43,17 +46,78 @@ test('app shell loads with templates, toolbar, minimap and canvas panel', async 
   expect(await saved(page)).toBeNull();
 });
 
-test('sidebar search filters templates and clearing it restores them', async ({ page }) => {
+const CATEGORIES = ['Article', 'Blog', 'E-Commerce', 'Features', 'Gallery', 'Header', 'Misc', 'Multimedia', 'Sign in', 'Socials'];
+
+test('sidebar groups named templates under category headings that collapse and stay collapsed', async ({ page }) => {
+  await openEditor(page);
+  const total = await templates(page).count();
+
+  await expect(categoryNames(page)).toHaveText(CATEGORIES);
+  await expect(page.locator('.sidebar-category-count')).toHaveText(['6', '12', '12', '6', '6', '6', '24', '12', '6', '12']);
+  // Every thumbnail is named.
+  await expect(page.locator('.sidebar-item-label')).toHaveCount(total);
+  await expect(template(page, 'E-Commerce', 'Checkout Delivery')).toBeVisible();
+
+  const blog = categoryToggle(page, 'Blog');
+  await expect(blog).toHaveAttribute('aria-expanded', 'true');
+  await blog.click();
+  await expect(blog).toHaveAttribute('aria-expanded', 'false');
+  await expect(templates(page)).toHaveCount(total - 12);
+  await expect(categoryNames(page)).toHaveText(CATEGORIES);
+
+  await page.reload();
+  await expect(page.locator('#canvas_1')).toBeVisible();
+  await expect(blog).toHaveAttribute('aria-expanded', 'false');
+  await expect(templates(page)).toHaveCount(total - 12);
+
+  await blog.click();
+  await expect(blog).toHaveAttribute('aria-expanded', 'true');
+  await expect(templates(page)).toHaveCount(total);
+  expect(await saved(page)).toBeNull();
+});
+
+test('sidebar search matches template and category names across categories', async ({ page }) => {
   await openEditor(page);
   const total = await templates(page).count();
   const search = page.locator('.sidebar-search input');
+  await categoryToggle(page, 'E-Commerce').click();
+  await expect(templates(page)).toHaveCount(total - 12);
 
+  // Matches show even inside a collapsed category; categories without matches are hidden.
   await search.fill('cart');
-  await expect(templates(page)).toHaveCount(2); // "Cart pop up" and "Cart"
+  await expect(categoryNames(page)).toHaveText(['E-Commerce']);
+  await expect(page.locator('.sidebar-item-label')).toHaveText(['Cart pop up', 'Cart']);
+  await expect(templates(page)).toHaveCount(2);
+
+  await search.fill('multimedia');
+  await expect(categoryNames(page)).toHaveText(['Multimedia']);
+  await expect(templates(page)).toHaveCount(12);
+
+  await search.fill('no such template');
+  await expect(categoryNames(page)).toHaveCount(0);
+  await expect(templates(page)).toHaveCount(0);
+  await expect(page.locator('.sidebar-empty .ant-empty-description')).toHaveText('No matching templates');
 
   await page.locator('.sidebar-search .ant-input-clear-icon').click();
   await expect(search).toHaveValue('');
-  await expect(templates(page)).toHaveCount(total);
+  await expect(categoryNames(page)).toHaveText(CATEGORIES);
+  await expect(categoryToggle(page, 'E-Commerce')).toHaveAttribute('aria-expanded', 'false');
+  await expect(templates(page)).toHaveCount(total - 12);
+});
+
+test('dropping a template from a later category adds a node with that template image', async ({ page }) => {
+  await openEditor(page);
+  await categoryToggle(page, 'Article').click();
+  const chat = template(page, 'Socials', 'Chat');
+  const img = await chat.getAttribute('src');
+  const at = await onCanvas(page, 400, 300);
+
+  await dropTemplate(page, chat, at);
+
+  await expect
+    .poll(() => saved(page))
+    .toMatchObject({ nodes: [{ type: 'node', shape: 'node-image-header', label: 'Chat', img, x: 400, y: 300 }] });
+  expect(img).toMatch(/Chat/);
 });
 
 test('dropping a template adds a saved node and selecting it opens the Node panel', async ({ page }) => {

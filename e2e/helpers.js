@@ -19,6 +19,17 @@ export const test = base.extend({
 export const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('data')));
 
 export const templates = (page) => page.locator('.sidebar img');
+export const categoryNames = (page) => page.locator('.sidebar-category-name');
+export const categoryToggle = (page, name) =>
+  page.locator('.sidebar-category-toggle').filter({ has: page.getByText(name, { exact: true }) });
+// The `<img>` of the sidebar template labelled `label` in category `category`.
+export const template = (page, category, label) =>
+  page
+    .locator('.sidebar-category')
+    .filter({ has: categoryToggle(page, category) })
+    .locator('.sidebar-item')
+    .filter({ has: page.getByText(label, { exact: true }) })
+    .locator('img');
 export const panelTitle = (page) => page.locator('.details .ant-card-head-title');
 export const nodeLabelInput = (page) => page.locator('.details input[name=title]');
 export const command = (page, name) => page.locator(`.toolbar .command[data-command="${name}"]`);
@@ -34,9 +45,10 @@ export async function onCanvas(page, x, y) {
   return { x: box.x + x, y: box.y + y };
 }
 
-// Drag the sidebar template at `index` and drop it so the node is centred on `at`.
-export async function dropTemplate(page, index, at) {
-  const item = templates(page).nth(index);
+// Drag a sidebar template (its index among all templates, or a locator for its
+// image) and drop it so the node is centred on `at`.
+export async function dropTemplate(page, which, at) {
+  const item = typeof which === 'number' ? templates(page).nth(which) : which;
   await item.scrollIntoViewIfNeeded();
   const box = await item.boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

@@ -58,7 +58,7 @@ const App = () => {
         onBeforeCommandExecute={onBeforeCommandExecute}
       >
         <FlowItemPanel />
-        <Row style={{ marginLeft: 112 }}>
+        <Row style={{ marginLeft: 128 }}>
           <Col span={19} className='text-center'>
             <ExportCanvas />
             <FlowToolbar />

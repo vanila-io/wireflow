@@ -7,7 +7,7 @@
   z-index: 999;
 }
 .sidebar {
-  width: 112px;
+  width: 128px;
   height: 100vh;
   user-select: none;
 }
@@ -15,65 +15,121 @@
   position: fixed;
   top: 15px;
   left: 0;
-  width: 112px;
+  width: 128px;
   bottom: 0;
-  height: 100vh;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-bottom: 16px;
+  /* Keep items scrolled into view clear of the pinned search box and heading. */
+  scroll-padding-top: 60px;
+  background: #ffffff;
 
   z-index: 1000;
   text-align: center;
 }
-.sidebar .ant-card-body > div:not(.sidebar-search) {
-  padding: 4px 16px;
-  transition: all 0.1s ease;
-  background: #ffffff;
-  position: relative;
-  z-index: 1;
-}
-/* .sidebar .ant-card-body div:after {
-  content: '';
-  position: relative;
-  z-index: 9999;
-} */
-.sidebar .ant-card-body > div:not(.sidebar-search):after {
-  content: '';
-  position: absolute;
-  z-index: 9;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-}
-.sidebar .ant-card-body > div:not(.sidebar-search):hover:after {
-  content: '';
-  position: absolute;
-  z-index: 999;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-}
-.sidebar .ant-card-body > div:not(.sidebar-search):hover {
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
-  transform: scale(1.15);
-  z-index: 999;
-}
-.sidebar div img {
-  max-width: 100%;
-  margin-top: -10px;
-  position: relative;
-  z-index: 9999;
-  pointer-events: none;
-}
 
+/* The search box and the current category heading stay pinned while scrolling. */
 .sidebar .sidebar-search {
-  margin: 5px;
-  width: auto;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: 0;
+  padding: 0 5px 6px;
+  width: 100%;
+  background: #ffffff;
 }
-
 .sidebar .sidebar-search input {
   font-size: 10px;
 }
+
+.sidebar-category-toggle {
+  position: sticky;
+  top: 30px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-top: 1px solid #f0f0f0;
+  background: #ffffff;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.sidebar-category-toggle:hover:not(:disabled) {
+  color: #1677ff;
+}
+.sidebar-category-toggle:focus-visible {
+  outline: 2px solid #1677ff;
+  outline-offset: -2px;
+}
+.sidebar-category-toggle:disabled {
+  cursor: default;
+}
+.sidebar-category-caret {
+  font-size: 8px;
+  transition: transform 0.15s ease;
+}
+.sidebar-category-toggle[aria-expanded='true'] .sidebar-category-caret {
+  transform: rotate(90deg);
+}
+.sidebar-category-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar-category-count {
+  color: rgba(0, 0, 0, 0.45);
+  font-weight: 400;
+}
+
+.sidebar-item {
+  position: relative;
+  z-index: 0;
+  padding: 4px 16px;
+  background: #ffffff;
+  transition: all 0.1s ease;
+}
+.sidebar-item:hover {
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+  transform: scale(1.15);
+  /* Above the other items, below the pinned headings. */
+  z-index: 1;
+}
+.sidebar-item img {
+  display: block;
+  width: 100%;
+  /* The SVGs are square, with the wireframe between 16% and 95% of the height:
+     crop the empty bands above and below it. */
+  aspect-ratio: 100 / 81;
+  object-fit: cover;
+  object-position: 50% 80%;
+  pointer-events: none;
+}
+.sidebar-item-label {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 10px;
+  line-height: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar .sidebar-empty {
+  margin: 24px 4px;
+}
+.sidebar .sidebar-empty .ant-empty-description {
+  font-size: 11px;
+}
+
 ::-webkit-scrollbar {
   width: 0px;
   background: transparent; /* make scrollbar transparent */

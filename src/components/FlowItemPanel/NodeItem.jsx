@@ -4,12 +4,12 @@ const NodeItem = (props) => {
   const { label, img } = props;
 
   return (
-    <Item
-      type='node'
-      size={[96, 88]}
-      model={{ img: img, label: label }}
-      src={img}
-    />
+    <div className='sidebar-item' title={label}>
+      <Item type='node' size={[96, 88]} model={{ img: img, label: label }}>
+        <img src={img} alt={label} draggable={false} />
+        <span className='sidebar-item-label'>{label}</span>
+      </Item>
+    </div>
   );
 };
 
