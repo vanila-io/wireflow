@@ -7,6 +7,7 @@ import { ContextMenu, Command, CanvasMenu, withPropsAPI } from 'gg-editor';
 import IconFont from '../IconFont';
 import { FILE_NAME, parseDiagramFile, serializeDiagram } from '../../utils/diagramFile';
 import { saveData } from '../../utils/saveData';
+import { removeDanglingEdges } from '../../utils/removeDanglingEdges';
 import './style.css';
 
 function download(name, href) {
@@ -35,7 +36,12 @@ const ExportCanvas = ({ propsAPI }) => {
     setTimeout(() => URL.revokeObjectURL(url), 30_000);
   }
 
-  function load(diagram, name) {
+  function load(file, name) {
+    // Files saved by older builds can hold arrows that don't connect two items. Drop them
+    // here, as FlowCanvas does on load and saveData on every write, so the canvas shows
+    // exactly what is stored.
+    const diagram = removeDanglingEdges(file);
+    const dropped = (file.edges?.length ?? 0) - (diagram.edges?.length ?? 0);
     const previous = propsAPI.save();
     propsAPI.currentPage.clearSelected(); // so the detail panel lets go of the old item
     try {
@@ -57,7 +63,7 @@ const ExportCanvas = ({ propsAPI }) => {
     history.queue = [];
     history.current = 0;
     propsAPI.editor.setCommandDOMenable();
-    messageApi.success(`Opened ${name}`);
+    messageApi.success(dropped ? `Opened ${name}. Removed ${dropped} unconnected ${dropped === 1 ? 'arrow' : 'arrows'}.` : `Opened ${name}`);
   }
 
   async function openFile(e) {

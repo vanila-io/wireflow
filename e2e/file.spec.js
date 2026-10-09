@@ -187,7 +187,7 @@ test('a file that is not a Wireflow diagram shows an error and leaves the canvas
   await expect(nodeLabelInput(page)).toHaveValue('Cart');
 });
 
-test('a hand-made file with loose edges, edges without a style and odd keys opens safely', async ({ page }) => {
+test('a hand-made file with a loose edge, an edge without a style and odd keys opens safely', async ({ page }) => {
   await openEditor(page);
   const node = (id, x, label, template) => ({ type: 'node', size: [96, 88], shape: 'node-image-header', id, x, y: 300, label, template });
   const text = JSON.stringify({
@@ -205,16 +205,18 @@ test('a hand-made file with loose edges, edges without a style and odd keys open
   }).replace('"label":"Cart"', '"style":{"__proto__":{"polluted":true}},"label":"Cart"');
 
   await openFile(page, jsonFile('handmade.json', text));
-  await expect(toast(page)).toHaveText('Opened handmade.json');
+  await expect(toast(page)).toHaveText('Opened handmade.json. Removed 1 unconnected arrow.');
   expect(await page.evaluate(() => ({}).polluted)).toBeUndefined(); // G6 deep-merges node styles
 
   const a = await onCanvas(page, 300, 300);
   const b = await onCanvas(page, 650, 300);
   await page.mouse.click((a.x + b.x) / 2, a.y); // the edge panel used to crash on an edge without a style
   await expect(panelTitle(page)).toHaveText(['Edge']);
-  await page.mouse.click(a.x, a.y + 180); // the loose edge is drawn too
-  await expect(panelTitle(page)).toHaveText(['Edge']);
-  expect((await saved(page)).edges).toContainEqual({ id: 'plain', source: 'a', sourceAnchor: 1, target: 'b', targetAnchor: 3 });
+  // The file still opens (Save wrote such files before loose edges were prevented), but
+  // the loose edge is dropped from the canvas as well as from storage.
+  await page.mouse.click(a.x, a.y + 180);
+  await expect(panelTitle(page)).toHaveText(['Canvas']);
+  expect((await saved(page)).edges).toEqual([{ id: 'plain', source: 'a', sourceAnchor: 1, target: 'b', targetAnchor: 3 }]);
 });
 
 test('a diagram too big for browser storage is not opened', async ({ page }) => {
