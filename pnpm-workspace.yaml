@@ -13,3 +13,14 @@ packageExtensions:
   gg-editor@2:
     dependencies:
       '@babel/runtime': ^7.0.0
+
+# @xyflow/react (the React Flow proof of concept behind ?engine=rf) uses d3 v3
+# packages whose ranges for d3-interpolate and d3-color are "1 - 3". pnpm satisfies
+# them with the 1.x copies gg-editor's G6 already needs, and d3-color 1.4.1 has a
+# ReDoS advisory (GHSA-36jr-mh4h-2g58). Give React Flow's d3 the fixed 3.x releases;
+# gg-editor keeps its own copies. Drop these once gg-editor is removed.
+overrides:
+  'd3-zoom@3>d3-interpolate': 3.0.1
+  'd3-transition@3>d3-interpolate': 3.0.1
+  'd3-interpolate@3>d3-color': 3.1.0
+  'd3-transition@3>d3-color': 3.1.0
