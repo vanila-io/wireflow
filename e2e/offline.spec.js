@@ -18,6 +18,25 @@ const missingIcons = (page) =>
       uses.map((use) => use.getAttribute('xlink:href')).filter((href) => !document.getElementById(href.slice(1))),
     );
 
+// Open the editor under a worker with different bytes, standing in for the
+// previous deploy; the real worker then arrives as an update. (Playwright can
+// route the first fetch of a worker script, not the browser's update checks.)
+async function openPreviousBuild(page, context) {
+  const current = await (await context.request.get('/service-worker.js')).text();
+  await context.route('**/service-worker.js', (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: `${current}\n// previous build\n` }),
+  );
+  await openEditor(page);
+  await waitForOfflineReady(page);
+  await context.unrouteAll();
+}
+
+// The current build is deployed and the browser checks for an update.
+const checkForUpdate = (page) =>
+  page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => r.update()));
+
+const updatePrompt = (page) => page.locator('.ant-notification-notice').filter({ hasText: 'Update available' });
+
 test('manifest is linked and makes the app installable', async ({ page, request }) => {
   await openEditor(page);
 
@@ -70,27 +89,18 @@ test('after the first visit the editor works offline', async ({ page, context })
 });
 
 test('a new deploy is offered as an update and reloading switches to it', async ({ page, context }) => {
-  // Install a worker with different bytes, standing in for the previous deploy.
-  // (Playwright can route the first fetch of a worker script, not update checks.)
-  const current = await (await context.request.get('/service-worker.js')).text();
-  await context.route('**/service-worker.js', (route) =>
-    route.fulfill({ contentType: 'text/javascript', body: `${current}\n// previous build\n` }),
-  );
-  await openEditor(page);
-  await waitForOfflineReady(page);
+  await openPreviousBuild(page, context);
+  await page.evaluate(() => (window.beforeUpdate = true));
+  await checkForUpdate(page);
 
-  // The current build is deployed and the browser checks for an update.
-  await context.unrouteAll();
-  await page.evaluate(() => {
-    window.beforeUpdate = true;
-    return navigator.serviceWorker.getRegistration().then((r) => r.update());
-  });
-
-  const prompt = page.locator('.ant-notification-notice').filter({ hasText: 'Update available' });
+  const prompt = updatePrompt(page);
   await expect(prompt).toBeVisible({ timeout: 15_000 });
   // Nothing changes until the user asks for it.
   expect(await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => Boolean(r.waiting)))).toBe(true);
+  expect(await page.evaluate(() => window.beforeUpdate)).toBe(true);
 
+  // The new build is already downloaded: switching to it needs no network.
+  await context.setOffline(true);
   const reloaded = page.waitForEvent('load');
   await prompt.getByRole('button', { name: 'Reload' }).click();
   await reloaded;
@@ -100,6 +110,29 @@ test('a new deploy is offered as an update and reloading switches to it', async 
     await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => [Boolean(r.waiting), r.active.state])),
   ).toEqual([false, 'activated']);
   await expect(prompt).toHaveCount(0);
+});
+
+test('reloading into an update in one tab reloads the other open tabs too', async ({ page, context }) => {
+  await openPreviousBuild(page, context);
+  const other = await context.newPage();
+  const errors = [];
+  other.on('console', (msg) => msg.type() === 'error' && errors.push(msg.text()));
+  other.on('pageerror', (error) => errors.push(error.message));
+  await openEditor(other);
+  await other.evaluate(() => (window.beforeUpdate = true));
+  await checkForUpdate(page);
+  await expect(updatePrompt(page)).toBeVisible({ timeout: 15_000 });
+  await expect(updatePrompt(other)).toBeVisible({ timeout: 15_000 });
+
+  // The new worker takes over both tabs; the other one must not stay on the old
+  // build with a Reload button that has nothing left to activate.
+  const otherReloaded = other.waitForEvent('load');
+  await updatePrompt(page).getByRole('button', { name: 'Reload' }).click();
+  await otherReloaded;
+  await expect(other.locator('#canvas_1')).toBeVisible();
+  expect(await other.evaluate(() => window.beforeUpdate)).toBeUndefined();
+  await expect(updatePrompt(other)).toHaveCount(0);
+  expect(errors).toEqual([]);
 });
 
 // Returning visitors of the old Create React App build have a Workbox worker
