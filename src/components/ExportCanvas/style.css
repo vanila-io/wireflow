@@ -3,6 +3,8 @@
   left: 20px;
   top: 20px;
   z-index: 999;
+  display: flex;
+  gap: 8px;
 }
 #canvas_1 {
   background: #f0f2f5;

@@ -1,38 +1,134 @@
-import { Button } from 'antd';
+import { useRef } from 'react';
+import { Button, Modal, Tooltip, message } from 'antd';
+import { FolderOpenOutlined, SaveOutlined } from '@ant-design/icons';
 import { toJpeg } from 'html-to-image';
-import { ContextMenu, Command, CanvasMenu } from 'gg-editor';
+import { ContextMenu, Command, CanvasMenu, withPropsAPI } from 'gg-editor';
 
 import IconFont from '../IconFont';
+import { FILE_NAME, parseDiagramFile, serializeDiagram } from '../../utils/diagramFile';
+import { saveData } from '../../utils/saveData';
 import './style.css';
 
-const ExportCanvas = () => {
+function download(name, href) {
+  const link = document.createElement('a');
+  link.download = name;
+  link.href = href;
+  link.click();
+}
+
+const ExportCanvas = ({ propsAPI }) => {
+  const fileInput = useRef(null);
+  const [modal, modalHolder] = Modal.useModal();
+  const [messageApi, messageHolder] = message.useMessage();
+
   function saveCanvas() {
     toJpeg(document.getElementById('canvas_1'), { quality: 1 })
-      .then(function (dataUrl) {
-        var link = document.createElement('a');
-        link.download = 'wireflow.jpg';
-        link.href = dataUrl;
-        link.click();
-      });
+      .then((dataUrl) => download('wireflow.jpg', dataUrl));
+  }
+
+  function saveFile() {
+    const blob = new Blob([serializeDiagram(propsAPI.save())], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    download(FILE_NAME, url);
+    setTimeout(() => URL.revokeObjectURL(url));
+  }
+
+  function load(diagram, name) {
+    const previous = propsAPI.save();
+    propsAPI.currentPage.clearSelected(); // so the detail panel lets go of the old item
+    try {
+      propsAPI.read(diagram);
+    } catch {
+      propsAPI.read(previous);
+      messageApi.error(`Couldn't open ${name}. The diagram in it couldn't be drawn.`);
+      return;
+    }
+    // Undo/redo replay snapshots of the previous diagram, so start a fresh history.
+    const history = propsAPI.editor.get('_command');
+    history.queue = [];
+    history.current = 0;
+    propsAPI.editor.setCommandDOMenable();
+    saveData(diagram);
+    messageApi.success(`Opened ${name}`);
+  }
+
+  async function openFile(e) {
+    const file = e.target.files[0];
+    e.target.value = ''; // so that picking the same file again fires `change`
+    if (!file) return;
+
+    let diagram;
+    try {
+      diagram = parseDiagramFile(await file.text());
+    } catch (error) {
+      messageApi.error(`Couldn't open ${file.name}. ${error.message ?? ''}`);
+      return;
+    }
+
+    const { nodes = [], edges = [], groups = [] } = propsAPI.save();
+    if (nodes.length + edges.length + groups.length === 0) {
+      load(diagram, file.name);
+      return;
+    }
+    modal.confirm({
+      title: 'Replace the current diagram?',
+      content: `Opening ${file.name} replaces the diagram on the canvas. Save it to a file first if you want to keep it.`,
+      okText: 'Replace',
+      onOk: () => load(diagram, file.name),
+    });
   }
 
   return (
-    <ContextMenu>
-      <CanvasMenu>
-        <Command name='autoZoom'>
+    <>
+      <ContextMenu>
+        <CanvasMenu>
           <div className='export'>
-            <Button
-              onClick={saveCanvas}
-              type='dashed'
-              size='large'
-              shape='circle'
-              icon={<IconFont type='icon-upload-demo' />}
+            <Command name='autoZoom'>
+              <Tooltip title='Export as JPEG' placement='bottom'>
+                <Button
+                  aria-label='Export as JPEG'
+                  onClick={saveCanvas}
+                  type='dashed'
+                  size='large'
+                  shape='circle'
+                  icon={<IconFont type='icon-upload-demo' />}
+                />
+              </Tooltip>
+            </Command>
+            <Tooltip title='Save to file' placement='bottom'>
+              <Button
+                aria-label='Save to file'
+                onClick={saveFile}
+                type='dashed'
+                size='large'
+                shape='circle'
+                icon={<SaveOutlined />}
+              />
+            </Tooltip>
+            <Tooltip title='Open file' placement='bottom'>
+              <Button
+                aria-label='Open file'
+                onClick={() => fileInput.current.click()}
+                type='dashed'
+                size='large'
+                shape='circle'
+                icon={<FolderOpenOutlined />}
+              />
+            </Tooltip>
+            <input
+              ref={fileInput}
+              type='file'
+              accept='.json,application/json'
+              hidden
+              onChange={openFile}
             />
           </div>
-        </Command>
-      </CanvasMenu>
-    </ContextMenu>
+        </CanvasMenu>
+      </ContextMenu>
+      {modalHolder}
+      {messageHolder}
+    </>
   );
 };
 
-export default ExportCanvas;
+export default withPropsAPI(ExportCanvas);

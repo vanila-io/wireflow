@@ -13,7 +13,7 @@
   <a href="https://www.producthunt.com/posts/wireflow">Product Hunt</a>
 </p>
 
-Wireflow is a free, open-source tool for sketching user flows. Drag wireframe screens onto a canvas, connect them, and export the result as an image. It runs entirely in the browser: no account, no backend.
+Wireflow is a free, open-source tool for sketching user flows. Drag wireframe screens onto a canvas, connect them, and export the result as an image or save it to a file you can open again. It runs entirely in the browser: no account, no backend.
 
 Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automatio.ai).
 
@@ -29,6 +29,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 - **Edit history**: undo, redo, copy, paste, and delete.
 - **Navigate**: zoom in and out, fit to screen, actual size, and a minimap.
 - **Export** the canvas to a JPEG with one click.
+- **Save and open files**: download the diagram as `wireflow.json` and open it again later, in any browser.
 - **Autosave**: every change is saved to your browser's `localStorage`.
 
 ## How it works
@@ -39,7 +40,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 
 1. **Drag a screen.** Pick a template from the left sidebar and drop it on the canvas.
 2. **Connect the flow.** Hover a screen to show its anchor points, then drag from an anchor to another screen. Select a node, edge, or group to edit it in the right-hand panel.
-3. **Export.** Click the round button in the top-left corner of the canvas to download `wireflow.jpg`. You don't need to save; the diagram is stored in your browser as you work.
+3. **Export.** Click the first round button in the top-left corner of the canvas to download `wireflow.jpg`. You don't need to save; the diagram is stored in your browser as you work. To keep an editable copy or move it to another browser, use the buttons next to it: **Save to file** downloads `wireflow.json` and **Open file** loads one back.
 
 ## Quick start
 
@@ -132,7 +133,8 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 ## Data and privacy
 
 - Your diagram is saved automatically to your browser's `localStorage` (key `data`) on every change. Nothing is sent to a server, and there are no accounts or analytics.
-- The diagram only exists in the browser where you made it. Clearing site data deletes it, and you can't move the editable diagram to another browser yet. JPEG export saves an image of the canvas, not an editable file.
+- The autosaved diagram only exists in the browser where you made it, and clearing site data deletes it. To keep it or move it to another browser, click **Save to file** and later **Open file**. Opening a file replaces the diagram on the canvas (Wireflow asks first if the canvas isn't empty). JPEG export saves an image of the canvas, not an editable file.
+- A saved file is JSON: `{ "format": "wireflow", "version": 1, "diagram": { "nodes": [...], "edges": [...], "groups": [...] } }`. Nodes name their screen template (`"template": "E-Commerce/Cart"`) instead of an image URL, so files keep working across Wireflow releases. **Open file** also accepts the plain `{ nodes, edges, groups }` object stored in `localStorage`. The format is documented in `src/utils/diagramFile.js`.
 - The toolbar icon font is loaded from Alibaba's iconfont CDN (`at.alicdn.com`).
 
 ## Tech stack
@@ -148,9 +150,9 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 ├── public/               static files copied as-is (icons, manifest, service worker)
 ├── src/
 │   ├── assets/images/    wireframe screen templates (SVG), one folder per category
-│   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export button
+│   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export/save/open buttons
 │   ├── containers/       app layout and custom node shapes
-│   └── utils/            localStorage persistence helpers
+│   └── utils/            persistence helpers: localStorage, the file format, template keys
 ├── index.html            Vite entry page
 ├── vite.config.js        Vite + Vitest config (build output: build/)
 ├── playwright.config.js  Playwright config
