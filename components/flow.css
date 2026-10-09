@@ -110,3 +110,9 @@
   border-radius: 6px;
   box-shadow: 0 8px 30px rgb(29 28 40 / 0.25);
 }
+
+/* ---- Added after production: edges with a colour of their own (#106) ---- */
+.react-flow__edge.colored.selected .react-flow__edge-path {
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 2px rgb(67 83 255 / 0.9));
+}

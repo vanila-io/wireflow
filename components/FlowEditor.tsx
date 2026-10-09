@@ -3,7 +3,7 @@
 // 98946 of build Jp7MF3_aUxMDjVuOFifu0); the diagram lives in one store
 // (lib/diagram/store.ts) that enforces the diagram rules, autosaves and keeps
 // the undo history.
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -22,6 +22,7 @@ import { readDiagram, readHistory, writeDiagram, writeHistory, BACKUP_KEY } from
 import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, parseLegacyStorage, serializeFile } from '@/lib/diagram/file';
 import { serialize, type Dropped } from '@/lib/diagram/rules';
 import ConfirmDialog from './editor/ConfirmDialog';
+import EdgePanel from './editor/EdgePanel';
 import FlowNode from './editor/FlowNode';
 import GroupNode from './editor/GroupNode';
 import Notices, { notice, type Notice } from './editor/Notices';
@@ -113,6 +114,20 @@ function Editor() {
   // Selection actions (recomputed on every store change, which includes selection).
   const canGroupNow = !!store.groupable();
   const groupSelected = !!store.selectedGroup();
+  // The edge panel shows for exactly one selected edge and nothing else selected.
+  const selectedEdges = edges.filter((e) => e.selected);
+  const selectedEdge = selectedEdges.length === 1 && !nodes.some((n) => n.selected) ? selectedEdges[0] : null;
+  // How edges are drawn (not stored): coloured edges keep their colour when
+  // selected, so they get a class that marks the selection another way.
+  const shownEdges = useMemo(
+    () =>
+      edges.map((e) => ({
+        ...e,
+        ...(e.style?.stroke && { className: 'colored' }),
+        ...(e.label && { labelStyle: { fill: '#6b6875', fontSize: 11, fontWeight: 600 }, labelBgPadding: [6, 3] as [number, number], labelBgBorderRadius: 4 }),
+      })),
+    [edges],
+  );
 
   const dismiss = useCallback((id: number) => setNotices((ns) => ns.filter((n) => n.id !== id)), []);
 
@@ -325,7 +340,7 @@ function Editor() {
             <ReactFlow
               nodeTypes={nodeTypes}
               nodes={nodes}
-              edges={edges}
+              edges={shownEdges}
               onNodesChange={store.onNodesChange}
               onEdgesChange={store.onEdgesChange}
               onConnect={store.onConnect}
@@ -376,6 +391,9 @@ function Editor() {
               <ToolbarButton label="Export JSON" onClick={exportJson} />
               <ToolbarButton label="Clear canvas" onClick={clearCanvas} />
             </div>
+            {selectedEdge ? (
+              <EdgePanel edge={selectedEdge} edges={edges} />
+            ) : (
             <aside className="absolute right-4 top-4 hidden w-60 rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border lg:block">
               <h3 className="text-sm font-bold text-ink">Keyboard shortcuts</h3>
               <dl className="mt-3 space-y-2 text-xs">
@@ -405,6 +423,7 @@ function Editor() {
                 <li>Your flow autosaves in this browser</li>
               </ul>
             </aside>
+            )}
           </div>
         </div>
       </div>

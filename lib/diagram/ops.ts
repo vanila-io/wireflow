@@ -1,6 +1,6 @@
 // Pure operations on a diagram. The store applies each one as a single undo step.
 import { absoluteBoxes, absolutePositions, fitGroups, GROUP_PADDING } from './groups';
-import { isCard, isGroup, newCardId, newId, type Diagram, type DiagramNode, type GroupNode } from './model';
+import { ARROW, isCard, isGroup, newCardId, newId, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode } from './model';
 
 // Ids of the given nodes and everything nested in them.
 export function withDescendants(nodes: DiagramNode[], ids: Iterable<string>): Set<string> {
@@ -184,3 +184,28 @@ export function setGroupLabel(d: Diagram, id: string, value: string): Diagram {
   };
 }
 
+// Edge colour (null: the default colour) and label (empty: none).
+export function updateEdge(d: Diagram, id: string, patch: { color?: string | null; label?: string }): Diagram {
+  return {
+    nodes: d.nodes,
+    edges: d.edges.map((e): DiagramEdge => {
+      if (e.id !== id) return e;
+      const next: DiagramEdge = { ...e };
+      if (patch.color !== undefined) {
+        if (patch.color === null) {
+          delete next.style;
+          next.markerEnd = { type: ARROW };
+        } else {
+          next.style = { stroke: patch.color };
+          next.markerEnd = { type: ARROW, color: patch.color };
+        }
+      }
+      if (patch.label !== undefined) {
+        const label = patch.label.trim();
+        if (label) next.label = label;
+        else delete next.label;
+      }
+      return next;
+    }),
+  };
+}

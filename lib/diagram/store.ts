@@ -15,8 +15,8 @@ import {
 import type { Graphic } from '@/lib/graphics';
 import { fitGroups } from './groups';
 import { canRedo, canUndo, createHistory, record, redo, undo, type History } from './history';
-import { ARROW, isGroup, makeCard, newId, type Diagram, type DiagramEdge, type DiagramNode } from './model';
-import { canGroup, copyItems, dropTargets, groupItems, pasteItems, removeItems, setGroupLabel, setHeaderText, setParents, toggleHeaders, ungroupItem, type Clip } from './ops';
+import { ARROW, DEFAULT_EDGE_COLOR, isGroup, makeCard, newId, type Diagram, type DiagramEdge, type DiagramNode } from './model';
+import { canGroup, copyItems, dropTargets, groupItems, pasteItems, removeItems, setGroupLabel, setHeaderText, setParents, toggleHeaders, ungroupItem, updateEdge, type Clip } from './ops';
 import { enforceRules, serialize } from './rules';
 
 export type StoreState = {
@@ -185,6 +185,11 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     ungroup() {
       const id = selectedGroup();
       if (id) apply((d) => ungroupItem(d, id), { select: state.nodes.filter((n) => n.parentId === id).map((n) => n.id) });
+    },
+    /** An edge's colour (null or the default colour: none of its own) and label. Unchanged values add no step. */
+    updateEdge(id: string, patch: { color?: string | null; label?: string }) {
+      const color = patch.color === DEFAULT_EDGE_COLOR ? null : patch.color;
+      apply((d) => updateEdge(d, id, { ...patch, ...(color !== undefined && { color }) }));
     },
     setGroupLabel(id: string, value: string) {
       apply((d) => setGroupLabel(d, id, value));
