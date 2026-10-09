@@ -189,6 +189,8 @@ function Editor() {
         e.preventDefault();
         store.redo();
       } else if (k === 'g') {
+        // Only when there is something to (un)group; otherwise the browser keeps Ctrl+G (find next).
+        if (e.shiftKey ? !store.selectedGroup() : !store.groupable()) return;
         e.preventDefault();
         if (e.shiftKey) store.ungroup();
         else store.group();
