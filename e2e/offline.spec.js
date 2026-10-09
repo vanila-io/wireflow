@@ -1,4 +1,4 @@
-import { test, expect, saved, templates, openEditor, onCanvas, dropTemplate } from './helpers.js';
+import { test, expect, saved, templates, nodeLabelInput, openEditor, onCanvas, dropTemplate } from './helpers.js';
 
 // The registration's active worker state, e.g. 'activated'.
 const workerState = (page) =>
@@ -96,6 +96,9 @@ test('a new deploy is offered as an update and reloading switches to it', async 
   // A cache the app doesn't own (another feature, a library) is left alone and
   // doesn't make the update skip the prompt.
   await page.evaluate(() => caches.open('not-wireflow').then(() => {}));
+  const cart = await onCanvas(page, 400, 300);
+  await dropTemplate(page, 19, cart);
+  await page.mouse.click(cart.x, cart.y);
   await page.evaluate(() => (window.beforeUpdate = true));
   await checkForUpdate(page);
 
@@ -105,6 +108,9 @@ test('a new deploy is offered as an update and reloading switches to it', async 
   expect(await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => Boolean(r.waiting)))).toBe(true);
   expect(await page.evaluate(() => window.beforeUpdate)).toBe(true);
 
+  // A label still being typed (no Enter, no blur) is kept: clicking Reload
+  // blurs the field, which saves it, before the page reloads.
+  await nodeLabelInput(page).fill('Checkout');
   // The new build is already downloaded: switching to it needs no network.
   await context.setOffline(true);
   const reloaded = page.waitForEvent('load');
@@ -117,6 +123,7 @@ test('a new deploy is offered as an update and reloading switches to it', async 
   ).toEqual([false, 'activated']);
   await expect(prompt).toHaveCount(0);
   expect(await cacheNames(page)).toContain('not-wireflow');
+  expect((await saved(page)).nodes.map((node) => node.label)).toEqual(['Checkout']);
 });
 
 test('reloading into an update in one tab reloads the other open tabs too', async ({ page, context }) => {
