@@ -156,7 +156,9 @@ class DetailForm extends Component {
     executeCommand(() => update(item, { ...values }));
   };
 
-  // Colors of the edges in the diagram, most recently added edge first.
+  // Colors of the edges in the diagram, topmost edge first. save() lists items
+  // in drawing order, so that is the most recently added edge unless To Front
+  // or To Back moved one.
   get usedEdgeColors() {
     const { edges = [] } = this.props.propsAPI.save();
     const colors = edges
