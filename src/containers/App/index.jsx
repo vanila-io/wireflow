@@ -64,6 +64,7 @@ const App = () => {
             <ExportCanvas />
             <FlowToolbar />
             <FlowCanvas />
+            <AiChat />
           </Col>
           <Col span={5}>
             <FlowDetailPanel />
@@ -72,7 +73,6 @@ const App = () => {
         </Row>
         <NodeRegisteWithHeader />
         <NodeRegisteWithoutHeader />
-        <AiChat />
       </GGEditor>
     </Layout>
   );

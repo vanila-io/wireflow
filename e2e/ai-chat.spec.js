@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import process from 'node:process';
 import { layoutIssues } from '../src/ai/layout.js';
-import { command, expect, openEditor, saved, test } from './helpers';
+import { command, dropTemplate, expect, onCanvas, openEditor, saved, test } from './helpers';
 
 const API = 'https://api.anthropic.com';
 const panel = (page) => page.locator('.ai-panel');
@@ -114,15 +114,23 @@ const flow = {
   ],
 };
 
-test('the AI panel and its SDK load only when opened', async ({ page }) => {
+test('the AI panel and its SDK load only when opened, from a button in the canvas corner', async ({ page }) => {
   const scripts = [];
-  page.on('request', (r) => r.resourceType() === 'script' && scripts.push(r.url()));
-  await page.goto('/');
-  await expect(page.locator('#canvas_1')).toBeVisible();
-  expect(scripts.some((u) => u.includes('AiPanel'))).toBe(false);
+  page.on('response', (r) => r.request().resourceType() === 'script' && scripts.push(r));
+  const sdkLoaded = async () => (await Promise.all(scripts.map((r) => r.text()))).some((js) => js.includes('anthropic-dangerous-direct-browser-access'));
+
+  await openEditor(page);
+  expect(await sdkLoaded()).toBe(false);
+
+  // Bottom-right corner of the canvas column, not under the details column.
+  const canvas = await page.locator('#canvas_1').boundingBox();
+  const button = await page.locator('.ai-toggle').boundingBox();
+  expect(Math.abs(canvas.x + canvas.width - (button.x + button.width) - 24)).toBeLessThan(2);
+  expect(Math.abs(page.viewportSize().height - (button.y + button.height) - 24)).toBeLessThan(2);
+
   await page.locator('.ai-toggle').click();
   await expect(panel(page).getByLabel('API key')).toBeVisible();
-  expect(scripts.some((u) => u.includes('AiPanel'))).toBe(true);
+  expect(await sdkLoaded()).toBe(true);
 });
 
 test('a mocked AI reply edits the diagram as one undo step that survives reload', async ({ page }) => {
@@ -158,15 +166,17 @@ test('a mocked AI reply edits the diagram as one undo step that survives reload'
   // One undo removes the whole AI change, and that is saved too.
   await command(page, 'undo').click();
   expect((await saved(page)).nodes).toEqual([]);
+  await expect(panel(page).locator('.ai-applied')).toHaveText(/^Undone:/);
 
   // Redo brings back the same ids, groups included.
   await command(page, 'redo').click();
   data = await saved(page);
   expect(data.nodes.map((n) => [n.id, n.parent ?? null])).toEqual([['login', null], ['home', 'app'], ['profile', 'app']]);
   expect(data.groups.map((g) => g.id)).toEqual(['app']);
+  await expect(panel(page).locator('.ai-applied')).toHaveText(/^Applied:/);
 
   // The panel's own Undo works too, and the undone state is what a reload shows.
-  await panel(page).getByRole('button', { name: 'Undo' }).click();
+  await panel(page).getByRole('button', { name: 'Undo: Added a login flow.' }).click();
   await expect(panel(page).locator('.ai-applied')).toHaveText(/^Undone:/);
   await page.reload();
   await expect(page.locator('#canvas_1')).toBeVisible();
@@ -184,6 +194,25 @@ test('an invalid batch is reported back to the model and nothing is applied', as
   expect(result.is_error).toBe(true);
   expect(JSON.parse(result.content).errors[0].message).toMatch(/unknown template/);
   expect((await saved(page))?.nodes ?? []).toEqual([]);
+});
+
+test('the panel offers Undo only while the AI change is the latest one', async ({ page }) => {
+  await mockAnthropic(page, [toolTurn({ summary: 'Added A.', operations: [{ op: 'add_screen', id: 'a', template: 'cart', label: 'A', x: 300, y: 300 }] }), textTurn('Done.')]);
+  await openPanel(page, 'sk-ant-test-key');
+  await ask(page, 'add a');
+  const undo = panel(page).getByRole('button', { name: 'Undo: Added A.' });
+  await expect(undo).toBeVisible();
+
+  // A change by the user comes after it: undoing from the panel would undo that too.
+  await dropTemplate(page, 0, await onCanvas(page, 150, 550));
+  await expect.poll(async () => (await saved(page)).nodes.length).toBe(2);
+  await expect(undo).toHaveCount(0);
+  await expect(panel(page).locator('.ai-applied')).toHaveText(/^Applied: Added A\./);
+
+  await command(page, 'undo').click();
+  await undo.click();
+  await expect(panel(page).locator('.ai-applied')).toHaveText(/^Undone:/);
+  expect((await saved(page)).nodes).toEqual([]);
 });
 
 test('redoing an AI change that clears the diagram is saved', async ({ page }) => {
@@ -245,6 +274,20 @@ test.describe('when requests fail', () => {
   // Chromium logs every failed or refused request as a console error.
   test.use({ allowErrors: [/Failed to load resource/] });
 
+  test('if the panel cannot be loaded, the editor keeps working and a later click retries', async ({ page }) => {
+    await page.route('**/assets/AiPanel-*.js', (route) => route.abort());
+    await openEditor(page);
+    await page.locator('.ai-toggle').click();
+    await expect(page.locator('.ai-toggle')).toHaveAttribute('aria-label', /Couldn't load the AI assistant/);
+    await expect(page.locator('#canvas_1')).toBeVisible();
+    await expect(page.locator('.toolbar .command')).toHaveCount(14);
+
+    await page.unroute('**/assets/AiPanel-*.js');
+    await page.locator('.ai-toggle').click();
+    await expect(panel(page).getByLabel('API key')).toBeVisible();
+    await expect(page.locator('.ai-toggle')).toHaveAttribute('aria-label', 'AI assistant');
+  });
+
   test('a stopped or failed request is not sent again with the next one', async ({ page }) => {
     const requests = await mockAnthropic(page, [textTurn('slow'), 400, textTurn('Added.')], { slow: 0 });
     await openPanel(page, 'sk-ant-test-key');
@@ -258,6 +301,18 @@ test.describe('when requests fail', () => {
     await ask(page, 'Add a login screen');
     await expect(panel(page).locator('.ai-text').last()).toHaveText('Added.');
     expect(userTexts(requests[2].body).filter((t) => !t.startsWith('<diagram>'))).toEqual(['Add a login screen']);
+  });
+
+  test('the session cost includes steps that finished before a later step failed', async ({ page }) => {
+    const one = { summary: 'Added A.', operations: [{ op: 'add_screen', id: 'a', template: 'cart', label: 'A', x: 300, y: 300 }] };
+    // 20,000 input + 2,000 output tokens on Haiku 5.5 ($0.10 / $0.50 per MTok) = $0.0030.
+    await mockAnthropic(page, [toolTurn(one, 'toolu_1', { input: 20000, output: 2000 }), 400]);
+    await openPanel(page, 'sk-ant-test-key');
+    await ask(page, 'add a');
+    await expect(panel(page).locator('.ant-alert-error')).toBeVisible();
+    await expect(panel(page).locator('.ai-cost')).toHaveText('$0.0030');
+    await expect(panel(page).locator('.ai-footer')).toContainText('$0.0030 this session');
+    expect((await saved(page)).nodes.map((n) => n.id)).toEqual(['a']);
   });
 
   test('a rejected key and a rate limit show a clear message', async ({ page }) => {

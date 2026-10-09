@@ -11,8 +11,10 @@ const diagramBlock = (state) => `<diagram>${JSON.stringify(snapshot(state))}</di
  * Provider-neutral; `chat` comes from provider.createChat().
  *
  * editor: { read() -> { data, selected, view? }, apply(actions) }
- * onEvent({ type: 'text' | 'thinking' | 'applied' | 'tool_error' | 'step', ... })
- * Returns { status, refusal, usage: {usd, ...} } with usage summed over all steps.
+ * onEvent({ type: 'step' | 'text' | 'thinking' | 'usage' | 'applied' | 'tool_error', ... });
+ * 'usage' arrives after every model call, so the cost of finished steps is known even
+ * if a later step fails or is stopped.
+ * Returns { status, refusal, usage } with usage summed over all steps.
  */
 export async function runRequest({ chat, text, editor, onEvent = () => {}, signal }) {
   const total = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0, usd: 0 };
@@ -26,6 +28,7 @@ export async function runRequest({ chat, text, editor, onEvent = () => {}, signa
       onThinking: (delta) => onEvent({ type: 'thinking', delta }),
     });
     Object.keys(total).forEach((k) => (total[k] += turn.usage[k] ?? 0));
+    onEvent({ type: 'usage', usage: turn.usage });
 
     if (turn.status !== 'tool_use') return { status: turn.status, refusal: turn.refusal, usage: total };
     // Out of steps: leave these calls unapplied (the provider reports them as such next time).

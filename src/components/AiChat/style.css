@@ -83,3 +83,13 @@
   color: #8c8c8c;
   font-size: 12px;
 }
+
+/* Read by screen readers, not shown. */
+.ai-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

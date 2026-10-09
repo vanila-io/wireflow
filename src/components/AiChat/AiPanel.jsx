@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { withPropsAPI } from 'gg-editor';
 import { Alert, Button, Checkbox, Drawer, Input, Select, Space, Typography } from 'antd';
 
@@ -37,6 +37,7 @@ const STATUS_NOTE = {
   truncated: 'The response was cut off; nothing more was applied.',
   step_limit: 'Stopped after too many steps.',
 };
+const statusNote = (m) => (m.status === 'refused' && m.refusal ? `${STATUS_NOTE.refused} ${m.refusal}` : STATUS_NOTE[m.status]);
 
 // The part of the canvas the user can see, in canvas coordinates: the canvas minus
 // what the open panel covers. Sent to the model so it places screens in view.
@@ -48,6 +49,16 @@ function visibleArea(graph) {
     y: Math.max(box.top, Math.min(box.bottom, window.innerHeight)),
   });
   return { x: Math.round(from.x), y: Math.round(from.y), width: Math.round(to.x - from.x), height: Math.round(to.y - from.y) };
+}
+
+// Where an AI change stands in the editor's undo history: 'latest' (the panel can
+// undo it), 'applied' (later changes came after it) or 'undone'.
+function changeState(editor, command) {
+  const queue = editor.getCommands();
+  const done = queue.indexOf(editor.getCurrentCommand()) + 1; // commands not undone
+  const index = queue.indexOf(command);
+  if (index < 0 || index >= done) return 'undone';
+  return index === done - 1 ? 'latest' : 'applied';
 }
 
 let nextId = 0;
@@ -69,6 +80,9 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [sessionCost, setSessionCost] = useState(0);
+  // Re-render on every editor command (undo and redo included), so each AI change
+  // shows whether it is still applied and can be undone from here.
+  const [, refresh] = useReducer((n) => n + 1, 0);
 
   const chat = useRef(null);
   const abort = useRef(null);
@@ -76,12 +90,17 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
   const composer = useRef(null);
 
   useEffect(() => {
-    // Braces matter: newer browsers return a Promise here, which React would take as a cleanup.
+    // Braces matter: Chromium returns a Promise here, which React would take as a cleanup.
     listEnd.current?.scrollIntoView({ block: 'end' });
   }, [messages]);
   useEffect(() => {
     if (open && apiKey) composer.current?.focus();
   }, [open, apiKey]);
+  useEffect(() => {
+    const { editor } = propsAPI;
+    editor.on('aftercommandexecute', refresh);
+    return () => editor.off('aftercommandexecute', refresh);
+  }, [propsAPI]);
 
   const persist = (patch) => {
     const next = { provider: providerId, model, ...(remember && apiKey ? { apiKey } : {}), ...patch };
@@ -135,32 +154,28 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
             update(id, (m) => ({ ...m, text: m.text ? m.text + sep + e.delta : e.delta }));
           }
           if (e.type === 'thinking') update(id, (m) => ({ ...m, thinking: m.thinking + e.delta }));
+          if (e.type === 'usage') {
+            update(id, (m) => ({ ...m, cost: (m.cost ?? 0) + e.usage.usd }));
+            setSessionCost((c) => c + e.usage.usd);
+          }
           if (e.type === 'applied') {
             const command = propsAPI.editor.getCurrentCommand();
-            update(id, (m) => ({ ...m, applied: [...m.applied, { count: e.count, summary: e.summary, command, undone: false }] }));
+            update(id, (m) => ({ ...m, applied: [...m.applied, { count: e.count, summary: e.summary, command }] }));
           }
-          if (e.type === 'tool_error') update(id, (m) => ({ ...m, retries: (m.retries ?? 0) + 1 }));
         },
       });
-      update(id, (m) => ({ ...m, status: result.status, cost: result.usage.usd }));
-      setSessionCost((c) => c + result.usage.usd);
+      update(id, (m) => ({ ...m, status: result.status, refusal: result.refusal }));
     } catch (err) {
       update(id, (m) => ({ ...m, status: err.kind === 'aborted' ? 'aborted' : 'error', error: err.message, errorKind: err.kind }));
-      if (err.kind !== 'aborted') console.warn('[ai]', err.cause ?? err);
     } finally {
       abort.current = null;
       setBusy(false);
     }
   }
 
-  function undo(messageId, index) {
-    const msg = messages.find((m) => m.id === messageId);
-    const entry = msg.applied[index];
-    // Only undo while this AI change is still the latest command; otherwise it
-    // would undo something the user did afterwards.
-    if (propsAPI.editor.getCurrentCommand() !== entry.command) return;
-    propsAPI.executeCommand('undo');
-    update(messageId, (m) => ({ ...m, applied: m.applied.map((a, i) => (i === index ? { ...a, undone: true } : a)) }));
+  function undo(command) {
+    // Only the latest change: undoing an older one would undo what came after it too.
+    if (changeState(propsAPI.editor, command) === 'latest') propsAPI.executeCommand('undo');
   }
 
   async function saveKey() {
@@ -186,6 +201,15 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
     setApiKey(null);
     storeSettings({ provider: providerId, model });
   }
+
+  // Screen readers hear each finished reply once, not every streamed token.
+  const last = messages.at(-1);
+  const announcement =
+    !busy && last?.role === 'assistant'
+      ? [last.text, ...last.applied.map((a) => `Applied: ${a.summary || `${a.count} changes`}.`), last.error ?? statusNote(last)]
+          .filter(Boolean)
+          .join(' ')
+      : '';
 
   const header = (
     <Space size='small'>
@@ -233,7 +257,7 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
       {!apiKey ? (
         <div className='ai-key'>
           <Typography.Paragraph>
-            Paste a {provider.label} API key. Requests go straight from this browser to {provider.label}; Wireflow has no server.
+            Paste your {provider.label} API key. Requests go straight from this browser to {provider.label}; Wireflow has no server.
           </Typography.Paragraph>
           <Input.Password
             placeholder={provider.keyHint}
@@ -244,7 +268,7 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
             aria-label='API key'
           />
           <Checkbox checked={remember} onChange={(e) => setRemember(e.target.checked)}>
-            Remember on this device
+            Remember on this device (stored unencrypted in this browser)
           </Checkbox>
           {keyError && <Alert type='error' showIcon title={keyError} />}
           <Button type='primary' loading={checkingKey} disabled={!keyDraft.trim()} onClick={saveKey}>
@@ -259,7 +283,7 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
         </div>
       ) : (
         <>
-          <div className='ai-messages' aria-live='polite'>
+          <div className='ai-messages'>
             {!messages.length && (
               <Typography.Text type='secondary' className='ai-empty'>
                 Describe a flow to build (&quot;a sign-up flow with email verification&quot;) or a change to make (&quot;rename the selected
@@ -281,20 +305,24 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
                   )}
                   {m.status === 'streaming' && !m.text && <Typography.Text type='secondary'>Thinking…</Typography.Text>}
                   {m.text && <div className='ai-text'>{m.text}</div>}
-                  {m.applied.map((a, i) => (
-                    <div key={i} className='ai-applied'>
-                      <span>
-                        {a.undone ? 'Undone: ' : 'Applied: '}
-                        {a.summary || `${a.count} changes`}
-                      </span>
-                      {!a.undone && (
-                        <Button size='small' type='link' onClick={() => undo(m.id, i)} disabled={busy}>
-                          Undo
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  {STATUS_NOTE[m.status] && <Alert type='warning' showIcon title={STATUS_NOTE[m.status]} />}
+                  {m.applied.map((a, i) => {
+                    const state = changeState(propsAPI.editor, a.command);
+                    const summary = a.summary || `${a.count} changes`;
+                    return (
+                      <div key={i} className='ai-applied' data-state={state}>
+                        <span>
+                          {state === 'undone' ? 'Undone: ' : 'Applied: '}
+                          {summary}
+                        </span>
+                        {state === 'latest' && (
+                          <Button size='small' type='link' onClick={() => undo(a.command)} disabled={busy} aria-label={`Undo: ${summary}`}>
+                            Undo
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {statusNote(m) && <Alert type='warning' showIcon title={statusNote(m)} />}
                   {m.status === 'aborted' && <Typography.Text type='secondary'>Stopped.</Typography.Text>}
                   {m.status === 'error' && (
                     <Alert
@@ -315,6 +343,9 @@ const AiPanel = ({ open, onClose, propsAPI }) => {
               ),
             )}
             <div ref={listEnd} />
+          </div>
+          <div className='ai-sr-only' role='status'>
+            {announcement}
           </div>
           <div className='ai-composer'>
             <Input.TextArea
