@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { ItemPanel } from 'gg-editor';
 import { Card, Empty, Input } from 'antd';
 import { RightOutlined } from '@ant-design/icons';
@@ -35,12 +36,15 @@ const FlowItemPanel = () => {
   // While searching, every matching template is shown, even in collapsed categories.
   const searching = keyword.trim() !== '';
 
-  function toggle(category) {
+  function toggle(button, category) {
     const next = collapsed.includes(category)
       ? collapsed.filter((c) => c !== category)
       : [...collapsed, category];
-    setCollapsed(next);
     storeCollapsed(next);
+    // Collapsing the category you have scrolled into would leave its pinned heading far
+    // above the visible list. Apply the change now and bring the heading back into view.
+    flushSync(() => setCollapsed(next));
+    button.scrollIntoView({ block: 'nearest' });
   }
 
   return (
@@ -53,41 +57,43 @@ const FlowItemPanel = () => {
           size='small'
           onChange={(e) => setKeyword(e.target.value)}
         />
-        {groups.map(({ category, items }) => {
-          const expanded = searching || !collapsed.includes(category);
-          const id = `sidebar-category-${category.replace(/\W+/g, '-')}`;
+        <div className='sidebar-list'>
+          {groups.map(({ category, items }) => {
+            const expanded = searching || !collapsed.includes(category);
+            const id = `sidebar-category-${category.replace(/\W+/g, '-')}`;
 
-          return (
-            <section key={category} className='sidebar-category'>
-              <button
-                type='button'
-                className='sidebar-category-toggle'
-                aria-expanded={expanded}
-                aria-controls={id}
-                disabled={searching}
-                onClick={() => toggle(category)}
-              >
-                <RightOutlined className='sidebar-category-caret' />
-                <span className='sidebar-category-name'>{category}</span>
-                <span className='sidebar-category-count'>{items.length}</span>
-              </button>
-              {expanded && (
-                <div id={id}>
-                  {items.map((item, i) => (
-                    <NodeItem key={i} {...item} />
-                  ))}
-                </div>
-              )}
-            </section>
-          );
-        })}
-        {groups.length === 0 && (
-          <Empty
-            className='sidebar-empty'
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description='No matching templates'
-          />
-        )}
+            return (
+              <section key={category} className='sidebar-category'>
+                <button
+                  type='button'
+                  className='sidebar-category-toggle'
+                  aria-expanded={expanded}
+                  aria-controls={id}
+                  disabled={searching}
+                  onClick={(e) => toggle(e.currentTarget, category)}
+                >
+                  <RightOutlined className='sidebar-category-caret' />
+                  <span className='sidebar-category-name'>{category}</span>
+                  <span className='sidebar-category-count'>{items.length}</span>
+                </button>
+                {expanded && (
+                  <div id={id}>
+                    {items.map((item, i) => (
+                      <NodeItem key={i} {...item} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+          {groups.length === 0 && (
+            <Empty
+              className='sidebar-empty'
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description='No matching templates'
+            />
+          )}
+        </div>
       </Card>
     </ItemPanel>
   );

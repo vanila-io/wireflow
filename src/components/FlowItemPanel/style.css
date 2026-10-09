@@ -11,39 +11,38 @@
   height: 100vh;
   user-select: none;
 }
+/* The search box stays at the top; only the template list below it scrolls. */
 .sidebar .ant-card-body {
   position: fixed;
   top: 15px;
   left: 0;
   width: var(--sidebar-width);
   bottom: 0;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  padding-bottom: 16px;
-  /* Keep items scrolled into view clear of the pinned search box and heading. */
-  scroll-padding-top: 60px;
+  display: flex;
+  flex-direction: column;
   background: #ffffff;
 
   z-index: 1000;
 }
-
-/* The search box and the current category heading stay pinned while scrolling. */
 .sidebar .sidebar-search {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  margin: 0;
-  padding: 0 5px 6px;
-  width: 100%;
-  background: #ffffff;
+  flex: none;
+  margin: 5px;
+  width: auto;
 }
 .sidebar .sidebar-search input {
   font-size: 10px;
 }
+.sidebar-list {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
 
+/* A category's heading stays pinned at the top of the list while you scroll through it. */
 .sidebar-category-toggle {
   position: sticky;
-  top: 30px;
+  top: 0;
   z-index: 2;
   display: flex;
   align-items: center;

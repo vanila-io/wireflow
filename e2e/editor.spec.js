@@ -52,7 +52,7 @@ test('the canvas starts exactly where the sidebar ends', async ({ page }) => {
   await openEditor(page);
   const canvas = await page.locator('#canvas_1').boundingBox();
 
-  // The card and its fixed, scrolling body are sized separately; neither may overlap the canvas or leave a gap.
+  // The card and its fixed-position body are sized separately; neither may overlap the canvas or leave a gap.
   for (const part of ['.sidebar', '.sidebar .ant-card-body']) {
     const box = await page.locator(part).boundingBox();
     expect(box.x + box.width, part).toBe(canvas.x);
@@ -88,6 +88,22 @@ test('sidebar groups named templates under category headings that collapse and s
   await expect(blog).toHaveAttribute('aria-expanded', 'true');
   await expect(templates(page)).toHaveCount(total);
   expect(await saved(page)).toBeNull();
+});
+
+test('collapsing the category you have scrolled into keeps its heading where it was', async ({ page }) => {
+  await openEditor(page);
+  const list = await page.locator('.sidebar-list').boundingBox();
+  const misc = categoryToggle(page, 'Misc');
+
+  // Deep inside Misc (24 templates), its heading is pinned to the top of the list.
+  await template(page, 'Misc', 'Team').scrollIntoViewIfNeeded();
+  await expect.poll(async () => (await misc.boundingBox()).y).toBeCloseTo(list.y, 0);
+
+  await misc.click();
+  await expect(misc).toHaveAttribute('aria-expanded', 'false');
+  // Still at the top of the list, under the pointer, rather than scrolled far out of view.
+  expect((await misc.boundingBox()).y).toBeCloseTo(list.y, 0);
+  await expect(template(page, 'Multimedia', 'Files')).toBeInViewport();
 });
 
 test('sidebar search matches template and category names across categories', async ({ page }) => {
