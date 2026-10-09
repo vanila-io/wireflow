@@ -4,6 +4,9 @@ import {
   expect,
   saved,
   templates,
+  categoryNames,
+  categoryToggle,
+  template,
   panelTitle,
   nodeLabelInput,
   colorTrigger,
@@ -53,17 +56,167 @@ test('app shell loads with templates, toolbar, minimap and canvas panel', async 
   expect(await saved(page)).toBeNull();
 });
 
-test('sidebar search filters templates and clearing it restores them', async ({ page }) => {
+const CATEGORIES = ['Article', 'Blog', 'E-Commerce', 'Features', 'Gallery', 'Header', 'Misc', 'Multimedia', 'Sign in', 'Socials'];
+
+test('the canvas starts exactly where the sidebar ends', async ({ page }) => {
+  await openEditor(page);
+  const canvas = await page.locator('#canvas_1').boundingBox();
+
+  // The card and its fixed-position body are sized separately; neither may overlap the canvas or leave a gap.
+  for (const part of ['.sidebar', '.sidebar .ant-card-body']) {
+    const box = await page.locator(part).boundingBox();
+    expect(box.x + box.width, part).toBe(canvas.x);
+  }
+});
+
+test('sidebar groups named templates under category headings that collapse and stay collapsed', async ({ page }) => {
+  await openEditor(page);
+  const total = await templates(page).count();
+
+  await expect(categoryNames(page)).toHaveText(CATEGORIES);
+  await expect(page.locator('.sidebar-category-count')).toHaveText(['6', '12', '12', '6', '6', '6', '24', '12', '6', '12']);
+  // Every thumbnail is named by its alt text and, for the mouse, its tile's tooltip.
+  const unnamed = await templates(page).evaluateAll((imgs) =>
+    imgs.filter((img) => !img.alt || img.closest('.sidebar-item').title !== img.alt).map((img) => img.src),
+  );
+  expect(unnamed).toEqual([]);
+  await expect(template(page, 'E-Commerce', 'Checkout Delivery')).toBeVisible();
+
+  const blog = categoryToggle(page, 'Blog');
+  await expect(blog).toHaveAttribute('aria-expanded', 'true');
+  await blog.click();
+  await expect(blog).toHaveAttribute('aria-expanded', 'false');
+  await expect(templates(page)).toHaveCount(total - 12);
+  await expect(categoryNames(page)).toHaveText(CATEGORIES);
+
+  await page.reload();
+  await expect(page.locator('#canvas_1')).toBeVisible();
+  await expect(blog).toHaveAttribute('aria-expanded', 'false');
+  await expect(templates(page)).toHaveCount(total - 12);
+
+  await blog.click();
+  await expect(blog).toHaveAttribute('aria-expanded', 'true');
+  await expect(templates(page)).toHaveCount(total);
+  expect(await saved(page)).toBeNull();
+});
+
+test('collapsing the category you have scrolled into keeps its heading where it was', async ({ page }) => {
+  await openEditor(page);
+  const list = await page.locator('.sidebar-list').boundingBox();
+  const misc = categoryToggle(page, 'Misc');
+
+  // Deep inside Misc (24 templates), its heading is pinned to the top of the list.
+  await template(page, 'Misc', 'Team').scrollIntoViewIfNeeded();
+  await expect.poll(async () => (await misc.boundingBox()).y).toBeCloseTo(list.y, 0);
+
+  await misc.click();
+  await expect(misc).toHaveAttribute('aria-expanded', 'false');
+  // Still at the top of the list, under the pointer, rather than scrolled far out of view.
+  expect((await misc.boundingBox()).y).toBeCloseTo(list.y, 0);
+  await expect(template(page, 'Multimedia', 'Files')).toBeInViewport();
+});
+
+test('category toggles are named headings that work from the keyboard', async ({ page }) => {
+  await openEditor(page);
+  const article = categoryToggle(page, 'Article');
+  await expect(page.locator('.sidebar-category').first()).toMatchAriaSnapshot(`
+    - heading "Article 6" [level=2]:
+      - button "Article 6" [expanded]
+  `);
+
+  await article.focus();
+  await page.keyboard.press('Enter');
+  await expect(article).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('Space');
+  await expect(article).toHaveAttribute('aria-expanded', 'true');
+  await expect(article).toBeFocused();
+
+  // aria-controls may only name a list that is on the page; a collapsed category has none.
+  await categoryToggle(page, 'Blog').click();
+  await expect(categoryToggle(page, 'Blog')).toHaveAttribute('aria-expanded', 'false');
+  const dangling = await page.locator('.sidebar-category-toggle').evaluateAll((buttons) =>
+    buttons.filter((b) => b.hasAttribute('aria-controls') && !document.getElementById(b.getAttribute('aria-controls'))).map((b) => b.textContent),
+  );
+  expect(dangling).toEqual([]);
+});
+
+test('sidebar search matches template and category names across categories', async ({ page }) => {
   await openEditor(page);
   const total = await templates(page).count();
   const search = page.locator('.sidebar-search input');
+  await categoryToggle(page, 'E-Commerce').click();
+  await expect(templates(page)).toHaveCount(total - 12);
 
+  // Matches show even inside a collapsed category; categories without matches are hidden.
   await search.fill('cart');
-  await expect(templates(page)).toHaveCount(2); // "Cart pop up" and "Cart"
+  await expect(categoryNames(page)).toHaveText(['E-Commerce']);
+  await expect(templates(page)).toHaveCount(2);
+  expect(await templates(page).evaluateAll((imgs) => imgs.map((img) => img.alt))).toEqual(['Cart pop up', 'Cart']);
+  await expect(categoryToggle(page, 'E-Commerce')).toBeDisabled();
+
+  // New results start at the top of the list, wherever it was scrolled to.
+  const list = page.locator('.sidebar-list');
+  await search.fill('');
+  await list.evaluate((el) => (el.scrollTop = el.scrollHeight));
+  await search.fill('video');
+  await expect(categoryNames(page)).toHaveText(['Blog', 'Header', 'Multimedia']);
+  expect(await list.evaluate((el) => el.scrollTop)).toBe(0);
+
+  await search.fill('multimedia');
+  await expect(categoryNames(page)).toHaveText(['Multimedia']);
+  await expect(templates(page)).toHaveCount(12);
+
+  await search.fill('no such template');
+  await expect(categoryNames(page)).toHaveCount(0);
+  await expect(templates(page)).toHaveCount(0);
+  await expect(page.locator('.sidebar-empty .ant-empty-description')).toHaveText('No matching templates');
 
   await page.locator('.sidebar-search .ant-input-clear-icon').click();
   await expect(search).toHaveValue('');
-  await expect(templates(page)).toHaveCount(total);
+  await expect(categoryNames(page)).toHaveText(CATEGORIES);
+  await expect(categoryToggle(page, 'E-Commerce')).toHaveAttribute('aria-expanded', 'false');
+  await expect(templates(page)).toHaveCount(total - 12);
+});
+
+test('the sidebar is as compact as before the categories: ten whole templates fit on a 900px-tall screen', async ({ page }) => {
+  await openEditor(page);
+
+  const whole = await templates(page).evaluateAll((imgs) =>
+    imgs.filter((img) => {
+      const { top, bottom } = img.closest('.sidebar-item').getBoundingClientRect();
+      return top >= 0 && bottom <= window.innerHeight;
+    }).length,
+  );
+  expect(whole).toBeGreaterThanOrEqual(10);
+});
+
+test('a template drags from anywhere on its tile, in the first, a middle and the last category', async ({ page }) => {
+  await openEditor(page);
+  // Socials starts collapsed, so its tiles mount after the editor exists and still have to start drags.
+  await categoryToggle(page, 'Socials').click();
+  await page.reload();
+  await expect(page.locator('#canvas_1')).toBeVisible();
+  await categoryToggle(page, 'Socials').click();
+
+  const picks = [template(page, 'Article', 'Article').first(), template(page, 'Misc', 'Team'), template(page, 'Socials', 'User').last()];
+  const expected = [];
+  for (const [i, img] of picks.entries()) {
+    await img.scrollIntoViewIfNeeded();
+    // Press in the tile's padding, 4px inside its left edge, not on the thumbnail itself.
+    const grab = await img.evaluate((el) => {
+      const tile = el.closest('.sidebar-item').getBoundingClientRect();
+      return { x: tile.x + 4, y: tile.y + tile.height / 2 };
+    });
+    const at = await onCanvas(page, 200 + 250 * i, 300);
+    await page.mouse.move(grab.x, grab.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x, at.y, { steps: 15 });
+    await page.mouse.up();
+    expected.push({ label: await img.getAttribute('alt'), img: await img.getAttribute('src'), x: 200 + 250 * i, y: 300 });
+  }
+
+  await expect.poll(async () => leftToRight((await saved(page))?.nodes ?? [])).toMatchObject(expected);
+  expect(expected.map((node) => node.label)).toEqual(['Article', 'Team', 'User']);
 });
 
 test('dropping a template adds a saved node and selecting it opens the Node panel', async ({ page }) => {
