@@ -139,7 +139,7 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 
 ## Tech stack
 
-[React 19](https://react.dev/) · [Vite 8](https://vite.dev/) · [Ant Design 6](https://ant.design/) · [GGEditor 2](https://github.com/alibaba/GGEditor) (built on G6) · [html-to-image](https://github.com/bubkoo/html-to-image) · [react-colorful](https://github.com/omgovich/react-colorful) · [Vitest](https://vitest.dev/) · [Playwright](https://playwright.dev/) · [ESLint](https://eslint.org/)
+[React 19](https://react.dev/) · [Vite 8](https://vite.dev/) · [Ant Design 6](https://ant.design/) · [GGEditor 2](https://github.com/alibaba/GGEditor) (built on G6) · [html-to-image](https://github.com/bubkoo/html-to-image) · [Vitest](https://vitest.dev/) · [Playwright](https://playwright.dev/) · [ESLint](https://eslint.org/)
 
 ## Project structure
 

@@ -23,8 +23,9 @@ const isObject = (value) => typeof value === 'object' && value !== null && !Arra
 // Wireflow and gg-editor only write string ids, and G6 can't select an item whose id is
 // a number, so ids must be text.
 const isId = (value) => typeof value === 'string' && value !== '';
-// gg-editor's Flow page (noEndEdge: true) saves an edge dropped on empty canvas with a
-// canvas point, { x, y }, as that end instead of an item id. G6 draws such edges.
+// Before #65 was fixed, an edge dropped on empty canvas was saved with a canvas point,
+// { x, y }, as that end instead of an item id. Files saved then still open: the point is
+// valid here, and opening drops such edges (removeDanglingEdges) like every other load.
 const isPoint = (value) => isObject(value) && Number.isFinite(value.x) && Number.isFinite(value.y);
 
 function nodeToFile(node) {

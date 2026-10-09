@@ -1,7 +1,14 @@
-import { Component } from 'react';
+import { Component, createRef } from 'react';
 import { withPropsAPI } from 'gg-editor';
-import { Card, Descriptions, Form, Input, Select, Slider } from 'antd';
-import { HexColorPicker as ColorPicker } from 'react-colorful';
+import {
+  Card,
+  ColorPicker,
+  Descriptions,
+  Form,
+  Input,
+  Select,
+  Slider,
+} from 'antd';
 
 import { upperFirst } from '../../../utils';
 
@@ -12,6 +19,24 @@ const edgeShapeOptions = [
   { value: 'flow-polyline', label: 'Polyline' },
   { value: 'flow-polyline-round', label: 'Polyline Round' },
 ];
+
+// The first entry is the default edge color (see onBeforeCommandExecute in App).
+const edgeColorPalette = [
+  '#a4b2c0',
+  '#262626',
+  '#1677ff',
+  '#13c2c2',
+  '#52c41a',
+  '#faad14',
+  '#fa541c',
+  '#f5222d',
+  '#eb2f96',
+  '#722ed1',
+];
+
+// Edges are opaque. disabledAlpha hides the picker's alpha controls, but its
+// hex field still accepts #rrggbbaa, so keep just #rrggbb.
+const toEdgeColor = (color) => color.toHexString().slice(0, 7);
 
 const nodeShortcuts = [
   {
@@ -65,17 +90,48 @@ const inlineFormItemLayout = {
 };
 
 class DetailForm extends Component {
+  form = createRef();
+
   // React 18+ batches gg-editor's "deselect old, select new" status updates into
   // one render, so switching straight from one node (or edge) to another no
   // longer remounts this form. Re-render on every selection; the Card below is
-  // keyed by item id so its Form starts from the new item's values.
+  // keyed by item id so its Form starts from the new item's values. Also
+  // re-render on every change to the diagram, as undo, redo and other commands
+  // change the selected item without going through this form.
   componentDidMount() {
     this.page = this.props.propsAPI.currentPage;
+    this.graph = this.page.getGraph();
     this.page.on('afteritemselected', this.refresh);
+    this.graph.on('afterchange', this.refresh);
+    // Only this panel's instance listens, and only while it is mounted, i.e.
+    // while a single node is selected.
+    if (this.props.type === 'node') {
+      document.addEventListener('keydown', this.handleNodeShortcut, true);
+    }
+    this.shown = this.item && this.values;
+  }
+
+  // A Form reads initialValues only when it mounts. When the selected item's
+  // values change afterwards (on undo, for example), copy just the changed ones
+  // into the form: a change to something else must not reset a label being
+  // typed or a color being dragged.
+  componentDidUpdate() {
+    const previous = this.shown;
+    this.shown = this.item && this.values;
+    if (!previous || !this.shown) return;
+
+    const changed = Object.entries(this.shown).filter(
+      ([name, value]) => value !== previous[name]
+    );
+    if (changed.length) {
+      this.form.current?.setFieldsValue(Object.fromEntries(changed));
+    }
   }
 
   componentWillUnmount() {
     this.page.off('afteritemselected', this.refresh);
+    this.graph.off('afterchange', this.refresh);
+    document.removeEventListener('keydown', this.handleNodeShortcut, true);
   }
 
   refresh = () => this.forceUpdate();
@@ -83,6 +139,23 @@ class DetailForm extends Component {
   get item() {
     const { propsAPI } = this.props;
     return propsAPI.getSelected()[0];
+  }
+
+  // The selected item's values, as this panel's form fields show them.
+  get values() {
+    const { type } = this.props;
+    const model = this.item.getModel();
+
+    if (type === 'edge') {
+      const { label = '', shape = 'flow-polyline-round', color, style } = model;
+      // An edge from an opened or older file may have no style.
+      return { label, shape, size: style?.lineWidth, color };
+    }
+    if (type === 'group') {
+      const { label = 'Group' } = model;
+      return { label };
+    }
+    return { label: model.label };
   }
 
   handleFieldChange = (values) => {
@@ -96,42 +169,69 @@ class DetailForm extends Component {
     executeCommand(() => update(item, { ...values }));
   };
 
+  // Colors of the edges in the diagram, topmost edge first. save() lists items
+  // in drawing order, so that is the most recently added edge unless To Front
+  // or To Back moved one.
+  get usedEdgeColors() {
+    const { edges = [] } = this.props.propsAPI.save();
+    const colors = edges
+      .map(({ color }) => color?.toLowerCase())
+      .filter(Boolean)
+      .reverse();
+    return [...new Set(colors)];
+  }
+
+  // Fires when a drag ends or an arrow key is released, so dragging the slider
+  // adds a single undo step (and pressing an arrow key at the limit none).
+  handleSizeChangeComplete = (lineWidth) => {
+    if (lineWidth === this.values.size) return;
+
+    this.handleFieldChange({ style: { lineWidth } });
+  };
+
+  // Fires when a drag across the palette or hue bar ends, so a drag adds a
+  // single undo step. Other changes fire it at once: a preset click, a complete
+  // hex value, and each RGB/HSB keystroke.
+  handleColorChangeComplete = (value) => {
+    const color = toEdgeColor(value);
+    if (color === this.item.getModel().color?.toLowerCase()) return;
+
+    this.handleFieldChange({ color });
+  };
+
   handleInputBlur = (type) => (e) => {
     e.preventDefault();
 
-    this.handleFieldChange({
-      [type]: e.currentTarget.value,
-    });
+    // Leaving a field unchanged must not add an empty undo step: that would
+    // also throw away whatever Redo could bring back.
+    const { value } = e.currentTarget;
+    if (!this.item || value === this.values[type]) return;
+
+    this.handleFieldChange({ [type]: value });
+  };
+
+  handleNodeShortcut = (e) => {
+    const { ctrlKey, key } = e;
+
+    if (ctrlKey && key === 'h') {
+      this.handleFieldChange({
+        shape: 'node-image-without-header',
+        size: [96, 78],
+      });
+    }
+
+    if (ctrlKey && key === 'k') {
+      this.handleFieldChange({
+        shape: 'node-image-header',
+        size: [96, 88],
+      });
+    }
   };
 
   renderNodeDetail = () => {
-    const { label } = this.item.getModel();
-
-    document.addEventListener(
-      'keydown',
-      (e) => {
-        const { ctrlKey, key } = e;
-
-        if (ctrlKey && key === 'h') {
-          this.handleFieldChange({
-            shape: 'node-image-without-header',
-            size: [96, 78],
-          });
-        }
-
-        if (ctrlKey && key === 'k') {
-          this.handleFieldChange({
-            shape: 'node-image-header',
-            size: [96, 88],
-          });
-        }
-      },
-      true
-    );
-
     return (
       <>
-        <Form initialValues={{ label }}>
+        <Form ref={this.form} initialValues={this.values}>
           <Item label='Label' name='label' {...inlineFormItemLayout}>
             <Input name='title' onBlur={this.handleInputBlur('label')} />
           </Item>
@@ -148,16 +248,9 @@ class DetailForm extends Component {
   };
 
   renderEdgeDetail = () => {
-    const {
-      label = '',
-      shape = 'flow-polyline-round',
-      color,
-      style: { lineWidth } = {}, // an opened file may have edges without a style
-    } = this.item.getModel();
-
     return (
       <>
-        <Form initialValues={{ label, shape, size: lineWidth }}>
+        <Form ref={this.form} initialValues={this.values}>
           <Item label='Label' name='label' {...inlineFormItemLayout}>
             <Input onBlur={this.handleInputBlur('label')} />
           </Item>
@@ -173,16 +266,29 @@ class DetailForm extends Component {
             <Slider
               min={1}
               max={10}
-              onChange={(lineWidth) =>
-                this.handleFieldChange({ style: { lineWidth } })
-              }
+              onChangeComplete={this.handleSizeChangeComplete}
             />
           </Item>
 
-          <Item label='Color' name='color' {...inlineFormItemLayout}>
+          <Item
+            label='Color'
+            name='color'
+            getValueFromEvent={toEdgeColor}
+            {...inlineFormItemLayout}
+          >
             <ColorPicker
-              color={color}
-              onChange={(color) => this.handleFieldChange({ color })}
+              showText
+              disabledAlpha
+              placement='bottomRight'
+              presets={[
+                { key: 'palette', label: 'Palette', colors: edgeColorPalette },
+                {
+                  key: 'used',
+                  label: 'In this diagram',
+                  colors: this.usedEdgeColors,
+                },
+              ]}
+              onChangeComplete={this.handleColorChangeComplete}
             />
           </Item>
         </Form>
@@ -198,10 +304,8 @@ class DetailForm extends Component {
   };
 
   renderGroupDetail = () => {
-    const { label = 'Group' } = this.item.getModel();
-
     return (
-      <Form initialValues={{ label }}>
+      <Form ref={this.form} initialValues={this.values}>
         <Item label='Label' name='label' {...inlineFormItemLayout}>
           <Input onBlur={this.handleInputBlur('label')} />
         </Item>
