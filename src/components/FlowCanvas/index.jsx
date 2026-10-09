@@ -3,21 +3,15 @@ import { Flow } from 'gg-editor';
 import './style.css';
 import { dataMapToData } from '../../utils/dataMapToData';
 import { saveData } from '../../utils/saveData';
+import { currentImg } from '../../utils/templates';
 import { removeDanglingEdges } from '../../utils/removeDanglingEdges';
 
-// Diagrams saved by the old Create React App build point at template images as
-// /static/media/<file>.<hash>.svg, which the Vite build no longer serves.
-// Re-point them at the current URL of the same template file.
-const templateUrls = Object.fromEntries(
-  Object.entries(
-    import.meta.glob('../../assets/images/*/*.svg', { eager: true, import: 'default' })
-  ).map(([path, url]) => [path.split('/').pop(), url])
-);
-
+// Template image URLs change when an SVG or the bundler changes (they moved from
+// /static/media/ when the app left Create React App), so re-point saved nodes at this
+// build's URL of their template.
 const stored = JSON.parse(localStorage.getItem('data'));
 stored?.nodes?.forEach((node) => {
-  const legacy = /\/static\/media\/(.+)\.[0-9a-f]{8}\.svg$/.exec(node.img);
-  if (legacy && templateUrls[`${legacy[1]}.svg`]) node.img = templateUrls[`${legacy[1]}.svg`];
+  if (node.img) node.img = currentImg(node.img);
 });
 
 // Older builds could save edges that don't connect two items. G6 can't draw an

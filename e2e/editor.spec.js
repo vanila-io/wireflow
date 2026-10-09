@@ -528,7 +528,7 @@ test('toolbar Delete removes the selected node and Undo brings it back', async (
 
 test('export button sits in the top-left of the canvas and downloads wireflow.jpg', async ({ page }) => {
   await openEditor(page);
-  const button = page.locator('.export button');
+  const button = page.getByRole('button', { name: 'Export as JPEG' });
   await expect(button).toHaveClass(/ant-btn-circle/);
   const canvasBox = await page.locator('#canvas_1').boundingBox();
   const buttonBox = await button.boundingBox();
