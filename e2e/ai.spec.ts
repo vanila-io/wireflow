@@ -212,7 +212,11 @@ test.describe('when requests fail', () => {
   // Chromium logs every failed or refused request as a console error.
   test.use({ allowErrors: /Failed to load resource|ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module/ });
 
-  test('if the panel cannot be loaded, the editor keeps working and a later click retries', async ({ page }) => {
+  test('if the panel cannot be loaded, the editor keeps working and a later click retries', async ({ browser }) => {
+    // Without the offline worker, which has the panel's chunk cached (a first
+    // visit, or a browser without service workers).
+    const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
     await openEditor(page);
     // Everything the editor needs has loaded; only the panel's chunk is still to come.
     await page.route('**/_next/static/chunks/**', (route) => route.abort());
@@ -225,6 +229,7 @@ test.describe('when requests fail', () => {
     await aiButton(page).click();
     await expect(panel(page).getByLabel('API key')).toBeVisible();
     await expect(aiButton(page)).toHaveAttribute('aria-label', 'AI assistant');
+    await context.close();
   });
 
   test('a stopped or failed request is not sent again with the next one', async ({ page }) => {

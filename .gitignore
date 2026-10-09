@@ -117,3 +117,6 @@ blob-report/
 next-env.d.ts
 .open-next/
 .dev.vars*
+
+# Written by tools/build-sw.mjs after next build
+public/sw.js

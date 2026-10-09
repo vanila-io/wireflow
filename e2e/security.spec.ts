@@ -14,11 +14,11 @@ test('pages are served with the CSP and hardening headers, and without x-powered
 });
 
 test.describe('the CSP in the browser', () => {
-  test.use({ allowErrors: /Content Security Policy|Refused to connect|Failed to fetch/ });
+  test.use({ allowErrors: /Content[- ]Security[- ]Policy|Refused to connect|Failed to fetch/ });
 
   test('lets the app run but blocks connections to other hosts', async ({ page }) => {
     const violations: string[] = [];
-    page.on('console', (m) => /Content Security Policy/.test(m.text()) && violations.push(m.text()));
+    page.on('console', (m) => /Content[- ]Security[- ]Policy/.test(m.text()) && violations.push(m.text()));
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await openEditor(page);

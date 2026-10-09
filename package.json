@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node tools/build-sw.mjs",
     "start": "next start",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy:staging": "opennextjs-cloudflare build && opennextjs-cloudflare deploy --env staging",

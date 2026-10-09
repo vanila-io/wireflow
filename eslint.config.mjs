@@ -16,6 +16,9 @@ export default defineConfig([
     '.open-next/**',
     '.wrangler/**',
     'next-env.d.ts',
+    // A template with placeholders (tools/build-sw.mjs), and its generated output.
+    'tools/sw-template.js',
+    'public/sw.js',
     'test-results/**',
     'playwright-report/**',
     'blob-report/**',

@@ -30,6 +30,7 @@ import Notices, { notice, type Notice } from './editor/Notices';
 import Sidebar, { DRAG_TYPE } from './editor/Sidebar';
 import { StoreContext, useStoreState } from './editor/StoreContext';
 import ToolbarButton from './editor/ToolbarButton';
+import UpdatePrompt from './editor/UpdatePrompt';
 
 const nodeTypes = { flow: FlowNode, group: GroupNode };
 
@@ -376,6 +377,7 @@ function Editor() {
               </PanelBoundary>
             )}
             <Notices notices={notices} onDismiss={dismiss} />
+            <UpdatePrompt />
             <ConfirmDialog
               open={!!pendingOpen}
               title="Replace the current diagram?"
