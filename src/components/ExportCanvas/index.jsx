@@ -5,7 +5,7 @@ import { toJpeg } from 'html-to-image';
 import { ContextMenu, Command, CanvasMenu, withPropsAPI } from 'gg-editor';
 
 import IconFont from '../IconFont';
-import { FILE_NAME, parseDiagramFile, serializeDiagram } from '../../utils/diagramFile';
+import { DIAGRAM_REPLACED, FILE_NAME, parseDiagramFile, serializeDiagram } from '../../utils/diagramFile';
 import { saveData } from '../../utils/saveData';
 import { removeDanglingEdges } from '../../utils/removeDanglingEdges';
 import './style.css';
@@ -63,6 +63,7 @@ const ExportCanvas = ({ propsAPI }) => {
     history.queue = [];
     history.current = 0;
     propsAPI.editor.setCommandDOMenable();
+    propsAPI.editor.emit(DIAGRAM_REPLACED);
     messageApi.success(dropped ? `Opened ${name}. Removed ${dropped} unconnected ${dropped === 1 ? 'arrow' : 'arrows'}.` : `Opened ${name}`);
   }
 

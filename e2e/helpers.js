@@ -3,11 +3,13 @@ import { test as base, expect } from '@playwright/test';
 export { expect };
 
 // Every test fails if the app logs a console error or throws an uncaught error.
+// `allowErrors` (set with test.use) lists console errors a test triggers on purpose.
 export const test = base.extend({
-  page: async ({ page }, runTest) => {
+  allowErrors: [[], { option: true }],
+  page: async ({ page, allowErrors }, runTest) => {
     const errors = [];
     page.on('console', (msg) => {
-      if (msg.type() === 'error') errors.push(msg.text());
+      if (msg.type() === 'error' && !allowErrors.some((re) => re.test(msg.text()))) errors.push(msg.text());
     });
     page.on('pageerror', (error) => errors.push(error.message));
     await runTest(page);

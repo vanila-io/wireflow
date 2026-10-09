@@ -31,6 +31,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 - **Export** the canvas to a JPEG with one click.
 - **Save and open files**: download the diagram as `wireflow.json` and open it again later, here or in another browser.
 - **Autosave**: every change is saved to your browser's `localStorage`.
+- **AI assistant** (optional, bring your own Anthropic API key): describe a flow or a change in plain language and Claude edits the diagram. Each change is one undo step.
 - **Works offline and installs as an app** (PWA) on desktop browsers.
 
 ## How it works
@@ -90,7 +91,14 @@ pnpm exec playwright install chromium      # first run only: download the test b
 pnpm test:e2e                              # end-to-end tests (Playwright, Chromium)
 ```
 
-Unit tests are `*.test.js` / `*.test.jsx` files under `src/`. The end-to-end specs live in `e2e/` and are configured in `playwright.config.js`. `pnpm test:e2e` builds the app and serves it on port 4179 by itself, so you don't need a running dev server (the port must be free).
+Unit tests are `*.test.js` / `*.test.jsx` files under `src/`. The end-to-end specs live in `e2e/` and are configured in `playwright.config.js`. `pnpm test:e2e` builds the app and serves it on port 4179 by itself, so you don't need a running dev server (the port must be free; set `E2E_PORT` to use another one).
+
+The AI tests run against a mocked API. A few also run against the real one when you set `AI_LIVE=1` and put a key in `.env` as `ANTHROPIC_API_KEY` (each run costs a fraction of a cent):
+
+```bash
+AI_LIVE=1 pnpm vitest run src/__tests__/ai/live.test.js
+AI_LIVE=1 pnpm test:e2e e2e/ai-chat.spec.js -g live
+```
 
 ## Docker
 
@@ -145,10 +153,12 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 
 ## Data and privacy
 
-- Your diagram is saved automatically to your browser's `localStorage` (key `data`) on every change. Nothing is sent to a server, and there are no accounts or analytics.
+- Your diagram is saved automatically to your browser's `localStorage` (key `data`) on every change. Unless you use the AI assistant, nothing is sent to a server, and there are no accounts or analytics.
+- The AI assistant is optional. When you use it, your messages and the current diagram (screen labels, template names, positions, connections and groups) go from your browser straight to Anthropic's API under your own API key, so Anthropic's terms and your organization's data settings apply. There is no Wireflow server in between. The chat is kept in memory only; a reload clears it.
+- Your API key stays in memory unless you tick "Remember on this device", which stores it unencrypted in this browser's `localStorage` (key `wireflow-ai`), where any script running on the page could read it. Use a dedicated key with an expiry and a spend limit. "Forget key" removes it.
 - The autosaved diagram only exists in the browser where you made it, and clearing site data deletes it. To keep it or move it to another browser, click **Save to file** and later **Open file**. Opening a file replaces the diagram on the canvas and clears the undo history (Wireflow asks first if the canvas isn't empty). JPEG export saves an image of the canvas, not an editable file.
 - A saved file is JSON: `{ "format": "wireflow", "version": 1, "diagram": { "nodes": [...], "edges": [...], "groups": [...] } }`. Nodes name their screen template (`"template": "E-Commerce/Cart"`) instead of an image URL, so files keep working across Wireflow releases. **Open file** also accepts the plain `{ nodes, edges, groups }` object stored in `localStorage`. The format is documented in `src/utils/diagramFile.js`.
-- The app makes no third-party requests: the toolbar icons (from iconfont.cn) are bundled with the app.
+- Apart from the AI assistant's calls to `api.anthropic.com` (only when you use it), the app makes no third-party requests: the toolbar icons (from iconfont.cn) are bundled with the app.
 
 ## Tech stack
 
@@ -162,8 +172,9 @@ To deploy on every push to `staging` instead, connect the repository in the Clou
 ├── e2e/                  Playwright end-to-end specs
 ├── public/               static files copied as-is (icons, web app manifest)
 ├── src/
+│   ├── ai/               AI assistant: template catalog, diagram edits and layout checks, agent loop, providers
 │   ├── assets/images/    wireframe screen templates (SVG), one folder per category
-│   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export/save/open buttons
+│   ├── components/       canvas, sidebar, toolbar, detail panel, minimap, export/save/open buttons, AI panel
 │   ├── containers/       app layout and custom node shapes
 │   ├── utils/            persistence helpers: localStorage, the file format, template keys
 │   └── service-worker.js offline cache (built to build/service-worker.js)

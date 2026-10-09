@@ -11,6 +11,7 @@ import FlowItemPanel from '../../components/FlowItemPanel';
 import FlowDetailPanel from '../../components/FlowDetailPanel';
 import FlowMiniMap from '../../components/FlowMiniMap';
 import ExportCanvas from '../../components/ExportCanvas';
+import AiChat from '../../components/AiChat';
 import UpdatePrompt from '../../components/UpdatePrompt';
 import { saveData } from '../../utils/saveData';
 
@@ -64,6 +65,7 @@ const App = () => {
             <ExportCanvas />
             <FlowToolbar />
             <FlowCanvas />
+            <AiChat />
           </Col>
           <Col span={5}>
             <FlowDetailPanel />

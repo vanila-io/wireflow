@@ -499,7 +499,7 @@ test('edges saved with a loose end or to a missing node are removed on load and 
   expect((await saved(page)).edges).toEqual([valid]);
 });
 
-test('toolbar Delete removes the selected node and Undo brings it back', async ({ page }) => {
+test('toolbar Delete removes the selected node, and Undo brings it back for good', async ({ page }) => {
   await openEditor(page);
   const at = await onCanvas(page, 400, 300);
   await dropTemplate(page, 0, at);
@@ -514,16 +514,14 @@ test('toolbar Delete removes the selected node and Undo brings it back', async (
   await page.mouse.click(at.x, at.y);
   await expect(panelTitle(page)).toHaveText(['Canvas']);
 
+  // Undo replays a snapshot (a G6 'changeData' event), which FlowCanvas saves.
   await command(page, 'undo').click();
+  await expect.poll(async () => (await saved(page)).nodes).toMatchObject([{ id, label }]);
+  await page.reload();
+  await expect(page.locator('#canvas_1')).toBeVisible();
   await page.mouse.click(at.x, at.y);
   await expect(panelTitle(page)).toHaveText(['Node']);
   await expect(nodeLabelInput(page)).toHaveValue(label);
-
-  // Undo replays a snapshot (a G6 'changeData' event), which FlowCanvas does not
-  // autosave; the restored node is written on the next edit.
-  await nodeLabelInput(page).fill('Restored');
-  await nodeLabelInput(page).blur();
-  await expect.poll(async () => (await saved(page)).nodes).toMatchObject([{ id, label: 'Restored' }]);
 });
 
 test('export button sits in the top-left of the canvas and downloads wireflow.jpg', async ({ page }) => {

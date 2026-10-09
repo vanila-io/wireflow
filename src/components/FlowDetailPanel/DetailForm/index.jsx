@@ -213,6 +213,9 @@ class DetailForm extends Component {
   handleNodeShortcut = (e) => {
     const { ctrlKey, key } = e;
 
+    // Typing in the AI chat must not toggle the selected node's header.
+    if (e.target.closest?.('.ai-panel')) return;
+
     if (ctrlKey && key === 'h') {
       this.handleFieldChange({
         shape: 'node-image-without-header',
