@@ -16,9 +16,9 @@ import {
 import '@xyflow/react/dist/style.css';
 import './flow.css';
 import { graphicById, type Graphic } from '@/lib/graphics';
-import { isCard, type Diagram } from '@/lib/diagram/model';
+import { isCard, STORAGE_KEY, type Diagram } from '@/lib/diagram/model';
 import { createDiagramStore, type DiagramStore } from '@/lib/diagram/store';
-import { readDiagram, readHistory, writeDiagram, writeHistory, BACKUP_KEY } from '@/lib/diagram/storage';
+import { readDiagram, readHistory, writeDiagram, writeHistory } from '@/lib/diagram/storage';
 import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, parseLegacyStorage, serializeFile } from '@/lib/diagram/file';
 import { serialize, type Dropped } from '@/lib/diagram/rules';
 import ConfirmDialog from './editor/ConfirmDialog';
@@ -47,10 +47,13 @@ function browserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | null
 export const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
-type Start = { store: DiagramStore; notices: Notice[]; hadDiagram: boolean; readOnly: boolean };
+// `lock.readOnly`: this tab must not write (a newer version saved the diagram, or
+// part of it couldn't be kept); it can change while the editor is open.
+type Start = { store: DiagramStore; notices: Notice[]; hadDiagram: boolean; lock: { readOnly: boolean } };
 
 // Where the previous editor autosaved (gg-editor's G6 format).
 const LEGACY_STORAGE_KEY = 'data';
+const NEWER = 'This diagram was saved by a newer version of Wireflow. Reload the page to get it; changes made here are not saved.';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -70,11 +73,16 @@ function start(): Start {
   const notices: Notice[] = [];
   const loaded = local ? readDiagram(local) : ({ status: 'empty' } as const);
   let initial: Diagram = { nodes: [], edges: [] };
-  let readOnly = false;
+  const lock = { readOnly: false };
 
   if (loaded.status === 'loaded') {
     initial = loaded.diagram;
     notices.push(...droppedNotices(loaded.dropped));
+    if (loaded.backup) notices.push(notice(`The diagram as it was saved is kept in this browser's storage under "${loaded.backup}".`));
+    if (!loaded.kept) {
+      lock.readOnly = true;
+      notices.push(notice("Part of your saved diagram couldn't be shown, and this browser's storage refused a copy of it, so this tab won't save over it.", 'error'));
+    }
   } else if (loaded.status === 'empty' && local) {
     // The previous editor (gg-editor) autosaved to localStorage['data']. Bring that
     // diagram over once; the old entry is left as it is.
@@ -85,17 +93,22 @@ function start(): Start {
     }
   } else if (loaded.status === 'newer') {
     initial = loaded.diagram;
-    readOnly = true;
-    notices.push(notice('This diagram was saved by a newer version of Wireflow. Reload the page to get it; changes made here are not saved.', 'error'));
+    lock.readOnly = true;
+    notices.push(notice(NEWER, 'error'));
   } else if (loaded.status === 'unreadable') {
-    notices.push(notice(`Your saved diagram couldn't be read. A copy is kept in this browser's storage under "${BACKUP_KEY}".`, 'error'));
+    if (loaded.backup) {
+      notices.push(notice(`Your saved diagram couldn't be read. A copy is kept in this browser's storage under "${loaded.backup}".`, 'error'));
+    } else {
+      lock.readOnly = true;
+      notices.push(notice("Your saved diagram couldn't be read, and this browser's storage refused a copy of it, so this tab won't save over it.", 'error'));
+    }
   }
 
   const session = browserStorage('sessionStorage');
   const store = createDiagramStore({
     initial,
-    save: (json) => !readOnly && !!local && writeDiagram(local, json),
-    history: session && !readOnly ? readHistory(session) : null,
+    save: (json) => !lock.readOnly && !!local && writeDiagram(local, json),
+    history: session && !lock.readOnly ? readHistory(session) : null,
   });
 
   const hadDiagram = initial.nodes.length > 0;
@@ -104,11 +117,11 @@ function start(): Start {
     const g = card ? graphicById(card) : undefined;
     if (g) store.addCard(g, { x: 80, y: 120 });
   }
-  return { store, notices, hadDiagram, readOnly };
+  return { store, notices, hadDiagram, lock };
 }
 
 function Editor() {
-  const [{ store, notices: initialNotices, hadDiagram, readOnly }] = useState(start);
+  const [{ store, notices: initialNotices, hadDiagram, lock }] = useState(start);
   const [notices, setNotices] = useState(initialNotices);
   const { nodes, edges, saveFailed } = useStoreState(store);
   const { screenToFlowPosition, zoomIn, zoomOut, fitView } = useReactFlow();
@@ -132,6 +145,7 @@ function Editor() {
   );
 
   const dismiss = useCallback((id: number) => setNotices((ns) => ns.filter((n) => n.id !== id)), []);
+  const say = useCallback((n: Notice) => setNotices((ns) => [...ns.slice(-3), n]), []);
   const ai = useAiPanel();
 
   const addCard = useCallback(
@@ -150,8 +164,8 @@ function Editor() {
   // Keep the undo history across a reload of this tab.
   useEffect(() => {
     const session = browserStorage('sessionStorage');
-    if (!session || readOnly) return;
-    const persist = () => writeHistory(session, store.history());
+    if (!session) return;
+    const persist = () => !lock.readOnly && writeHistory(session, store.history());
     const onVisibility = () => document.visibilityState === 'hidden' && persist();
     window.addEventListener('pagehide', persist);
     document.addEventListener('visibilitychange', onVisibility);
@@ -159,7 +173,28 @@ function Editor() {
       window.removeEventListener('pagehide', persist);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [store, readOnly]);
+  }, [store, lock]);
+
+  // Another tab saved the diagram: show its version here, so this tab's next save
+  // doesn't overwrite it with an older one. A newer version of Wireflow in the
+  // other tab makes this one read-only.
+  useEffect(() => {
+    const local = browserStorage('localStorage');
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY || e.storageArea !== local || !local || e.newValue === null) return;
+      const loaded = readDiagram(local);
+      if (loaded.status === 'newer') {
+        lock.readOnly = true;
+        store.adopt(loaded.diagram);
+        say(notice(NEWER, 'error'));
+      } else if (loaded.status === 'loaded' && !lock.readOnly) {
+        store.adopt(loaded.diagram);
+        say(notice('Updated with the changes made in another tab.'));
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [store, lock, say]);
 
   // Keyboard: H toggles the header of selected cards; Backspace/Delete removes
   // the selection; Ctrl/Cmd+Z undo; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redo.
@@ -246,11 +281,14 @@ function Editor() {
   // one undo step. If the browser can't store it, the current diagram stays.
   const fileInput = useRef<HTMLInputElement>(null);
   const [pendingOpen, setPendingOpen] = useState<{ name: string; diagram: Diagram; dropped: Dropped } | null>(null);
-  const say = useCallback((n: Notice) => setNotices((ns) => [...ns.slice(-3), n]), []);
 
   const replaceWith = useCallback(
     ({ name, diagram, dropped }: { name: string; diagram: Diagram; dropped: Dropped }) => {
       setPendingOpen(null);
+      if (lock.readOnly) {
+        say(notice(`Couldn't open ${name}: this tab doesn't save (see the message above). Reload the page, then open the file.`, 'error'));
+        return;
+      }
       if (!store.replace(diagram, 'open')) {
         say(notice(`Couldn't open ${name}. It's too big to keep in this browser's storage, so your diagram is unchanged.`, 'error'));
         return;
@@ -258,7 +296,7 @@ function Editor() {
       setNotices((ns) => [...ns.slice(-2), notice(`Opened ${name}.`), ...droppedNotices(dropped)]);
       setTimeout(() => fitView({ padding: 0.2, duration: 250 }), 60);
     },
-    [store, say, fitView],
+    [store, lock, say, fitView],
   );
 
   const openFile = useCallback(

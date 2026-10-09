@@ -102,7 +102,10 @@ test('edges saved with a missing end are removed on load, with a message', async
   await expect(page.locator('.react-flow__edge')).toHaveCount(1);
   // Nothing is written until the user changes something.
   expect(JSON.parse((await raw(page))!).edges).toHaveLength(3);
-  await page.getByRole('button', { name: 'Dismiss' }).click();
+  // The diagram as it was is kept before anything is saved over it.
+  await expect(page.getByRole('status').filter({ hasText: 'The diagram as it was saved is kept in this browser' })).toBeVisible();
+  expect(JSON.parse((await page.evaluate((k) => localStorage.getItem(`${k}.backup`), STORAGE_KEY))!).edges).toHaveLength(3);
+  await page.getByRole('status').filter({ hasText: 'Removed 2 connections' }).getByRole('button', { name: 'Dismiss' }).click();
   await expect(page.getByText("Removed 2 connections")).toHaveCount(0);
 });
 
@@ -152,7 +155,46 @@ test('unreadable saved data is kept in a backup key, not overwritten', async ({ 
   await expect(page.getByRole('alert').filter({ hasText: "Your saved diagram couldn't be read" })).toBeVisible();
   await page.locator('aside button[draggable="true"]').first().click();
   await expect.poll(async () => (await saved(page))?.nodes.length).toBe(1);
-  expect(await page.evaluate((key) => localStorage.getItem(`${key}.unreadable`), STORAGE_KEY)).toBe('{"nodes": [broken');
+  expect(await page.evaluate((key) => localStorage.getItem(`${key}.backup`), STORAGE_KEY)).toBe('{"nodes": [broken');
+});
+
+// Review finding: two open tabs used to overwrite each other's diagram.
+test("a change in another tab shows here, and this tab's next save keeps it", async ({ page, context }) => {
+  await seed(page, SAMPLE);
+  await openEditor(page);
+  const other = await context.newPage();
+  await openEditor(other);
+  await other.locator('aside button[draggable="true"]').nth(40).click();
+  await expect(other.locator('.react-flow__node')).toHaveCount(3);
+
+  await expect(page.locator('.react-flow__node')).toHaveCount(3);
+  await expect(page.getByRole('status').filter({ hasText: 'Updated with the changes made in another tab.' })).toBeVisible();
+  await card(page, 'Cart').locator('img').click();
+  await page.keyboard.press('h');
+  await expect.poll(async () => (await saved(page))!.nodes.length).toBe(3);
+  expect((await saved(page))!.nodes.find((n) => n.data.graphicId === 'e-commerce-cart')!.data.showHeader).toBe(false);
+});
+
+test('a newer version of Wireflow in another tab makes this one stop saving', async ({ page, context }) => {
+  await seed(page, SAMPLE);
+  await openEditor(page);
+  const other = await context.newPage();
+  await other.goto('/');
+  const newer = JSON.stringify({ ...SAMPLE, version: 99 });
+  await other.evaluate(([k, v]) => localStorage.setItem(k, v), [STORAGE_KEY, newer]);
+  await expect(page.getByRole('alert').filter({ hasText: 'newer version of Wireflow' })).toBeVisible();
+  await card(page, 'Cart').locator('img').click();
+  await page.keyboard.press('h');
+  await expect(page.getByText('Not saved in this browser')).toBeVisible();
+  expect(await raw(page)).toBe(newer);
+
+  // Open file explains instead of claiming the file is too big.
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Open file' }).first().click();
+  await (await chooser).setFiles({ name: 'x.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ nodes: [], edges: [] })) });
+  await page.getByRole('dialog').getByRole('button', { name: 'Replace' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: "Couldn't open x.json: this tab doesn't save" })).toBeVisible();
+  expect(await raw(page)).toBe(newer);
 });
 
 test('a diagram from a newer version is shown but never overwritten', async ({ page }) => {

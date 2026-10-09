@@ -233,6 +233,18 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       emit();
       return true;
     },
+    /**
+     * Show a diagram another tab has just saved, as an undo step of its own,
+     * without writing it back (it is already stored).
+     */
+    adopt(next: Diagram) {
+      const { diagram: d } = enforceRules(next);
+      const json = serialize(d);
+      if (json === history.present.json) return;
+      history = record(history, json, 'sync');
+      state = { ...state, ...show(d), dropTarget: null, canUndo: canUndo(history), canRedo: canRedo(history) };
+      emit();
+    },
     undo: () => travel(undo),
     redo: () => travel(redo),
   };

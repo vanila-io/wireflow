@@ -153,6 +153,16 @@ describe('diagram store', () => {
     expect(store.getState().canRedo).toBe(true);
   });
 
+  it("takes another tab's saved diagram as an undo step without saving it again", () => {
+    const { store, saves } = setup();
+    store.adopt({ nodes: [card('a'), card('b', 400), card('from-other-tab', 800)], edges: [] });
+    expect(saves).toEqual([]);
+    expect(store.diagram().nodes.map((n) => n.id)).toContain('from-other-tab');
+    expect(store.history().present.kind).toBe('sync');
+    store.toggleHeaders(['a']);
+    expect(JSON.parse(saves[0]).nodes.map((n: { id: string }) => n.id)).toContain('from-other-tab');
+  });
+
   it('continues a restored history only if it ends at the loaded diagram', () => {
     const first = setup({ nodes: [], edges: [] });
     first.store.addCard(graphicById('article-article-1')!, { x: 0, y: 0 });

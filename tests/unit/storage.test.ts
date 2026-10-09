@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { STORAGE_KEY } from '@/lib/diagram/model';
 import { serialize } from '@/lib/diagram/rules';
-import { BACKUP_KEY, HISTORY_KEY, migrate, readDiagram, readHistory, writeDiagram, writeHistory } from '@/lib/diagram/storage';
+import { backup, BACKUP_KEY, HISTORY_KEY, migrate, readDiagram, readHistory, writeDiagram, writeHistory } from '@/lib/diagram/storage';
 import { createHistory, record } from '@/lib/diagram/history';
 import { card, edge, MemoryStorage, PRODUCTION_SAMPLE } from './helpers';
 
@@ -59,6 +59,49 @@ describe('autosave storage', () => {
     const loaded = readDiagram(storage);
     expect(loaded.status === 'loaded' && loaded.diagram.edges.map((e) => e.id)).toEqual(['ok']);
     expect(loaded.status === 'loaded' && loaded.dropped.edges).toBe(1);
+  });
+
+  // Review findings: newer data with another shape, repeated unreadable data,
+  // dropped items and saves over a newer version all used to lose data.
+  it('recognises a newer version before looking at its shape', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, nodes: { a: card('a') }, links: [] }));
+    expect(readDiagram(storage)).toEqual({ status: 'newer', diagram: { nodes: [], edges: [] } });
+  });
+
+  it('keeps every unreadable version, not just the first', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(STORAGE_KEY, 'first');
+    expect(readDiagram(storage)).toEqual({ status: 'unreadable', backup: BACKUP_KEY });
+    storage.setItem(STORAGE_KEY, 'second');
+    const second = readDiagram(storage);
+    expect(second.status === 'unreadable' && second.backup).toMatch(new RegExp(`^${BACKUP_KEY.replace('.', '\\.')}\\.\\d+$`));
+    expect(storage.getItem(BACKUP_KEY)).toBe('first');
+    expect(storage.getItem((second as { backup: string }).backup)).toBe('second');
+    expect(backup(new MemoryStorage(3), 'too long')).toBeNull();
+  });
+
+  it('keeps the original before the first save when the rules dropped something', () => {
+    const storage = new MemoryStorage();
+    const original = JSON.stringify({ nodes: [card('a'), { ...card('b'), data: { graphicId: 'gone-template' } }], edges: [] });
+    storage.setItem(STORAGE_KEY, original);
+    const loaded = readDiagram(storage);
+    expect(loaded).toMatchObject({ status: 'loaded', backup: BACKUP_KEY, kept: true, dropped: { nodes: 1 } });
+    expect(storage.getItem(BACKUP_KEY)).toBe(original);
+    // A clean diagram needs no copy.
+    storage.setItem(STORAGE_KEY, JSON.stringify({ nodes: [card('a')], edges: [] }));
+    expect(readDiagram(storage)).toMatchObject({ backup: null, kept: true });
+    // No room for the copy: the editor must not save over the original.
+    const full = new MemoryStorage(original.length + STORAGE_KEY.length + 10);
+    full.setItem(STORAGE_KEY, original);
+    expect(readDiagram(full)).toMatchObject({ status: 'loaded', backup: null, kept: false });
+  });
+
+  it('never writes over a diagram saved by a newer version', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: 9, nodes: [] }));
+    expect(writeDiagram(storage, serialize({ nodes: [card('a')], edges: [] }))).toBe(false);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).version).toBe(9);
   });
 
   it('reports a full or blocked storage instead of throwing', () => {
