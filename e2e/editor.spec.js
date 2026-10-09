@@ -48,6 +48,17 @@ test('app shell loads with templates, toolbar, minimap and canvas panel', async 
 
 const CATEGORIES = ['Article', 'Blog', 'E-Commerce', 'Features', 'Gallery', 'Header', 'Misc', 'Multimedia', 'Sign in', 'Socials'];
 
+test('the canvas starts exactly where the sidebar ends', async ({ page }) => {
+  await openEditor(page);
+  const canvas = await page.locator('#canvas_1').boundingBox();
+
+  // The card and its fixed, scrolling body are sized separately; neither may overlap the canvas or leave a gap.
+  for (const part of ['.sidebar', '.sidebar .ant-card-body']) {
+    const box = await page.locator(part).boundingBox();
+    expect(box.x + box.width, part).toBe(canvas.x);
+  }
+});
+
 test('sidebar groups named templates under category headings that collapse and stay collapsed', async ({ page }) => {
   await openEditor(page);
   const total = await templates(page).count();

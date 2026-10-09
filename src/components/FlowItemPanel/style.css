@@ -7,7 +7,7 @@
   z-index: 999;
 }
 .sidebar {
-  width: 128px;
+  width: var(--sidebar-width);
   height: 100vh;
   user-select: none;
 }
@@ -15,7 +15,7 @@
   position: fixed;
   top: 15px;
   left: 0;
-  width: 128px;
+  width: var(--sidebar-width);
   bottom: 0;
   overflow-y: scroll;
   overflow-x: hidden;
