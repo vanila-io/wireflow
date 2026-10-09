@@ -138,6 +138,75 @@ test('connecting two nodes creates an edge whose shape, size and color are edita
   expect((await edge()).color).not.toBe('#a4b2c0');
 });
 
+test('an edge dropped on empty canvas is cancelled, whether new or re-dragged', async ({ page }) => {
+  await openEditor(page);
+  const a = await onCanvas(page, 300, 300);
+  const b = await onCanvas(page, 650, 300);
+  await dropTemplate(page, 0, a);
+  await dropTemplate(page, 1, b);
+  await expect.poll(async () => (await saved(page))?.nodes.length).toBe(2);
+  const before = await page.evaluate(() => localStorage.getItem('data'));
+
+  // Drag from the right anchor of `a` and let go on empty canvas below the nodes.
+  await page.mouse.move(a.x, a.y, { steps: 5 });
+  await page.mouse.move(a.x + 48, a.y, { steps: 10 });
+  await page.mouse.down();
+  await page.mouse.move(a.x + 200, a.y + 220, { steps: 40 });
+  await page.mouse.up();
+  // A loose edge would run right from the anchor, then down to the drop point.
+  await page.mouse.click(a.x + 200, a.y + 150);
+  await expect(panelTitle(page)).toHaveText(['Canvas']);
+  expect(await page.evaluate(() => localStorage.getItem('data'))).toBe(before);
+
+  // Connecting still works, and dragging the edge's end off its node leaves it attached.
+  const [source, target] = (await saved(page)).nodes.map((node) => node.id);
+  await connect(page, a, b);
+  await expect.poll(async () => (await saved(page)).edges).toMatchObject([{ source, target }]);
+  await page.mouse.click((a.x + b.x) / 2, a.y);
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+  const connected = await page.evaluate(() => localStorage.getItem('data'));
+
+  // The edge's end point sits on its arrow, just left of the anchor; approach it along the edge.
+  await page.mouse.move(b.x - 100, b.y, { steps: 5 });
+  await page.mouse.move(b.x - 52, b.y, { steps: 10 });
+  await page.mouse.down();
+  await page.mouse.move(b.x - 52, b.y + 250, { steps: 40 });
+  await page.mouse.up();
+  await page.mouse.click(b.x - 52, b.y + 150);
+  await expect(panelTitle(page)).toHaveText(['Canvas']);
+  expect(await page.evaluate(() => localStorage.getItem('data'))).toBe(connected);
+  await page.mouse.click((a.x + b.x) / 2, a.y);
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+});
+
+test('edges saved with a loose end are removed on load and the cleaned diagram is saved', async ({ page }) => {
+  const nodes = [
+    { type: 'node', size: [96, 88], img: '/static/media/Sign in 1.a1b484ff.svg', label: 'Sign in', x: 250, y: 250, id: '3c1f0a2b', shape: 'node-image-header' },
+    { type: 'node', size: [96, 88], img: '/static/media/Cart.2ae03932.svg', label: 'Cart', x: 550, y: 250, id: '9d4e7b10', shape: 'node-image-header' },
+  ];
+  const valid = { source: '3c1f0a2b', sourceAnchor: 1, target: '9d4e7b10', targetAnchor: 3, shape: 'flow-polyline-round', color: '#a4b2c0', style: { lineWidth: 2 }, id: '5a6b7c8d' };
+  // Saved before the fix: dropped below "Sign in" on empty canvas.
+  const loose = { source: '3c1f0a2b', sourceAnchor: 2, target: { x: 250, y: 500 }, shape: 'flow-polyline-round', color: '#a4b2c0', style: { lineWidth: 2 }, id: '1e2f3a4b' };
+  await page.addInitScript((data) => {
+    if (localStorage.getItem('data') === null) localStorage.setItem('data', JSON.stringify(data));
+  }, { nodes, edges: [loose, valid], groups: [] });
+  await openEditor(page);
+
+  const { edges } = await saved(page);
+  expect(edges).toEqual([valid]);
+
+  const signIn = await onCanvas(page, 250, 250);
+  const cart = await onCanvas(page, 550, 250);
+  await page.mouse.click(signIn.x, signIn.y + 170); // where the loose edge was drawn
+  await expect(panelTitle(page)).toHaveText(['Canvas']);
+  await page.mouse.click((signIn.x + cart.x) / 2, signIn.y);
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+
+  await page.reload();
+  await expect(page.locator('#canvas_1')).toBeVisible();
+  expect((await saved(page)).edges).toEqual([valid]);
+});
+
 test('toolbar Delete removes the selected node and Undo brings it back', async ({ page }) => {
   await openEditor(page);
   const at = await onCanvas(page, 400, 300);

@@ -3,6 +3,7 @@ import { Flow } from 'gg-editor';
 import './style.css';
 import { dataMapToData } from '../../utils/dataMapToData';
 import { saveData } from '../../utils/saveData';
+import { removeDanglingEdges } from '../../utils/removeDanglingEdges';
 
 // Diagrams saved by the old Create React App build point at template images as
 // /static/media/<file>.<hash>.svg, which the Vite build no longer serves.
@@ -13,11 +14,15 @@ const templateUrls = Object.fromEntries(
   ).map(([path, url]) => [path.split('/').pop(), url])
 );
 
-const data = JSON.parse(localStorage.getItem('data'));
-data?.nodes?.forEach((node) => {
+const stored = JSON.parse(localStorage.getItem('data'));
+stored?.nodes?.forEach((node) => {
   const legacy = /\/static\/media\/(.+)\.[0-9a-f]{8}\.svg$/.exec(node.img);
   if (legacy && templateUrls[`${legacy[1]}.svg`]) node.img = templateUrls[`${legacy[1]}.svg`];
 });
+
+// Drop edges saved with a loose end (see removeDanglingEdges) and save the result.
+const data = removeDanglingEdges(stored);
+if (data !== stored) saveData(data);
 
 const FlowCanvas = () => {
   const [edge, setEdge] = useState({});
@@ -68,6 +73,9 @@ const FlowCanvas = () => {
         saveData(dataMapToData(e.item && e.item.dataMap, e.item.itemMap));
       }}
       data={data}
+      // gg-editor's Flow defaults to `noEndEdge: true`, which saves an edge dropped
+      // on empty canvas with a canvas point as its end. Cancel such drops instead.
+      noEndEdge={false}
       onBeforeItemUnselected={() => setEdge({})}
       onMouseEnter={mouseEvent}
       onMouseLeave={mouseEvent}
