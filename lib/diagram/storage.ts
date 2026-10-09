@@ -1,8 +1,8 @@
 // Autosave in this browser. The diagram lives in localStorage['wireflow-flow-v1'],
 // the key production uses, so diagrams made on wireflow.co open here unchanged.
 import { DIAGRAM_VERSION, STORAGE_KEY, type Diagram } from './model';
-import { dropProto, enforceRulesOnLoad, type Dropped } from './rules';
-import { parseHistory, type History } from './history';
+import { dropProto, enforceRulesOnLoad, serialize, type Dropped } from './rules';
+import { parseHistory, type History, type Step } from './history';
 
 // Where unreadable data is copied before anything else is written to STORAGE_KEY.
 export const BACKUP_KEY = `${STORAGE_KEY}.unreadable`;
@@ -72,9 +72,15 @@ export function writeDiagram(storage: Storage, diagramJson: string): boolean {
   }
 }
 
+// The tab's undo history, every step through the rules (it may come from an
+// older build, and undo writes steps straight back to storage). Null if any step
+// isn't a diagram.
 export function readHistory(storage: Storage): History | null {
   try {
-    return parseHistory(JSON.parse(storage.getItem(HISTORY_KEY) ?? 'null'));
+    const history = parseHistory(JSON.parse(storage.getItem(HISTORY_KEY) ?? 'null'));
+    if (!history) return null;
+    const clean = (step: Step): Step => ({ ...step, json: serialize(enforceRulesOnLoad(JSON.parse(step.json, dropProto)).diagram) });
+    return { past: history.past.map(clean), present: clean(history.present), future: history.future.map(clean) };
   } catch {
     return null;
   }

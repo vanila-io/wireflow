@@ -67,7 +67,7 @@ describe('autosave storage', () => {
 
   it('keeps as much undo history as fits, and reads only well-formed history', () => {
     let h = createHistory('{"nodes":[],"edges":[]}');
-    for (let i = 0; i < 20; i++) h = record(h, `{"n":${i},"pad":"${'x'.repeat(100)}"}`);
+    for (let i = 0; i < 20; i++) h = record(h, serialize({ nodes: [card(`n${i}`, i * 10, 0)], edges: [] }));
     const roomy = new MemoryStorage();
     writeHistory(roomy, h);
     expect(readHistory(roomy)?.past).toHaveLength(20);
@@ -79,5 +79,12 @@ describe('autosave storage', () => {
     const broken = new MemoryStorage();
     broken.setItem(HISTORY_KEY, '{"past":[1],"present":{},"future":[]}');
     expect(readHistory(broken)).toBeNull();
+    // Steps go through the rules (a session history may come from an older build).
+    const dirty = new MemoryStorage();
+    const step = (id: number, json: string) => ({ id, json });
+    dirty.setItem(HISTORY_KEY, JSON.stringify({ past: [step(1, JSON.stringify({ nodes: [card('a'), card('b')], edges: [edge('x', 'a', 'gone')] }))], present: step(2, serialize({ nodes: [], edges: [] })), future: [] }));
+    expect(JSON.parse(readHistory(dirty)!.past[0].json).edges).toEqual([]);
+    dirty.setItem(HISTORY_KEY, JSON.stringify({ past: [step(1, 'not json')], present: step(2, '{}'), future: [] }));
+    expect(readHistory(dirty)).toBeNull();
   });
 });
