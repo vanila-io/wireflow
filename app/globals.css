@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-ink: #2d2b33;
+  --color-ink-soft: #6b6875;
+  --color-wire-blue: #4353ff;
+  --color-wire-blue-dark: #3240e0;
+  --color-wire-lavender: #eef0ff;
+  --color-wire-canvas: #f0f2f5;
+  --color-wire-border: #e6e6ec;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+}
+
+/* ---- React Flow editor overrides ---- */
+.react-flow {
+  background: var(--color-wire-canvas);
+}
+
+.flow-node:hover .react-flow__handle,
+.react-flow__node.selected .react-flow__handle {
+  opacity: 1;
+}
+
+.react-flow__edge-path {
+  stroke: #a3a8c3;
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--color-wire-blue);
+}
+
+.react-flow__controls-button {
+  border: none;
+  border-bottom: 1px solid #eee;
+}

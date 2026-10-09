@@ -1,0 +1,716 @@
+[
+ {
+  "id": "article-article-1",
+  "label": "Article",
+  "category": "article",
+  "categoryLabel": "Article",
+  "src": "/graphics/article/article-1.svg"
+ },
+ {
+  "id": "article-article-2",
+  "label": "Article",
+  "category": "article",
+  "categoryLabel": "Article",
+  "src": "/graphics/article/article-2.svg"
+ },
+ {
+  "id": "article-article-3",
+  "label": "Article",
+  "category": "article",
+  "categoryLabel": "Article",
+  "src": "/graphics/article/article-3.svg"
+ },
+ {
+  "id": "article-article-4",
+  "label": "Article",
+  "category": "article",
+  "categoryLabel": "Article",
+  "src": "/graphics/article/article-4.svg"
+ },
+ {
+  "id": "article-article-5",
+  "label": "Article",
+  "category": "article",
+  "categoryLabel": "Article",
+  "src": "/graphics/article/article-5.svg"
+ },
+ {
+  "id": "article-article-6",
+  "label": "Article",
+  "category": "article",
+  "categoryLabel": "Article",
+  "src": "/graphics/article/article-6.svg"
+ },
+ {
+  "id": "blog-articles-1",
+  "label": "Blog",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-1.svg"
+ },
+ {
+  "id": "blog-articles-2",
+  "label": "Blog",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-2.svg"
+ },
+ {
+  "id": "blog-articles-3",
+  "label": "Blog",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-3.svg"
+ },
+ {
+  "id": "blog-articles-4",
+  "label": "Blog",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-4.svg"
+ },
+ {
+  "id": "blog-articles-5",
+  "label": "Blog",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-5.svg"
+ },
+ {
+  "id": "blog-articles-6",
+  "label": "Blog",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-6.svg"
+ },
+ {
+  "id": "blog-articles-7",
+  "label": "Blog",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-7.svg"
+ },
+ {
+  "id": "blog-articles-8",
+  "label": "Blog",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-8.svg"
+ },
+ {
+  "id": "blog-articles-9",
+  "label": "Blog video",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-9.svg"
+ },
+ {
+  "id": "blog-articles-10",
+  "label": "Blog video",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-10.svg"
+ },
+ {
+  "id": "blog-articles-11",
+  "label": "Blog",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-11.svg"
+ },
+ {
+  "id": "blog-articles-12",
+  "label": "Blog video",
+  "category": "blog",
+  "categoryLabel": "Blog",
+  "src": "/graphics/blog/articles-12.svg"
+ },
+ {
+  "id": "e-commerce-cart-popup",
+  "label": "Cart pop up",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/cart-popup.svg"
+ },
+ {
+  "id": "e-commerce-cart",
+  "label": "Cart",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/cart.svg"
+ },
+ {
+  "id": "e-commerce-checkout",
+  "label": "Checkout",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/checkout.svg"
+ },
+ {
+  "id": "e-commerce-complete",
+  "label": "Checkout Complete",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/complete.svg"
+ },
+ {
+  "id": "e-commerce-delivery",
+  "label": "Checkout Delivery",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/delivery.svg"
+ },
+ {
+  "id": "e-commerce-item-2",
+  "label": "Product Item",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/item-2.svg"
+ },
+ {
+  "id": "e-commerce-item",
+  "label": "Product Item",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/item.svg"
+ },
+ {
+  "id": "e-commerce-paypal",
+  "label": "Paypal",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/paypal.svg"
+ },
+ {
+  "id": "e-commerce-products-1",
+  "label": "Product Item",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/products-1.svg"
+ },
+ {
+  "id": "e-commerce-products-2",
+  "label": "Product Item",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/products-2.svg"
+ },
+ {
+  "id": "e-commerce-products-3",
+  "label": "Product Item",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/products-3.svg"
+ },
+ {
+  "id": "e-commerce-rate",
+  "label": "Rate",
+  "category": "e-commerce",
+  "categoryLabel": "E-Commerce",
+  "src": "/graphics/e-commerce/rate.svg"
+ },
+ {
+  "id": "features-features-1",
+  "label": "Feature",
+  "category": "features",
+  "categoryLabel": "Features",
+  "src": "/graphics/features/features-1.svg"
+ },
+ {
+  "id": "features-features-2",
+  "label": "Feature",
+  "category": "features",
+  "categoryLabel": "Features",
+  "src": "/graphics/features/features-2.svg"
+ },
+ {
+  "id": "features-features-3",
+  "label": "Feature",
+  "category": "features",
+  "categoryLabel": "Features",
+  "src": "/graphics/features/features-3.svg"
+ },
+ {
+  "id": "features-features-4",
+  "label": "Feature",
+  "category": "features",
+  "categoryLabel": "Features",
+  "src": "/graphics/features/features-4.svg"
+ },
+ {
+  "id": "features-features-5",
+  "label": "Feature",
+  "category": "features",
+  "categoryLabel": "Features",
+  "src": "/graphics/features/features-5.svg"
+ },
+ {
+  "id": "features-features-6",
+  "label": "Feature",
+  "category": "features",
+  "categoryLabel": "Features",
+  "src": "/graphics/features/features-6.svg"
+ },
+ {
+  "id": "gallery-gallery-1",
+  "label": "Gallery Image",
+  "category": "gallery",
+  "categoryLabel": "Gallery",
+  "src": "/graphics/gallery/gallery-1.svg"
+ },
+ {
+  "id": "gallery-gallery-2",
+  "label": "Gallery Image",
+  "category": "gallery",
+  "categoryLabel": "Gallery",
+  "src": "/graphics/gallery/gallery-2.svg"
+ },
+ {
+  "id": "gallery-gallery-3",
+  "label": "Gallery Image",
+  "category": "gallery",
+  "categoryLabel": "Gallery",
+  "src": "/graphics/gallery/gallery-3.svg"
+ },
+ {
+  "id": "gallery-gallery-4",
+  "label": "Gallery Image",
+  "category": "gallery",
+  "categoryLabel": "Gallery",
+  "src": "/graphics/gallery/gallery-4.svg"
+ },
+ {
+  "id": "gallery-gallery-5",
+  "label": "Gallery Image",
+  "category": "gallery",
+  "categoryLabel": "Gallery",
+  "src": "/graphics/gallery/gallery-5.svg"
+ },
+ {
+  "id": "gallery-gallery-6",
+  "label": "Gallery Image",
+  "category": "gallery",
+  "categoryLabel": "Gallery",
+  "src": "/graphics/gallery/gallery-6.svg"
+ },
+ {
+  "id": "header-header-1",
+  "label": "Header Image",
+  "category": "header",
+  "categoryLabel": "Header",
+  "src": "/graphics/header/header-1.svg"
+ },
+ {
+  "id": "header-header-2",
+  "label": "Header Image",
+  "category": "header",
+  "categoryLabel": "Header",
+  "src": "/graphics/header/header-2.svg"
+ },
+ {
+  "id": "header-header-3",
+  "label": "Header Video",
+  "category": "header",
+  "categoryLabel": "Header",
+  "src": "/graphics/header/header-3.svg"
+ },
+ {
+  "id": "header-header-4",
+  "label": "Header Video",
+  "category": "header",
+  "categoryLabel": "Header",
+  "src": "/graphics/header/header-4.svg"
+ },
+ {
+  "id": "header-header-5",
+  "label": "Header Image",
+  "category": "header",
+  "categoryLabel": "Header",
+  "src": "/graphics/header/header-5.svg"
+ },
+ {
+  "id": "header-header-6",
+  "label": "Header Image",
+  "category": "header",
+  "categoryLabel": "Header",
+  "src": "/graphics/header/header-6.svg"
+ },
+ {
+  "id": "misc-404",
+  "label": "Not Found 404",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/404.svg"
+ },
+ {
+  "id": "misc-about",
+  "label": "About",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/about.svg"
+ },
+ {
+  "id": "misc-analitycs",
+  "label": "Analitycs Chart",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/analitycs.svg"
+ },
+ {
+  "id": "misc-calender",
+  "label": "Calender Schedule",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/calender.svg"
+ },
+ {
+  "id": "misc-cards",
+  "label": "Cards",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/cards.svg"
+ },
+ {
+  "id": "misc-contact",
+  "label": "Contact",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/contact.svg"
+ },
+ {
+  "id": "misc-counter",
+  "label": "Counter Timer",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/counter.svg"
+ },
+ {
+  "id": "misc-error",
+  "label": "Error Fail",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/error.svg"
+ },
+ {
+  "id": "misc-faqs",
+  "label": "FAQS",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/faqs.svg"
+ },
+ {
+  "id": "misc-forum",
+  "label": "Forum",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/forum.svg"
+ },
+ {
+  "id": "misc-loading",
+  "label": "Loading Progress",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/loading.svg"
+ },
+ {
+  "id": "misc-price-1",
+  "label": "Price",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/price-1.svg"
+ },
+ {
+  "id": "misc-price-2",
+  "label": "Price",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/price-2.svg"
+ },
+ {
+  "id": "misc-progress",
+  "label": "Loading Progress",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/progress.svg"
+ },
+ {
+  "id": "misc-search-results",
+  "label": "Search Results",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/search-results.svg"
+ },
+ {
+  "id": "misc-search",
+  "label": "Search",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/search.svg"
+ },
+ {
+  "id": "misc-settings",
+  "label": "Settings",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/settings.svg"
+ },
+ {
+  "id": "misc-sitemap",
+  "label": "Sitemap",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/sitemap.svg"
+ },
+ {
+  "id": "misc-socials",
+  "label": "Socials",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/socials.svg"
+ },
+ {
+  "id": "misc-steps",
+  "label": "Steps",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/steps.svg"
+ },
+ {
+  "id": "misc-subscribde",
+  "label": "Subscribe",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/subscribde.svg"
+ },
+ {
+  "id": "misc-tags",
+  "label": "Tags",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/tags.svg"
+ },
+ {
+  "id": "misc-team",
+  "label": "Team",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/team.svg"
+ },
+ {
+  "id": "misc-under-contruction",
+  "label": "Under Contruction",
+  "category": "misc",
+  "categoryLabel": "Misc",
+  "src": "/graphics/misc/under-contruction.svg"
+ },
+ {
+  "id": "multimedia-files",
+  "label": "Files",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/files.svg"
+ },
+ {
+  "id": "multimedia-songs-1",
+  "label": "Media Songs",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/songs-1.svg"
+ },
+ {
+  "id": "multimedia-songs-2",
+  "label": "Media Songs",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/songs-2.svg"
+ },
+ {
+  "id": "multimedia-songs-3",
+  "label": "Media Songs",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/songs-3.svg"
+ },
+ {
+  "id": "multimedia-upload-files",
+  "label": "Upload Files",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/upload-files.svg"
+ },
+ {
+  "id": "multimedia-upload-image",
+  "label": "Upload Image",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/upload-image.svg"
+ },
+ {
+  "id": "multimedia-video-player-1",
+  "label": "Video Player",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/video-player-1.svg"
+ },
+ {
+  "id": "multimedia-video-player-2",
+  "label": "Video Player",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/video-player-2.svg"
+ },
+ {
+  "id": "multimedia-videos-1",
+  "label": "Video",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/videos-1.svg"
+ },
+ {
+  "id": "multimedia-videos-2",
+  "label": "Video",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/videos-2.svg"
+ },
+ {
+  "id": "multimedia-videos-3",
+  "label": "Video",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/videos-3.svg"
+ },
+ {
+  "id": "multimedia-videos-4",
+  "label": "Video",
+  "category": "multimedia",
+  "categoryLabel": "Multimedia",
+  "src": "/graphics/multimedia/videos-4.svg"
+ },
+ {
+  "id": "sign-in-forgot-password-1",
+  "label": "Forgot Password",
+  "category": "sign-in",
+  "categoryLabel": "Sign in",
+  "src": "/graphics/sign-in/forgot-password-1.svg"
+ },
+ {
+  "id": "sign-in-forgot-password-2",
+  "label": "Forgot Password",
+  "category": "sign-in",
+  "categoryLabel": "Sign in",
+  "src": "/graphics/sign-in/forgot-password-2.svg"
+ },
+ {
+  "id": "sign-in-sign-in-1",
+  "label": "Sign In",
+  "category": "sign-in",
+  "categoryLabel": "Sign in",
+  "src": "/graphics/sign-in/sign-in-1.svg"
+ },
+ {
+  "id": "sign-in-sign-in-2",
+  "label": "Sign In",
+  "category": "sign-in",
+  "categoryLabel": "Sign in",
+  "src": "/graphics/sign-in/sign-in-2.svg"
+ },
+ {
+  "id": "sign-in-sign-up-1",
+  "label": "Sign Up",
+  "category": "sign-in",
+  "categoryLabel": "Sign in",
+  "src": "/graphics/sign-in/sign-up-1.svg"
+ },
+ {
+  "id": "sign-in-sign-up-2",
+  "label": "Sign Up",
+  "category": "sign-in",
+  "categoryLabel": "Sign in",
+  "src": "/graphics/sign-in/sign-up-2.svg"
+ },
+ {
+  "id": "socials-chat",
+  "label": "Chat",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/chat.svg"
+ },
+ {
+  "id": "socials-comments",
+  "label": "Comments",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/comments.svg"
+ },
+ {
+  "id": "socials-connection",
+  "label": "Connection",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/connection.svg"
+ },
+ {
+  "id": "socials-feeds",
+  "label": "Feeds",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/feeds.svg"
+ },
+ {
+  "id": "socials-profile-1",
+  "label": "Profile",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/profile-1.svg"
+ },
+ {
+  "id": "socials-profile-2",
+  "label": "Profile",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/profile-2.svg"
+ },
+ {
+  "id": "socials-profile-3",
+  "label": "Profile",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/profile-3.svg"
+ },
+ {
+  "id": "socials-profile-4",
+  "label": "Profile",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/profile-4.svg"
+ },
+ {
+  "id": "socials-user-settings-2",
+  "label": "User Settings",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/user-settings-2.svg"
+ },
+ {
+  "id": "socials-user-settings",
+  "label": "User Settings",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/user-settings.svg"
+ },
+ {
+  "id": "socials-users-2",
+  "label": "User",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/users-2.svg"
+ },
+ {
+  "id": "socials-users",
+  "label": "User",
+  "category": "socials",
+  "categoryLabel": "Socials",
+  "src": "/graphics/socials/users.svg"
+ }
+]

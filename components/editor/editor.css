@@ -1,0 +1,67 @@
+/* Editor node + canvas styles (kept in its own file so preview proxies never
+   serve a stale cached chunk for it) */
+
+.flow-node {
+  width: 220px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid #bcc2c6;
+  outline: 2px solid transparent;
+  transition: outline-color 120ms ease;
+}
+
+.flow-node.selected {
+  outline-color: var(--color-wire-blue);
+}
+
+.flow-node-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 8px;
+  border-bottom: 1px solid #ebeff0;
+  background: #ebeff0;
+  border-radius: 5px 5px 0 0;
+}
+
+.flow-node-header button {
+  cursor: text;
+}
+
+.flow-node-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0 0 5px 5px;
+}
+
+.react-flow__handle {
+  opacity: 1;
+  pointer-events: all;
+  width: 9px;
+  height: 9px;
+  z-index: 10;
+  background: #7a869a;
+  border: 1px solid #fff;
+  border-radius: 50%;
+}
+
+.flow-node-dots {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.flow-node-dots i {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #c4cbd1;
+}
