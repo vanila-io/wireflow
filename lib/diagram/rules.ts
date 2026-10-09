@@ -12,6 +12,7 @@
 // It never throws on bad input: what it can't keep it drops, and it counts what
 // it dropped so callers can tell the user.
 import { graphicById } from '@/lib/graphics';
+import { EMPTY_GROUP, fitGroups } from './groups';
 import { ARROW, isGroup, type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode } from './model';
 
 export type Dropped = { nodes: number; edges: number; parents: number };
@@ -58,7 +59,8 @@ function group(raw: Obj, id: string): GroupNode | undefined {
   const pos = position(raw.position);
   if (!pos) return undefined;
   const data = isObject(raw.data) ? raw.data : {};
-  const size = isNum(raw.width) && isNum(raw.height) && raw.width > 0 && raw.height > 0 ? { width: raw.width, height: raw.height } : {};
+  // A group always has a size: React Flow would draw one without it as a 150px sliver.
+  const size = isNum(raw.width) && isNum(raw.height) && raw.width > 0 && raw.height > 0 ? { width: raw.width, height: raw.height } : { ...EMPTY_GROUP };
   return {
     id,
     type: 'group',
@@ -149,3 +151,10 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
 // A diagram as stored: only what the rules keep, so selection, drag state and
 // React Flow's measurements never reach storage or the undo history.
 export const serialize = (diagram: Diagram) => JSON.stringify(enforceRules(diagram).diagram);
+
+// For a diagram from outside (storage, a file): the rules, then every group
+// framed around its members (a hand-made file may give groups no size).
+export function enforceRulesOnLoad(input: unknown): { diagram: Diagram; dropped: Dropped } {
+  const { diagram, dropped } = enforceRules(input);
+  return { diagram: { nodes: fitGroups(diagram.nodes), edges: diagram.edges }, dropped };
+}

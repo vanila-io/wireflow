@@ -1,7 +1,7 @@
 // Autosave in this browser. The diagram lives in localStorage['wireflow-flow-v1'],
 // the key production uses, so diagrams made on wireflow.co open here unchanged.
 import { DIAGRAM_VERSION, STORAGE_KEY, type Diagram } from './model';
-import { dropProto, enforceRules, type Dropped } from './rules';
+import { dropProto, enforceRulesOnLoad, type Dropped } from './rules';
 import { parseHistory, type History } from './history';
 
 // Where unreadable data is copied before anything else is written to STORAGE_KEY.
@@ -55,7 +55,7 @@ export function readDiagram(storage: Storage): Loaded {
     }
     return { status: 'unreadable' };
   }
-  const { diagram, dropped } = enforceRules(migrated.data);
+  const { diagram, dropped } = enforceRulesOnLoad(migrated.data);
   return migrated.version > DIAGRAM_VERSION ? { status: 'newer', diagram } : { status: 'loaded', diagram, dropped };
 }
 

@@ -18,7 +18,7 @@
 // - the previous editor's plain G6 {nodes, edges, groups} (its localStorage['data']).
 import { fromG6, legacyGraphic, type G6Diagram } from './legacy';
 import { isCard, type Diagram } from './model';
-import { dropProto, enforceRules, type Dropped } from './rules';
+import { dropProto, enforceRules, enforceRulesOnLoad, type Dropped } from './rules';
 
 export const FILE_FORMAT = 'wireflow';
 export const FILE_VERSION = 2;
@@ -142,7 +142,7 @@ export function parseFile(text: string): { diagram: Diagram; dropped: Dropped } 
   // Without a version, tell the two plain formats apart by how nodes are placed.
   legacy ??= 'groups' in diagram || (diagram.nodes as unknown[]).some((n) => isObject(n) && !('position' in n) && 'x' in n);
 
-  return enforceRules(legacy ? parseG6(diagram) : parseCurrent(diagram));
+  return enforceRulesOnLoad(legacy ? parseG6(diagram) : parseCurrent(diagram));
 }
 
 /** Read the previous editor's localStorage['data'], or null if it can't be used. */

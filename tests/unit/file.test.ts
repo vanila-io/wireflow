@@ -57,6 +57,26 @@ describe('wireflow.json', () => {
     expect(diagram.edges).toHaveLength(1);
   });
 
+  // Review finding: React Flow draws a group without a size as a 150px sliver.
+  it('gives every group a real frame: around its members, or a default size when empty', () => {
+    const file = {
+      nodes: [
+        { id: 'g', type: 'group', position: { x: 0, y: 0 }, data: { label: 'G' } },
+        { ...card('a', 20, 50), parentId: 'g' },
+        { id: 'empty', type: 'group', position: { x: 900, y: 0 }, data: { label: 'E' } },
+      ],
+      edges: [],
+    };
+    const { diagram } = parseFile(JSON.stringify(file));
+    const g = diagram.nodes.find((n) => n.id === 'g')!;
+    expect(g.width).toBe(220 + 32);
+    expect(g.height).toBeCloseTo(cardSize({ graphicId: 'article-article-1' }).height + 52);
+    expect(absoluteBoxes(diagram.nodes).get('a')).toMatchObject({ x: 20, y: 50 });
+    expect(diagram.nodes.find((n) => n.id === 'empty')).toMatchObject({ width: 252, height: 120 });
+    const legacyEmpty = parseFile(JSON.stringify({ nodes: [], edges: [], groups: [{ id: 'lone', label: 'Lone', x: 10, y: 10 }] })).diagram;
+    expect(legacyEmpty.nodes[0]).toMatchObject({ width: 252, height: 120 });
+  });
+
   it('drops connections with a missing end and says how many', () => {
     const d = { nodes: [card('a'), card('b')], edges: [edge('ok', 'a', 'b'), edge('x', 'a', 'gone')] };
     const { diagram, dropped } = parseFile(JSON.stringify(d));
