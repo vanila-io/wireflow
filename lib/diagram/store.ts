@@ -144,8 +144,14 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       if (ended.length) {
         // A drag ended: a card dropped into a frame joins that group, one dragged
         // out leaves it, and frames wrap their members again.
-        const parents = dropTargets(nodes, ended);
-        nodes = Object.keys(parents).length ? (setParents({ nodes, edges: state.edges }, parents).nodes as DiagramNode[]) : fitGroups(nodes);
+        // If this ever fails, the move is still committed (and the drag state
+        // cleared, without which nothing more would be saved).
+        try {
+          const parents = dropTargets(nodes, ended);
+          nodes = Object.keys(parents).length ? (setParents({ nodes, edges: state.edges }, parents).nodes as DiagramNode[]) : fitGroups(nodes);
+        } catch (error) {
+          console.warn('Wireflow: could not update groups after a drag', error);
+        }
       } else if (moving.some((c) => c.dragging)) {
         // While dragging, highlight the group the card would join.
         dropTarget = Object.values(dropTargets(nodes, moving.map((c) => c.id))).find((id) => id !== undefined) ?? null;

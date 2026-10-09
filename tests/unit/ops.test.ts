@@ -135,6 +135,35 @@ describe('batch operations in the store are single undo steps', () => {
     expect(last().nodes.map((n) => n.position)).toEqual([{ x: 0, y: 0 }, { x: 300, y: 100 }]);
   });
 
+  // Review finding: two overlapping groups dragged together used to be put inside
+  // each other, which crashed and left them "dragging", so nothing more was saved.
+  it('dragging two overlapping groups together keeps them apart, and later moves are still saved', () => {
+    const saves: string[] = [];
+    const store = createDiagramStore({ initial: two(), save: (j) => (saves.push(j), true) });
+    store.onNodesChange([
+      { type: 'select', id: 'a', selected: true },
+      { type: 'select', id: 'b', selected: true },
+    ]);
+    store.group();
+    const g1 = store.selectedIds()[0];
+    store.copy();
+    store.paste(); // a copy 20px off, overlapping the original
+    const g2 = store.selectedIds().find((id) => id !== g1)!;
+    store.onNodesChange([{ type: 'select', id: g1, selected: true }]);
+    const pos = (id: string) => store.getState().nodes.find((n) => n.id === id)!.position;
+    const move = (dragging: boolean) =>
+      store.onNodesChange([g1, g2].map((id) => ({ type: 'position' as const, id, position: { x: pos(id).x + 5, y: pos(id).y }, dragging })));
+    move(true);
+    move(false);
+    const last = JSON.parse(saves[saves.length - 1]) as Diagram;
+    expect(last.nodes.filter((n) => n.type === 'group').map((n) => n.parentId)).toEqual([undefined, undefined]);
+    expect(store.getState().nodes.some((n) => n.dragging)).toBe(false);
+    // A later drag of a card is saved.
+    const count = saves.length;
+    store.onNodesChange([{ type: 'position', id: 'a', position: { x: 100, y: 0 }, dragging: false }]);
+    expect(saves.length).toBe(count + 1);
+  });
+
   it('a drag that ends inside a frame puts the card in the group, as one step', () => {
     const { store, last } = setup();
     store.apply((d) => ({ ...groupItems(d, ['a', 'b'], { id: 'g' }), nodes: [...groupItems(d, ['a', 'b'], { id: 'g' }).nodes, card('c', 2000, 0)] }));

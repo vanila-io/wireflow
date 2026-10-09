@@ -124,7 +124,13 @@ export function setParents(d: Diagram, parents: Record<string, string | undefine
     return next;
   });
   // React Flow needs parents before children.
-  const depth = (n: DiagramNode): number => (n.parentId === undefined ? 0 : 1 + depth(nodes.find((m) => m.id === n.parentId)!));
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const depth = (n: DiagramNode) => {
+    let d = 0;
+    // Bounded, so even a parent loop (which the rules would cut) can't hang.
+    for (let p = n.parentId; p !== undefined && d <= nodes.length; p = byId.get(p)?.parentId) d++;
+    return d;
+  };
   const ordered = nodes.map((n, i) => ({ n, i, d: depth(n) })).sort((a, b) => a.d - b.d || a.i - b.i).map((o) => o.n);
   return { nodes: fitGroups(ordered), edges: d.edges };
 }
@@ -144,6 +150,9 @@ export function dropTargets(nodes: DiagramNode[], movedIds: string[]): Record<st
   };
   const contains = (b: { x: number; y: number; width: number; height: number }, pt: { x: number; y: number }) =>
     pt.x >= b.x && pt.x <= b.x + b.width && pt.y >= b.y && pt.y <= b.y + b.height;
+  // A moved item, or anything inside one, can't take in another moved item: two
+  // overlapping groups dragged together must not end up inside each other.
+  const moving = (groupId: string) => movedIds.some((m) => isInside(groupId, m));
   const changes: Record<string, string | undefined> = {};
   for (const id of movedIds) {
     const node = byId.get(id);
@@ -153,7 +162,7 @@ export function dropTargets(nodes: DiagramNode[], movedIds: string[]): Record<st
     const centre = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
     if (node.parentId !== undefined && contains(boxes.get(node.parentId)!, centre)) continue;
     const target = nodes
-      .filter((g) => isGroup(g) && !isInside(g.id, id) && contains(boxes.get(g.id)!, centre))
+      .filter((g) => isGroup(g) && !moving(g.id) && contains(boxes.get(g.id)!, centre))
       .sort((a, b2) => boxes.get(a.id)!.width * boxes.get(a.id)!.height - boxes.get(b2.id)!.width * boxes.get(b2.id)!.height)[0];
     if (target?.id !== node.parentId) changes[id] = target?.id;
   }
