@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     // Offline support: builds src/service-worker.js into build/service-worker.js
     // with the list of build files to precache. Off under `pnpm dev`.
+    // To switch it off for everyone, add `selfDestroying: true` and deploy: that
+    // build's worker unregisters itself, deletes its caches and reloads open
+    // tabs. Don't just remove the plugin (see src/service-worker.js).
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',

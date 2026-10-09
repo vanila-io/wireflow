@@ -46,7 +46,9 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 
 After your first visit, Wireflow keeps working without a network connection: a service worker stores the app and all screen templates in the browser. To get a window of its own, install it from the browser (in Chrome or Edge, the install icon in the address bar, or **Install Wireflow** in the menu).
 
-When a new version is deployed, the app shows an **Update available** notice. Click **Reload** to switch; your diagram is autosaved, so nothing is lost. The service worker only runs in production builds (`pnpm build`, `pnpm preview`, deployments), never under `pnpm dev`.
+When a new version is deployed, Wireflow notices it the next time you open it, or within an hour in a tab you keep open, and shows an **Update available** notice. Until you click **Reload**, the version you have keeps working, offline too. Clicking it reloads every open Wireflow tab into the new version; your diagram is autosaved, so nothing is lost.
+
+Only production builds served over HTTPS or from `localhost` register the service worker (`pnpm preview`, Docker, deployments). `pnpm dev` never does.
 
 Editing on phones isn't supported yet: the diagram engine only handles mouse input ([#60](https://github.com/vanila-io/wireflow/issues/60)).
 
@@ -100,6 +102,8 @@ Then open http://localhost:8083. The image builds the app in a Node 24 stage and
 ## Deploy
 
 The app is a static site, so any static host can serve `build/`.
+
+Every build includes the offline service worker at `/service-worker.js`, the URL the old Create React App build used, so browsers that still run that build switch to the new one by themselves. Keep that file in every deployment. If it's missing, browsers that installed the app keep running their cached copy, because the check for a new worker fails (Cloudflare answers the missing file with `index.html`, nginx with a 404). To switch offline support off for everyone, add `selfDestroying: true` to the `VitePWA` options in `vite.config.js` and deploy: the new worker removes itself and its caches and reloads open tabs. No cache headers are needed: browsers bypass the HTTP cache when they check for a new worker.
 
 ### Cloudflare Workers (staging)
 

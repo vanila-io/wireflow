@@ -7,7 +7,11 @@
 // returning visitors keep checking that URL for updates. A browser allows one
 // registration per scope, so serving the new worker at the same URL makes it a
 // regular update of that registration: no second script URL and no
-// unregister/re-register race.
+// unregister/re-register race. Keep this URL forever, and never ship a build
+// without it: browsers that installed the app would keep running their cached
+// copy, because a missing script fails the update check (Cloudflare answers it
+// with index.html, nginx with a 404). To switch offline support off, build with
+// `selfDestroying: true` (vite.config.js) and deploy that.
 //
 // Updates between our own builds wait for the user: the app shows an "Update
 // available" prompt (src/components/UpdatePrompt) that sends SKIP_WAITING. The
