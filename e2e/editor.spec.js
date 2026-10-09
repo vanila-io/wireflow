@@ -11,6 +11,9 @@ import {
   onCanvas,
   dropTemplate,
   connect,
+  drag,
+  leftAnchor,
+  rightAnchor,
 } from './helpers.js';
 
 test('app shell loads with templates, toolbar, minimap and canvas panel', async ({ page }) => {
@@ -138,7 +141,7 @@ test('connecting two nodes creates an edge whose shape, size and color are edita
   expect((await edge()).color).not.toBe('#a4b2c0');
 });
 
-test('an edge dropped on empty canvas is cancelled, whether new or re-dragged', async ({ page }) => {
+test('a new edge dropped on empty canvas is not created', async ({ page }) => {
   await openEditor(page);
   const a = await onCanvas(page, 300, 300);
   const b = await onCanvas(page, 650, 300);
@@ -147,49 +150,66 @@ test('an edge dropped on empty canvas is cancelled, whether new or re-dragged', 
   await expect.poll(async () => (await saved(page))?.nodes.length).toBe(2);
   const before = await page.evaluate(() => localStorage.getItem('data'));
 
-  // Drag from the right anchor of `a` and let go on empty canvas below the nodes.
+  // Drop it on the empty canvas between the nodes. A loose edge would be a straight
+  // line from the anchor to that point.
   await page.mouse.move(a.x, a.y, { steps: 5 });
-  await page.mouse.move(a.x + 48, a.y, { steps: 10 });
-  await page.mouse.down();
-  await page.mouse.move(a.x + 200, a.y + 220, { steps: 40 });
-  await page.mouse.up();
-  // A loose edge would run right from the anchor, then down to the drop point.
-  await page.mouse.click(a.x + 200, a.y + 150);
+  await drag(page, rightAnchor(a), { x: a.x + 200, y: a.y });
+  await page.mouse.click(a.x + 120, a.y);
   await expect(panelTitle(page)).toHaveText(['Canvas']);
   expect(await page.evaluate(() => localStorage.getItem('data'))).toBe(before);
 
-  // Connecting still works, and dragging the edge's end off its node leaves it attached.
+  // The same drag dropped on the other node's anchor connects them.
   const [source, target] = (await saved(page)).nodes.map((node) => node.id);
   await connect(page, a, b);
   await expect.poll(async () => (await saved(page)).edges).toMatchObject([{ source, target }]);
-  await page.mouse.click((a.x + b.x) / 2, a.y);
-  await expect(panelTitle(page)).toHaveText(['Edge']);
-  const connected = await page.evaluate(() => localStorage.getItem('data'));
-
-  // The edge's end point sits on its arrow, just left of the anchor; approach it along the edge.
-  await page.mouse.move(b.x - 100, b.y, { steps: 5 });
-  await page.mouse.move(b.x - 52, b.y, { steps: 10 });
-  await page.mouse.down();
-  await page.mouse.move(b.x - 52, b.y + 250, { steps: 40 });
-  await page.mouse.up();
-  await page.mouse.click(b.x - 52, b.y + 150);
-  await expect(panelTitle(page)).toHaveText(['Canvas']);
-  expect(await page.evaluate(() => localStorage.getItem('data'))).toBe(connected);
-  await page.mouse.click((a.x + b.x) / 2, a.y);
-  await expect(panelTitle(page)).toHaveText(['Edge']);
 });
 
-test('edges saved with a loose end are removed on load and the cleaned diagram is saved', async ({ page }) => {
+test("an edge's end dropped on empty canvas stays on its node, and dropped on another node's anchor moves there", async ({ page }) => {
+  await openEditor(page);
+  const a = await onCanvas(page, 300, 300);
+  const b = await onCanvas(page, 650, 300);
+  const c = await onCanvas(page, 650, 550);
+  await dropTemplate(page, 0, a);
+  await dropTemplate(page, 1, b);
+  await dropTemplate(page, 2, c);
+  await expect.poll(async () => (await saved(page))?.nodes.length).toBe(3);
+  const [source, target, other] = (await saved(page)).nodes.map((node) => node.id);
+  await connect(page, a, b);
+  await expect.poll(async () => (await saved(page)).edges).toMatchObject([{ source, target }]);
+  const connected = await page.evaluate(() => localStorage.getItem('data'));
+
+  // A selected edge has a handle on each end. The target one sits on the arrow head,
+  // 10 px left of b's anchor.
+  await page.mouse.click((a.x + b.x) / 2, a.y);
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+  const endHandle = { x: leftAnchor(b).x - 10, y: b.y };
+
+  // Drag it back along the edge and drop it on empty canvas. If that drop were kept,
+  // the edge would now stop short of b.
+  await drag(page, endHandle, { x: a.x + 180, y: a.y });
+  await page.mouse.click(b.x - 90, b.y);
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+  expect(await page.evaluate(() => localStorage.getItem('data'))).toBe(connected);
+
+  // Dropped on c's anchor instead, the same edge now ends on c.
+  await drag(page, endHandle, leftAnchor(c));
+  await expect.poll(async () => (await saved(page)).edges).toMatchObject([{ source, target: other }]);
+});
+
+test('edges saved with a loose end or to a missing node are removed on load and the cleaned diagram is saved', async ({ page }) => {
   const nodes = [
     { type: 'node', size: [96, 88], img: '/static/media/Sign in 1.a1b484ff.svg', label: 'Sign in', x: 250, y: 250, id: '3c1f0a2b', shape: 'node-image-header' },
     { type: 'node', size: [96, 88], img: '/static/media/Cart.2ae03932.svg', label: 'Cart', x: 550, y: 250, id: '9d4e7b10', shape: 'node-image-header' },
   ];
   const valid = { source: '3c1f0a2b', sourceAnchor: 1, target: '9d4e7b10', targetAnchor: 3, shape: 'flow-polyline-round', color: '#a4b2c0', style: { lineWidth: 2 }, id: '5a6b7c8d' };
-  // Saved before the fix: dropped below "Sign in" on empty canvas.
+  // Saved by older builds: one dropped on empty canvas below "Sign in", and one
+  // pasted after the node it points to was deleted.
   const loose = { source: '3c1f0a2b', sourceAnchor: 2, target: { x: 250, y: 500 }, shape: 'flow-polyline-round', color: '#a4b2c0', style: { lineWidth: 2 }, id: '1e2f3a4b' };
+  const toDeleted = { source: '9d4e7b10', sourceAnchor: 2, target: '7c0d1e2f', targetAnchor: 0, shape: 'flow-polyline-round', color: '#a4b2c0', style: { lineWidth: 2 }, id: '2b3c4d5e' };
   await page.addInitScript((data) => {
     if (localStorage.getItem('data') === null) localStorage.setItem('data', JSON.stringify(data));
-  }, { nodes, edges: [loose, valid], groups: [] });
+  }, { nodes, edges: [loose, valid, toDeleted], groups: [] });
+  // G6 can't draw an edge to a missing node, so without the clean-up the app doesn't start.
   await openEditor(page);
 
   const { edges } = await saved(page);
@@ -197,7 +217,7 @@ test('edges saved with a loose end are removed on load and the cleaned diagram i
 
   const signIn = await onCanvas(page, 250, 250);
   const cart = await onCanvas(page, 550, 250);
-  await page.mouse.click(signIn.x, signIn.y + 170); // where the loose edge was drawn
+  await page.mouse.click(signIn.x, signIn.y + 170); // on the line the loose edge would draw
   await expect(panelTitle(page)).toHaveText(['Canvas']);
   await page.mouse.click((signIn.x + cart.x) / 2, signIn.y);
   await expect(panelTitle(page)).toHaveText(['Edge']);
