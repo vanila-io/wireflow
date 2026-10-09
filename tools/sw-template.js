@@ -16,30 +16,38 @@ const SHELL = '/app';
 const PREFIX = 'wireflow-precache-';
 const CACHE = PREFIX + VERSION;
 const precached = new Set(PRECACHE);
+const CONCURRENCY = 4;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE);
-      await Promise.all(
-        PRECACHE.map(async (path) => {
-          // Revalidate with the server: an older copy in the HTTP cache must not
-          // end up in this build's cache.
-          const response = await fetch(path, { cache: 'no-cache' });
-          if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
-          // A server that answers a missing file with a page (an SPA fallback, a
-          // login page) must not have that page cached as a script or a style:
-          // the install fails and the browser tries again on a later visit.
-          if (path !== SHELL && (response.headers.get('content-type') || '').includes('text/html')) {
-            throw new Error(`${path}: got an HTML page instead of the file`);
-          }
-          await cache.put(path, response);
-        }),
-      ).catch(async (error) => {
+      const store = async (path) => {
+        // Revalidate with the server: an older copy in the HTTP cache must not
+        // end up in this build's cache.
+        const response = await fetch(path, { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
+        // A server that answers a missing file with a page (an SPA fallback, a
+        // login page) must not have that page cached as a script or a style:
+        // the install fails and the browser tries again on a later visit.
+        if (path !== SHELL && (response.headers.get('content-type') || '').includes('text/html')) {
+          throw new Error(`${path}: got an HTML page instead of the file`);
+        }
+        await cache.put(path, response);
+      };
+      // A few files at a time, so the install doesn't crowd out the page.
+      const queue = [...PRECACHE];
+      const worker = async () => {
+        for (let path = queue.shift(); path !== undefined; path = queue.shift()) await store(path);
+      };
+      try {
+        await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+      } catch (error) {
+        queue.length = 0;
         // Leave nothing half-filled behind; the browser tries again on a later visit.
         await caches.delete(CACHE);
         throw error;
-      });
+      }
     })(),
   );
 });

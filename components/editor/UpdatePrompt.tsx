@@ -22,8 +22,11 @@ export default function UpdatePrompt() {
     };
     const onControllerChange = () => offered && window.location.reload();
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
-    navigator.serviceWorker
-      .register('/sw.js', { scope: '/app' })
+    // Register once the page has loaded, so installing (which downloads the whole
+    // editor and every template) doesn't compete with the page's own requests.
+    const loaded = document.readyState === 'complete' ? Promise.resolve() : new Promise((resolve) => window.addEventListener('load', resolve, { once: true }));
+    loaded
+      .then(() => navigator.serviceWorker.register('/sw.js', { scope: '/app' }))
       .then((registration) => {
         offer(registration.waiting);
         registration.addEventListener('updatefound', () => {
