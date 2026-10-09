@@ -147,14 +147,15 @@ test('connecting two nodes creates an edge whose shape, size and color are edita
   expect((await edge()).color).toMatch(/^#[0-9a-f]{6}$/);
   await expect(colorTrigger(page)).toHaveText((await edge()).color.toUpperCase());
 
-  // So a single Undo restores the original color. Undo is not autosaved; reselect
-  // the edge to read the restored model back into the panel.
+  // So a single Undo restores the original color. The panel follows Undo and Redo
+  // while the edge stays selected (Undo is not autosaved, so check the panel).
+  const picked = (await edge()).color.toUpperCase();
   await command(page, 'undo').click();
-  await page.mouse.click(a.x, a.y + 150);
-  await expect(panelTitle(page)).toHaveText(['Canvas']);
-  await page.mouse.click((a.x + b.x) / 2, a.y);
   await expect(colorTrigger(page)).toHaveText('#A4B2C0');
   await expect(page.locator('.details .ant-select')).toHaveText('Smooth');
+  await expect(size).toHaveAttribute('aria-valuenow', '3');
+  await command(page, 'redo').click();
+  await expect(colorTrigger(page)).toHaveText(picked);
 });
 
 test('edge color can be typed as hex and reused from the colors already in the diagram', async ({ page }) => {
@@ -173,19 +174,22 @@ test('edge color can be typed as hex and reused from the colors already in the d
   const presets = (section) =>
     colorPicker(page).locator('.ant-collapse-item').filter({ hasText: section }).locator('.ant-color-picker-presets-color');
 
+  const used = presets('In this diagram');
+
   await page.mouse.click((a.x + b.x) / 2, a.y);
   await expect(panelTitle(page)).toHaveText(['Edge']);
   await colorTrigger(page).click();
   await expect(presets('Palette').first()).toHaveClass(/presets-color-checked/); // the default edge color
+  await expect(used).toHaveCount(1); // both edges still have the default color
   await colorPicker(page).locator('.ant-color-picker-hex-input input').fill('E8590C');
   await expect.poll(colors).toEqual(['#e8590c', '#a4b2c0']);
   await expect(colorTrigger(page)).toHaveText('#E8590C');
+  await expect(used).toHaveCount(2); // updated while the picker is open
 
   // The other edge offers the color just used; picking it applies the exact value.
   await page.mouse.click((b.x + c.x) / 2, b.y);
   await expect(colorTrigger(page)).toHaveText('#A4B2C0');
   await colorTrigger(page).click();
-  const used = presets('In this diagram');
   await expect(used).toHaveCount(2);
   const orange = used.filter({ has: page.locator('[style*="rgb(232, 89, 12)"]') });
   await expect(orange).toHaveCount(1);
@@ -193,14 +197,39 @@ test('edge color can be typed as hex and reused from the colors already in the d
   await expect.poll(colors).toEqual(['#e8590c', '#e8590c']);
   await expect(colorTrigger(page)).toHaveText('#E8590C');
   await expect(orange).toHaveClass(/presets-color-checked/);
+  await expect(used).toHaveCount(1);
 
-  // Undo reverts just that one color change.
+  // Undo reverts just that one color change. The panel and the "In this diagram"
+  // row follow Undo and Redo while the edge stays selected.
   await command(page, 'undo').click();
-  await page.mouse.click(a.x, a.y + 150);
-  await page.mouse.click((b.x + c.x) / 2, b.y);
   await expect(colorTrigger(page)).toHaveText('#A4B2C0');
-  await page.mouse.click((a.x + b.x) / 2, a.y);
+  await colorTrigger(page).click();
+  await expect(used).toHaveCount(2);
+  await command(page, 'redo').click();
   await expect(colorTrigger(page)).toHaveText('#E8590C');
+  await colorTrigger(page).click();
+  await expect(used).toHaveCount(1);
+});
+
+test('the Node panel follows Undo and Redo, and leaving the label unchanged keeps Redo', async ({ page }) => {
+  await openEditor(page);
+  const at = await onCanvas(page, 400, 300);
+  await dropTemplate(page, 0, at);
+  await expect.poll(async () => (await saved(page))?.nodes.length).toBe(1);
+  await page.mouse.click(at.x, at.y);
+  await nodeLabelInput(page).fill('Landing');
+  await nodeLabelInput(page).blur();
+  await expect.poll(async () => (await saved(page)).nodes[0].label).toBe('Landing');
+
+  await command(page, 'undo').click();
+  await expect(nodeLabelInput(page)).toHaveValue('Article');
+  // Clicking into the field and out again changes nothing, so it adds no undo
+  // step, which would also have thrown away the step Redo brings back.
+  await nodeLabelInput(page).focus();
+  await nodeLabelInput(page).blur();
+  await expect(command(page, 'redo')).not.toHaveClass(/disable/);
+  await command(page, 'redo').click();
+  await expect(nodeLabelInput(page)).toHaveValue('Landing');
 });
 
 test('toolbar Delete removes the selected node and Undo brings it back', async ({ page }) => {

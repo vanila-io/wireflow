@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { Component, createRef } from 'react';
 import { withPropsAPI } from 'gg-editor';
 import {
   Card,
@@ -86,13 +86,19 @@ const inlineFormItemLayout = {
 };
 
 class DetailForm extends Component {
+  form = createRef();
+
   // React 18+ batches gg-editor's "deselect old, select new" status updates into
   // one render, so switching straight from one node (or edge) to another no
   // longer remounts this form. Re-render on every selection; the Card below is
-  // keyed by item id so its Form starts from the new item's values.
+  // keyed by item id so its Form starts from the new item's values. Also
+  // re-render on every change to the diagram, as undo, redo and other commands
+  // change the selected item without going through this form.
   componentDidMount() {
     this.page = this.props.propsAPI.currentPage;
+    this.graph = this.page.getGraph();
     this.page.on('afteritemselected', this.refresh);
+    this.graph.on('afterchange', this.refresh);
     // Only this panel's instance listens, and only while it is mounted, i.e.
     // while a single node is selected.
     if (this.props.type === 'node') {
@@ -100,8 +106,15 @@ class DetailForm extends Component {
     }
   }
 
+  // A Form reads initialValues only when it mounts, so show the selected
+  // item's current values (after an undo, for example).
+  componentDidUpdate() {
+    if (this.item) this.form.current?.setFieldsValue(this.values);
+  }
+
   componentWillUnmount() {
     this.page.off('afteritemselected', this.refresh);
+    this.graph.off('afterchange', this.refresh);
     document.removeEventListener('keydown', this.handleNodeShortcut, true);
   }
 
@@ -110,6 +123,22 @@ class DetailForm extends Component {
   get item() {
     const { propsAPI } = this.props;
     return propsAPI.getSelected()[0];
+  }
+
+  // The selected item's values, as this panel's form fields show them.
+  get values() {
+    const { type } = this.props;
+    const model = this.item.getModel();
+
+    if (type === 'edge') {
+      const { label = '', shape = 'flow-polyline-round', color, style } = model;
+      return { label, shape, size: style.lineWidth, color };
+    }
+    if (type === 'group') {
+      const { label = 'Group' } = model;
+      return { label };
+    }
+    return { label: model.label };
   }
 
   handleFieldChange = (values) => {
@@ -140,15 +169,17 @@ class DetailForm extends Component {
     if (color === this.item.getModel().color?.toLowerCase()) return;
 
     this.handleFieldChange({ color });
-    this.forceUpdate(); // refresh the "In this diagram" presets
   };
 
   handleInputBlur = (type) => (e) => {
     e.preventDefault();
 
-    this.handleFieldChange({
-      [type]: e.currentTarget.value,
-    });
+    // Leaving a field unchanged must not add an empty undo step: that would
+    // also throw away whatever Redo could bring back.
+    const { value } = e.currentTarget;
+    if (!this.item || value === this.values[type]) return;
+
+    this.handleFieldChange({ [type]: value });
   };
 
   handleNodeShortcut = (e) => {
@@ -170,11 +201,9 @@ class DetailForm extends Component {
   };
 
   renderNodeDetail = () => {
-    const { label } = this.item.getModel();
-
     return (
       <>
-        <Form initialValues={{ label }}>
+        <Form ref={this.form} initialValues={this.values}>
           <Item label='Label' name='label' {...inlineFormItemLayout}>
             <Input name='title' onBlur={this.handleInputBlur('label')} />
           </Item>
@@ -191,16 +220,9 @@ class DetailForm extends Component {
   };
 
   renderEdgeDetail = () => {
-    const {
-      label = '',
-      shape = 'flow-polyline-round',
-      color,
-      style: { lineWidth },
-    } = this.item.getModel();
-
     return (
       <>
-        <Form initialValues={{ label, shape, size: lineWidth, color }}>
+        <Form ref={this.form} initialValues={this.values}>
           <Item label='Label' name='label' {...inlineFormItemLayout}>
             <Input onBlur={this.handleInputBlur('label')} />
           </Item>
@@ -251,10 +273,8 @@ class DetailForm extends Component {
   };
 
   renderGroupDetail = () => {
-    const { label = 'Group' } = this.item.getModel();
-
     return (
-      <Form initialValues={{ label }}>
+      <Form ref={this.form} initialValues={this.values}>
         <Item label='Label' name='label' {...inlineFormItemLayout}>
           <Input onBlur={this.handleInputBlur('label')} />
         </Item>
