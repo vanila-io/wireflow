@@ -1,7 +1,14 @@
 import { Component } from 'react';
 import { withPropsAPI } from 'gg-editor';
-import { Card, Descriptions, Form, Input, Select, Slider } from 'antd';
-import { HexColorPicker as ColorPicker } from 'react-colorful';
+import {
+  Card,
+  ColorPicker,
+  Descriptions,
+  Form,
+  Input,
+  Select,
+  Slider,
+} from 'antd';
 
 import { upperFirst } from '../../../utils';
 
@@ -11,6 +18,20 @@ const edgeShapeOptions = [
   { value: 'flow-smooth', label: 'Smooth' },
   { value: 'flow-polyline', label: 'Polyline' },
   { value: 'flow-polyline-round', label: 'Polyline Round' },
+];
+
+// The first entry is the default edge color (see onBeforeCommandExecute in App).
+const edgeColorPalette = [
+  '#a4b2c0',
+  '#262626',
+  '#1677ff',
+  '#13c2c2',
+  '#52c41a',
+  '#faad14',
+  '#fa541c',
+  '#f5222d',
+  '#eb2f96',
+  '#722ed1',
 ];
 
 const nodeShortcuts = [
@@ -96,6 +117,26 @@ class DetailForm extends Component {
     executeCommand(() => update(item, { ...values }));
   };
 
+  // Colors of the edges in the diagram, most recently added edge first.
+  get usedEdgeColors() {
+    const { edges = [] } = this.props.propsAPI.save();
+    const colors = edges
+      .map(({ color }) => color?.toLowerCase())
+      .filter(Boolean)
+      .reverse();
+    return [...new Set(colors)];
+  }
+
+  // Fires once per pick (hex/RGB input, preset click or the end of a drag),
+  // so dragging across the palette adds a single undo step.
+  handleColorChangeComplete = (value) => {
+    const color = value.toHexString();
+    if (color === this.item.getModel().color?.toLowerCase()) return;
+
+    this.handleFieldChange({ color });
+    this.forceUpdate(); // refresh the "In this diagram" presets
+  };
+
   handleInputBlur = (type) => (e) => {
     e.preventDefault();
 
@@ -157,7 +198,7 @@ class DetailForm extends Component {
 
     return (
       <>
-        <Form initialValues={{ label, shape, size: lineWidth }}>
+        <Form initialValues={{ label, shape, size: lineWidth, color }}>
           <Item label='Label' name='label' {...inlineFormItemLayout}>
             <Input onBlur={this.handleInputBlur('label')} />
           </Item>
@@ -181,8 +222,18 @@ class DetailForm extends Component {
 
           <Item label='Color' name='color' {...inlineFormItemLayout}>
             <ColorPicker
-              color={color}
-              onChange={(color) => this.handleFieldChange({ color })}
+              showText
+              disabledAlpha
+              placement='bottomRight'
+              presets={[
+                { key: 'palette', label: 'Palette', colors: edgeColorPalette },
+                {
+                  key: 'used',
+                  label: 'In this diagram',
+                  colors: this.usedEdgeColors,
+                },
+              ]}
+              onChangeComplete={this.handleColorChangeComplete}
             />
           </Item>
         </Form>

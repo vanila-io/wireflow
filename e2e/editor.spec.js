@@ -6,6 +6,8 @@ import {
   templates,
   panelTitle,
   nodeLabelInput,
+  colorTrigger,
+  colorPicker,
   command,
   openEditor,
   onCanvas,
@@ -132,10 +134,73 @@ test('connecting two nodes creates an edge whose shape, size and color are edita
   await page.keyboard.press('ArrowRight');
   await expect.poll(async () => (await edge()).style.lineWidth).toBe(3);
 
-  const saturation = await page.locator('.details .react-colorful__saturation').boundingBox();
-  await page.mouse.click(saturation.x + saturation.width * 0.8, saturation.y + saturation.height * 0.2);
-  await expect.poll(async () => (await edge()).color).toMatch(/^#[0-9a-f]{6}$/);
-  expect((await edge()).color).not.toBe('#a4b2c0');
+  // Dragging across the palette previews the color and commits it once, on release.
+  await expect(colorTrigger(page)).toHaveText('#A4B2C0');
+  await colorTrigger(page).click();
+  const select = colorPicker(page).locator('.ant-color-picker-select');
+  await select.hover({ position: { x: 40, y: 120 } }); // waits for the popover to finish animating
+  const palette = await select.boundingBox();
+  await page.mouse.down();
+  await page.mouse.move(palette.x + palette.width * 0.8, palette.y + palette.height * 0.2, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(async () => (await edge()).color).not.toBe('#a4b2c0');
+  expect((await edge()).color).toMatch(/^#[0-9a-f]{6}$/);
+  await expect(colorTrigger(page)).toHaveText((await edge()).color.toUpperCase());
+
+  // So a single Undo restores the original color. Undo is not autosaved; reselect
+  // the edge to read the restored model back into the panel.
+  await command(page, 'undo').click();
+  await page.mouse.click(a.x, a.y + 150);
+  await expect(panelTitle(page)).toHaveText(['Canvas']);
+  await page.mouse.click((a.x + b.x) / 2, a.y);
+  await expect(colorTrigger(page)).toHaveText('#A4B2C0');
+  await expect(page.locator('.details .ant-select')).toHaveText('Smooth');
+});
+
+test('edge color can be typed as hex and reused from the colors already in the diagram', async ({ page }) => {
+  await openEditor(page);
+  const a = await onCanvas(page, 200, 300);
+  const b = await onCanvas(page, 500, 300);
+  const c = await onCanvas(page, 800, 300);
+  await dropTemplate(page, 0, a);
+  await dropTemplate(page, 1, b);
+  await dropTemplate(page, 19, c);
+  await expect.poll(async () => (await saved(page))?.nodes.length).toBe(3);
+  await connect(page, a, b);
+  await connect(page, b, c);
+  await expect.poll(async () => (await saved(page)).edges.map((edge) => edge.color)).toEqual(['#a4b2c0', '#a4b2c0']);
+  const colors = async () => (await saved(page)).edges.map((edge) => edge.color);
+  const presets = (section) =>
+    colorPicker(page).locator('.ant-collapse-item').filter({ hasText: section }).locator('.ant-color-picker-presets-color');
+
+  await page.mouse.click((a.x + b.x) / 2, a.y);
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+  await colorTrigger(page).click();
+  await expect(presets('Palette').first()).toHaveClass(/presets-color-checked/); // the default edge color
+  await colorPicker(page).locator('.ant-color-picker-hex-input input').fill('E8590C');
+  await expect.poll(colors).toEqual(['#e8590c', '#a4b2c0']);
+  await expect(colorTrigger(page)).toHaveText('#E8590C');
+
+  // The other edge offers the color just used; picking it applies the exact value.
+  await page.mouse.click((b.x + c.x) / 2, b.y);
+  await expect(colorTrigger(page)).toHaveText('#A4B2C0');
+  await colorTrigger(page).click();
+  const used = presets('In this diagram');
+  await expect(used).toHaveCount(2);
+  const orange = used.filter({ has: page.locator('[style*="rgb(232, 89, 12)"]') });
+  await expect(orange).toHaveCount(1);
+  await orange.click();
+  await expect.poll(colors).toEqual(['#e8590c', '#e8590c']);
+  await expect(colorTrigger(page)).toHaveText('#E8590C');
+  await expect(orange).toHaveClass(/presets-color-checked/);
+
+  // Undo reverts just that one color change.
+  await command(page, 'undo').click();
+  await page.mouse.click(a.x, a.y + 150);
+  await page.mouse.click((b.x + c.x) / 2, b.y);
+  await expect(colorTrigger(page)).toHaveText('#A4B2C0');
+  await page.mouse.click((a.x + b.x) / 2, a.y);
+  await expect(colorTrigger(page)).toHaveText('#E8590C');
 });
 
 test('toolbar Delete removes the selected node and Undo brings it back', async ({ page }) => {
