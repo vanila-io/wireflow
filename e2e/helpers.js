@@ -21,6 +21,9 @@ export const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getIt
 export const templates = (page) => page.locator('.sidebar img');
 export const panelTitle = (page) => page.locator('.details .ant-card-head-title');
 export const nodeLabelInput = (page) => page.locator('.details input[name=title]');
+export const colorTrigger = (page) => page.locator('.details .ant-color-picker-trigger');
+// The open color picker popover (antd keeps closed popovers in the DOM, hidden).
+export const colorPicker = (page) => page.locator('.ant-popover.ant-color-picker:visible');
 export const command = (page, name) => page.locator(`.toolbar .command[data-command="${name}"]`);
 
 export async function openEditor(page) {
