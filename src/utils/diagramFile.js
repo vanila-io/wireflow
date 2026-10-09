@@ -17,6 +17,10 @@ export const FILE_FORMAT = 'wireflow';
 export const FILE_VERSION = 1;
 export const FILE_NAME = 'wireflow.json';
 
+// Emitted on gg-editor's editor (editor.emit) after Open file has replaced the whole
+// diagram and cleared the undo history, so other panels can let go of earlier changes.
+export const DIAGRAM_REPLACED = 'afterdiagramreplace';
+
 export class DiagramFileError extends Error {}
 
 const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);

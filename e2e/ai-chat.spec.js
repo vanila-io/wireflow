@@ -215,6 +215,23 @@ test('the panel offers Undo only while the AI change is the latest one', async (
   expect((await saved(page)).nodes).toEqual([]);
 });
 
+test('after Open file replaces the diagram, earlier AI changes show as replaced, not undone', async ({ page }) => {
+  await mockAnthropic(page, [toolTurn({ summary: 'Added A.', operations: [{ op: 'add_screen', id: 'a', template: 'cart', label: 'A', x: 300, y: 300 }] }), textTurn('Done.')]);
+  await openPanel(page, 'sk-ant-test-key');
+  await ask(page, 'add a');
+  await expect(panel(page).getByRole('button', { name: 'Undo: Added A.' })).toBeVisible();
+
+  const file = { format: 'wireflow', version: 1, diagram: { nodes: [{ type: 'node', size: [96, 88], shape: 'node-image-header', label: 'Checkout', template: 'E-Commerce/Checkout', x: 500, y: 450, id: 'c0ffee01' }], edges: [], groups: [] } };
+  const choosing = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Open file' }).click();
+  await (await choosing).setFiles({ name: 'other.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(file)) });
+  await page.locator('.ant-modal-confirm').getByRole('button', { name: 'Replace' }).click();
+
+  await expect.poll(async () => (await saved(page)).nodes.map((n) => n.id)).toEqual(['c0ffee01']);
+  await expect(panel(page).locator('.ai-applied')).toHaveText(/^Replaced by an opened file: Added A\./);
+  await expect(panel(page).getByRole('button', { name: /^Undo/ })).toHaveCount(0);
+});
+
 test('redoing an AI change that clears the diagram is saved', async ({ page }) => {
   await seed(page, { nodes: [{ id: 'n1', type: 'node', shape: 'node-image-header', size: [96, 88], label: 'Kept', x: 200, y: 200 }], edges: [], groups: [] });
   await mockAnthropic(page, [toolTurn({ summary: 'Cleared.', operations: [{ op: 'clear' }] }), textTurn('Cleared.')]);
