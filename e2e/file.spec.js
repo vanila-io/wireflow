@@ -170,9 +170,44 @@ test('a file that is not a Wireflow diagram shows an error and leaves the canvas
   await openFile(page, jsonFile('future.json', { ...loneCheckout, version: 2 }));
   await expect(toast(page).last()).toHaveText("Couldn't open future.json. It was saved by a newer version of Wireflow.");
 
+  // G6 would follow this group's parent link forever and hang the page.
+  const loop = { ...loneCheckout, diagram: { ...loneCheckout.diagram, groups: [{ id: 'g1', x: 400, y: 400, parent: 'g1' }] } };
+  await openFile(page, jsonFile('loop.json', loop));
+  await expect(toast(page).last()).toHaveText('Couldn\'t open loop.json. The group "g1" is inside itself.');
+
   await expect(confirmDialog(page)).toHaveCount(0);
   expect(await saved(page)).toEqual(before);
   await page.mouse.click(at.x, at.y);
   await expect(panelTitle(page)).toHaveText(['Node']);
   await expect(nodeLabelInput(page)).toHaveValue('Cart');
+});
+
+test('a hand-made file with loose edges, edges without a style and odd keys opens safely', async ({ page }) => {
+  await openEditor(page);
+  const node = (id, x, label, template) => ({ type: 'node', size: [96, 88], shape: 'node-image-header', id, x, y: 300, label, template });
+  const text = JSON.stringify({
+    format: 'wireflow',
+    version: 1,
+    diagram: {
+      nodes: [node('a', 300, 'Sign in', 'Sign in/Sign in 2'), node('b', 650, 'Cart', 'E-Commerce/Cart')],
+      edges: [
+        { id: 'plain', source: 'a', sourceAnchor: 1, target: 'b', targetAnchor: 3 }, // no shape, color or style
+        // Ends on empty canvas, which gg-editor's default `noEndEdge: true` lets you draw and save.
+        { id: 'loose', source: 'a', sourceAnchor: 2, target: { x: 300, y: 560 }, style: { lineWidth: 2 } },
+      ],
+      groups: [],
+    },
+  }).replace('"label":"Cart"', '"style":{"__proto__":{"polluted":true}},"label":"Cart"');
+
+  await openFile(page, jsonFile('handmade.json', text));
+  await expect(toast(page)).toHaveText('Opened handmade.json');
+  expect(await page.evaluate(() => ({}).polluted)).toBeUndefined(); // G6 deep-merges node styles
+
+  const a = await onCanvas(page, 300, 300);
+  const b = await onCanvas(page, 650, 300);
+  await page.mouse.click((a.x + b.x) / 2, a.y); // the edge panel used to crash on an edge without a style
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+  await page.mouse.click(a.x, a.y + 180);
+  await expect(panelTitle(page)).toHaveText(['Edge']);
+  expect((await saved(page)).edges.map((edge) => edge.target)).toEqual(['b', { x: 300, y: 560 }]);
 });

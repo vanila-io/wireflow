@@ -20,7 +20,12 @@ export const FILE_NAME = 'wireflow.json';
 export class DiagramFileError extends Error {}
 
 const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
-const isId = (value) => (typeof value === 'string' && value !== '') || Number.isFinite(value);
+// Wireflow and gg-editor only write string ids, and G6 can't select an item whose id is
+// a number, so ids must be text.
+const isId = (value) => typeof value === 'string' && value !== '';
+// gg-editor's Flow page (noEndEdge: true) saves an edge dropped on empty canvas with a
+// canvas point, { x, y }, as that end instead of an item id. G6 draws such edges.
+const isPoint = (value) => isObject(value) && Number.isFinite(value.x) && Number.isFinite(value.y);
 
 function nodeToFile(node) {
   const template = templateKey(node.img);
@@ -53,25 +58,42 @@ function check(condition, problem) {
 function checkItems(nodes, edges, groups) {
   const ids = new Set();
   const checkId = (item, kind) => {
-    check(isObject(item) && isId(item.id), `It has a ${kind} without an id.`);
+    check(isObject(item) && isId(item.id), `It has ${kind} whose id is missing or isn't text.`);
     check(!ids.has(item.id), `It has more than one item with the id "${item.id}".`);
     ids.add(item.id);
   };
 
-  groups.forEach((group) => checkId(group, 'group'));
+  groups.forEach((group) => checkId(group, 'a group'));
   const groupIds = new Set(ids);
+  const checkParent = (item, kind) =>
+    check(item.parent === undefined || groupIds.has(item.parent), `The ${kind} "${item.id}" is in a group that doesn't exist.`);
+  groups.forEach((group) => checkParent(group, 'group'));
+  // G6 follows `parent` links until they run out, so a group inside itself would hang
+  // the page. A chain longer than the number of groups has a loop.
+  const parentOf = new Map(groups.map((group) => [group.id, group.parent]));
+  groups.forEach((group) => {
+    let parent = group.parent;
+    for (let steps = 0; parent !== undefined; steps += 1) {
+      check(steps < groups.length, `The group "${parent}" is inside itself.`);
+      parent = parentOf.get(parent);
+    }
+  });
+
   nodes.forEach((node) => {
-    checkId(node, 'node');
+    checkId(node, 'a node');
     check(Number.isFinite(node.x) && Number.isFinite(node.y), `The node "${node.id}" has no position.`);
     check(node.label === undefined || typeof node.label === 'string', `The node "${node.id}" has a label that isn't text.`);
-    check(node.parent === undefined || groupIds.has(node.parent), `The node "${node.id}" is in a group that doesn't exist.`);
+    checkParent(node, 'node');
   });
-  groups.forEach((group) => {
-    check(group.parent === undefined || groupIds.has(group.parent), `The group "${group.id}" is in a group that doesn't exist.`);
-  });
+
+  const endIds = new Set(ids); // nodes and groups
+  const isEnd = (end) => endIds.has(end) || isPoint(end);
   edges.forEach((edge) => {
-    checkId(edge, 'edge');
-    check(ids.has(edge.source) && ids.has(edge.target), `The edge "${edge.id}" isn't connected to items in the diagram.`);
+    checkId(edge, 'an edge');
+    check(isEnd(edge.source) && isEnd(edge.target), `The edge "${edge.id}" isn't connected to items in the diagram.`);
+    // The edge panel reads these when the edge is selected.
+    check(edge.style === undefined || isObject(edge.style), `The edge "${edge.id}" has a style that isn't valid.`);
+    check(edge.color === undefined || typeof edge.color === 'string', `The edge "${edge.id}" has a color that isn't text.`);
   });
 }
 
@@ -81,7 +103,9 @@ function checkItems(nodes, edges, groups) {
 export function parseDiagramFile(text) {
   let json;
   try {
-    json = JSON.parse(text);
+    // A file can come from anyone. Drop "__proto__" keys: G6 deep-merges item models
+    // (Util.mix(true, ...)), and merging such a key would change Object.prototype.
+    json = JSON.parse(text, (key, value) => (key === '__proto__' ? undefined : value));
   } catch {
     throw new DiagramFileError("It isn't a JSON file.");
   }

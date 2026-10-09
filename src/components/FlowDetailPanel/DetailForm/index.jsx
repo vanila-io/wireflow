@@ -152,7 +152,7 @@ class DetailForm extends Component {
       label = '',
       shape = 'flow-polyline-round',
       color,
-      style: { lineWidth },
+      style: { lineWidth } = {}, // an opened file may have edges without a style
     } = this.item.getModel();
 
     return (
