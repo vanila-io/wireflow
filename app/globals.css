@@ -42,3 +42,8 @@ body {
 :root {
   --sidebar-width: 16rem;
 }
+@media (max-width: 639px) {
+  :root {
+    --sidebar-width: 8.5rem;
+  }
+}

@@ -82,7 +82,7 @@ export default function Sidebar({ onAddCard, onTouchDrop }: Props) {
       <p className="sr-only" role="status">
         {searching ? `${items.length} ${items.length === 1 ? 'graphic matches' : 'graphics match'}` : ''}
       </p>
-      <div ref={list} className="grid flex-1 grid-cols-2 content-start gap-2 overflow-y-auto p-3">
+      <div ref={list} className="grid flex-1 grid-cols-1 content-start gap-2 overflow-y-auto p-3 sm:grid-cols-2">
         {items.map((g) => (
           <button
             key={g.id}
@@ -132,7 +132,7 @@ export default function Sidebar({ onAddCard, onTouchDrop }: Props) {
             <img src={g.src} alt={g.label} draggable={false} className="pointer-events-none h-auto w-full" />
           </button>
         ))}
-        {items.length === 0 && <p className="col-span-2 py-8 text-center text-sm text-ink-soft">No graphics match “{query}”</p>}
+        {items.length === 0 && <p className="py-8 text-center sm:col-span-2 text-sm text-ink-soft">No graphics match “{query}”</p>}
       </div>
     </aside>
   );

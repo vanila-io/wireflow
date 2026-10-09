@@ -111,6 +111,22 @@
   box-shadow: 0 8px 30px rgb(29 28 40 / 0.25);
 }
 
+/* ---- Added after production: phones and touch screens (#93) ---- */
+/* A finger needs a bigger target than a 9px dot. */
+@media (pointer: coarse) {
+  .react-flow__handle {
+    width: 16px;
+    height: 16px;
+  }
+}
+/* The canvas is narrow: the toolbar has zoom and fit, so drop the overlays. */
+@media (max-width: 639px) {
+  .react-flow__minimap,
+  .react-flow__controls {
+    display: none;
+  }
+}
+
 /* ---- Added after production: edges with a colour of their own (#106) ---- */
 .react-flow__edge.colored.selected .react-flow__edge-path {
   stroke-width: 3px;

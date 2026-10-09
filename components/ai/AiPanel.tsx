@@ -217,7 +217,7 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
       ref={panel}
       aria-label="AI assistant"
       hidden={!open}
-      className="ai-panel absolute inset-y-0 right-0 z-30 flex w-[420px] max-w-full flex-col border-l border-wire-border bg-white shadow-[0_8px_30px_rgba(29,28,40,0.15)]"
+      className="ai-panel absolute inset-y-0 right-0 z-30 flex w-[420px] max-w-full flex-col max-sm:fixed max-sm:inset-x-0 max-sm:top-14 max-sm:w-full border-l border-wire-border bg-white shadow-[0_8px_30px_rgba(29,28,40,0.15)]"
     >
       <header className="flex items-center gap-2 border-b border-wire-border px-4 py-3">
         <h2 className="flex-1 text-sm font-bold text-ink">AI assistant</h2>

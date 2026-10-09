@@ -17,6 +17,9 @@ export class Finger {
       await this.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y }] });
     }
     await this.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    // Chrome doesn't turn a tap that lands within a few hundred ms of the previous
+    // gesture into a click (seen in emulation). People don't tap that fast; wait.
+    await new Promise((resolve) => setTimeout(resolve, 400));
   }
 
   async tap(at: { x: number; y: number }) {

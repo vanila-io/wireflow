@@ -296,20 +296,21 @@ function Editor() {
               </svg>
               <span className="text-sm font-bold text-ink">Wireflow</span>
             </a>
-            <span className="text-xs text-ink-soft">
+            <span className="hidden text-xs text-ink-soft sm:inline">
               {cards} cards · {edges.length} connections
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className={`text-xs ${saveFailed ? 'font-semibold text-rose-600' : 'text-ink-soft'}`} role="status">
+            {/* On a phone only a failed save is shown; the header has no room for more. */}
+            <span className={`text-xs ${saveFailed ? 'font-semibold text-rose-600' : 'hidden text-ink-soft sm:inline'}`} role="status">
               {saveFailed ? 'Not saved in this browser' : 'All changes saved'}
             </span>
             <button
               onClick={() => void ai.toggle()}
               aria-expanded={ai.open}
-              aria-label={ai.failed ? LOAD_FAILED : "AI assistant"}
-              title={ai.failed ? LOAD_FAILED : "AI assistant (your own Anthropic key)"}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 transition ${ai.failed ? "text-rose-600 ring-rose-300" : "text-wire-blue ring-wire-blue/40 hover:bg-wire-lavender"}`}
+              aria-label={ai.failed ? LOAD_FAILED : 'AI assistant'}
+              title={ai.failed ? LOAD_FAILED : 'AI assistant (your own Anthropic key)'}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 transition ${ai.failed ? 'text-rose-600 ring-rose-300' : 'text-wire-blue ring-wire-blue/40 hover:bg-wire-lavender'}`}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 <path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9z" />
@@ -319,7 +320,7 @@ function Editor() {
             <button
               onClick={chooseFile}
               title="Open a wireflow.json file"
-              className="rounded-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-wire-blue ring-1 ring-wire-blue/40 transition hover:bg-wire-lavender"
+              className="hidden rounded-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-wire-blue ring-1 ring-wire-blue/40 transition hover:bg-wire-lavender sm:block"
             >
               Open file
             </button>
@@ -335,7 +336,7 @@ function Editor() {
                 if (file) void openFile(file);
               }}
             />
-            <button onClick={exportJson} title="Save the diagram as wireflow.json" className="rounded-md bg-wire-blue px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-wire-blue-dark">
+            <button onClick={exportJson} title="Save the diagram as wireflow.json" className="hidden rounded-md bg-wire-blue px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-wire-blue-dark sm:block">
               Export JSON
             </button>
           </div>
@@ -398,7 +399,7 @@ function Editor() {
                 )}
               </div>
             )}
-            <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl bg-white px-2 py-1.5 shadow-[0_8px_30px_rgba(29,28,40,0.15)] ring-1 ring-wire-border">
+            <div className="absolute bottom-5 left-1/2 flex w-max max-w-[calc(100%-1rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-1 rounded-xl bg-white px-2 py-1.5 shadow-[0_8px_30px_rgba(29,28,40,0.15)] ring-1 ring-wire-border">
               <ToolbarButton label="Undo" onClick={store.undo} />
               <ToolbarButton label="Redo" onClick={store.redo} />
               <span className="mx-1 h-5 w-px bg-wire-border" />
