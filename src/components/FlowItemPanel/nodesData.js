@@ -105,409 +105,511 @@ export default [
   {
     label: 'Article',
     img: articleImage1,
+    category: 'Article',
   },
   {
     label: 'Article',
     img: articleImage2,
+    category: 'Article',
   },
   {
     label: 'Article',
     img: articleImage3,
+    category: 'Article',
   },
   {
     label: 'Article',
     img: articleImage4,
+    category: 'Article',
   },
   {
     label: 'Article',
     img: articleImage5,
+    category: 'Article',
   },
   {
     label: 'Article',
     img: articleImage6,
+    category: 'Article',
   },
   {
     label: 'Blog',
     img: blogImage1,
+    category: 'Blog',
   },
   {
     label: 'Blog',
     img: blogImage2,
+    category: 'Blog',
   },
   {
     label: 'Blog',
     img: blogImage3,
+    category: 'Blog',
   },
   {
     label: 'Blog',
     img: blogImage4,
+    category: 'Blog',
   },
   {
     label: 'Blog',
     img: blogImage5,
+    category: 'Blog',
   },
   {
     label: 'Blog',
     img: blogImage6,
+    category: 'Blog',
   },
   {
     label: 'Blog',
     img: blogImage7,
+    category: 'Blog',
   },
   {
     label: 'Blog',
     img: blogImage8,
+    category: 'Blog',
   },
   {
     label: 'Blog video',
     img: blogImage9,
+    category: 'Blog',
   },
   {
     label: 'Blog video',
     img: blogImage10,
+    category: 'Blog',
   },
   {
     label: 'Blog',
     img: blogImage11,
+    category: 'Blog',
   },
   {
     label: 'Blog video',
     img: blogImage12,
+    category: 'Blog',
   },
   {
     label: 'Cart pop up',
     img: cartPopup,
+    category: 'E-Commerce',
   },
   {
     label: 'Cart',
     img: cart,
+    category: 'E-Commerce',
   },
   {
     label: 'Checkout',
     img: checkout,
+    category: 'E-Commerce',
   },
   {
     label: 'Checkout Complete',
     img: complete,
+    category: 'E-Commerce',
   },
   {
     label: 'Checkout Delivery',
     img: delivery,
+    category: 'E-Commerce',
   },
   {
     label: 'Product Item',
     img: ecomItem2,
+    category: 'E-Commerce',
   },
   {
     label: 'Product Item',
     img: ecomItem,
+    category: 'E-Commerce',
   },
   {
     label: 'Paypal',
     img: paypal,
+    category: 'E-Commerce',
   },
   {
     label: 'Product Item',
     img: products1,
+    category: 'E-Commerce',
   },
   {
     label: 'Product Item',
     img: products2,
+    category: 'E-Commerce',
   },
   {
     label: 'Product Item',
     img: products3,
+    category: 'E-Commerce',
   },
   {
     label: 'Rate',
     img: rate,
+    category: 'E-Commerce',
   },
   {
     label: 'Feature',
     img: feature1,
+    category: 'Features',
   },
   {
     label: 'Feature',
     img: feature2,
+    category: 'Features',
   },
   {
     label: 'Feature',
     img: feature3,
+    category: 'Features',
   },
   {
     label: 'Feature',
     img: feature4,
+    category: 'Features',
   },
   {
     label: 'Feature',
     img: feature5,
+    category: 'Features',
   },
   {
     label: 'Feature',
     img: feature6,
+    category: 'Features',
   },
   {
     label: 'Gallery Image',
     img: gallery1,
+    category: 'Gallery',
   },
   {
     label: 'Gallery Image',
     img: gallery2,
+    category: 'Gallery',
   },
   {
     label: 'Gallery Image',
     img: gallery3,
+    category: 'Gallery',
   },
   {
     label: 'Gallery Image',
     img: gallery4,
+    category: 'Gallery',
   },
   {
     label: 'Gallery Image',
     img: gallery5,
+    category: 'Gallery',
   },
   {
     label: 'Gallery Image',
     img: gallery6,
+    category: 'Gallery',
   },
   {
     label: 'Header Image',
     img: header1,
+    category: 'Header',
   },
   {
     label: 'Header Image',
     img: header2,
+    category: 'Header',
   },
   {
     label: 'Header Video',
     img: header3,
+    category: 'Header',
   },
   {
     label: 'Header Video',
     img: header4,
+    category: 'Header',
   },
   {
     label: 'Header Image',
     img: header5,
+    category: 'Header',
   },
   {
     label: 'Header Image',
     img: header6,
+    category: 'Header',
   },
   {
     label: 'Not Found 404',
     img: error404,
+    category: 'Misc',
   },
   {
     label: 'About',
     img: about,
+    category: 'Misc',
   },
   {
     label: 'Analitycs Chart',
     img: analitycs,
+    category: 'Misc',
   },
   {
     label: 'Calender Schedule',
     img: calender,
+    category: 'Misc',
   },
   {
     label: 'Cards',
     img: cards,
+    category: 'Misc',
   },
   {
     label: 'Contact',
     img: contact,
+    category: 'Misc',
   },
   {
     label: 'Counter Timer',
     img: counter,
+    category: 'Misc',
   },
   {
     label: 'Error Fail',
     img: error,
+    category: 'Misc',
   },
   {
     label: 'FAQS',
     img: faqs,
+    category: 'Misc',
   },
   {
     label: 'Forum',
     img: forum,
+    category: 'Misc',
   },
   {
     label: 'Loading Progress',
     img: loading,
+    category: 'Misc',
   },
   {
     label: 'Price',
     img: price1,
+    category: 'Misc',
   },
   {
     label: 'Price',
     img: price2,
+    category: 'Misc',
   },
   {
     label: 'Loading Progress',
     img: progress,
+    category: 'Misc',
   },
   {
     label: 'Search Results',
     img: searchresults,
+    category: 'Misc',
   },
   {
     label: 'Search',
     img: search,
+    category: 'Misc',
   },
   {
     label: 'Settings',
     img: settings,
+    category: 'Misc',
   },
   {
     label: 'Sitemap',
     img: sitemap,
+    category: 'Misc',
   },
   {
     label: 'Socials',
     img: socials,
+    category: 'Misc',
   },
   {
     label: 'Steps',
     img: steps,
+    category: 'Misc',
   },
   {
     label: 'Subscribe',
     img: subscribde,
+    category: 'Misc',
   },
   {
     label: 'Tags',
     img: tags,
+    category: 'Misc',
   },
   {
     label: 'Team',
     img: team,
+    category: 'Misc',
   },
   {
     label: 'Under Contruction',
     img: underContruction,
+    category: 'Misc',
   },
   {
     label: 'Files',
     img: files,
+    category: 'Multimedia',
   },
   {
     label: 'Media Songs',
     img: songs1,
+    category: 'Multimedia',
   },
   {
     label: 'Media Songs',
     img: songs2,
+    category: 'Multimedia',
   },
   {
     label: 'Media Songs',
     img: songs3,
+    category: 'Multimedia',
   },
   {
     label: 'Upload Files',
     img: uploadFiles,
+    category: 'Multimedia',
   },
   {
     label: 'Upload Image',
     img: uploadImage,
+    category: 'Multimedia',
   },
   {
     label: 'Video Player',
     img: videoPlayer1,
+    category: 'Multimedia',
   },
   {
     label: 'Video Player',
     img: videoPlayer2,
+    category: 'Multimedia',
   },
   {
     label: 'Video',
     img: videos1,
+    category: 'Multimedia',
   },
   {
     label: 'Video',
     img: videos2,
+    category: 'Multimedia',
   },
   {
     label: 'Video',
     img: videos3,
+    category: 'Multimedia',
   },
   {
     label: 'Video',
     img: videos4,
+    category: 'Multimedia',
   },
   {
     label: 'Forgot Password',
     img: forgotPassword1,
+    category: 'Sign in',
   },
   {
     label: 'Forgot Password',
     img: forgotPassword2,
+    category: 'Sign in',
   },
   {
     label: 'Sign In',
     img: signin1,
+    category: 'Sign in',
   },
   {
     label: 'Sign In',
     img: signin2,
+    category: 'Sign in',
   },
   {
     label: 'Sign Up',
     img: signUp1,
+    category: 'Sign in',
   },
   {
     label: 'Sign Up',
     img: signUp2,
+    category: 'Sign in',
   },
   {
     label: 'Chat',
     img: chat,
+    category: 'Socials',
   },
   {
     label: 'Comments',
     img: comments,
+    category: 'Socials',
   },
   {
     label: 'Connection',
     img: connection,
+    category: 'Socials',
   },
   {
     label: 'Feeds',
     img: feeds,
+    category: 'Socials',
   },
   {
     label: 'Profile',
     img: profile1,
+    category: 'Socials',
   },
   {
     label: 'Profile',
     img: profile2,
+    category: 'Socials',
   },
   {
     label: 'Profile',
     img: profile3,
+    category: 'Socials',
   },
   {
     label: 'Profile',
     img: profile4,
+    category: 'Socials',
   },
   {
     label: 'User Settings',
     img: userSettings2,
+    category: 'Socials',
   },
   {
     label: 'User Settings',
     img: userSettings,
+    category: 'Socials',
   },
   {
     label: 'User',
     img: users2,
+    category: 'Socials',
   },
   {
     label: 'User',
     img: users,
+    category: 'Socials',
   },
 ];
