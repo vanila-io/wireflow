@@ -1,4 +1,5 @@
-Review pass of PR #110 (offline-pwa), branch head 229fc10. Chromium 156, Firefox 157.
+Review pass of PR #110 (offline-pwa), branch head e43e423 (app code as of 229fc10; e43e423 only adds a test check).
+Chromium 156, Firefox 157.
 
 Suite
   pnpm lint                                              clean
@@ -18,6 +19,7 @@ Do the new tests catch the bugs? Each line: test, run against a changed source, 
   new worker with matchAll() after claim()          + kill-switch leftovers test     FAILED: the fresh page was reloaded
   new worker without the SPA fallback guard         + SPA fallback test              FAILED
   new worker that always skips waiting              + update test                    FAILED
+  update test, update activated without the click's blur (a forced reload)          FAILED: the half-typed label was lost
 
 Cloudflare (wrangler dev 4.148.0, workerd, env staging) -> review-pass.json "cloudflare"
   /index.html is a 307 to /; Workbox stores a non-redirected copy (118 entries).
@@ -36,6 +38,9 @@ Firefox, repo e2e spec (Playwright Firefox):
   not runnable there: the installability test (CDP), and the tests that route the worker script or
           worker-initiated requests (Chromium-only Playwright features); covered above with real deploys.
 WebKit: not run (the host lacks WebKit's system libraries; needs sudo).
+
+Mid-edit, Chromium and Firefox (real deploys): a label typed but not committed when Reload is clicked is
+saved (the click blurs the field first). Also asserted by the e2e update test.
 
 pnpm dev (Vite dev server): no service worker registration, 14/14 toolbar icons resolve, no third-party
 requests, no console errors.
