@@ -110,6 +110,13 @@ describe('planOps', () => {
     ok([{ op: 'ungroup', id: 'g' }, { op: 'update_screen', id: 'b', label: 'x' }, { op: 'group', id: 'g2', label: 'All', members: ['a', 'b', 'c'] }]);
   });
 
+  // Review finding: these batches were refused as a whole.
+  it('accepts removing ids that an earlier id of the same batch already removed', () => {
+    const plan = ok([{ op: 'remove', ids: ['a', 'e1'] }, { op: 'remove', ids: ['g', 'b', 'c'] }]);
+    expect(applyActions(base(), plan.actions)).toEqual({ nodes: [], edges: [] });
+    bad([{ op: 'remove', ids: ['a', 'never-existed'] }]);
+  });
+
   it('only groups members that share a parent', () => {
     bad([{ op: 'group', id: 'g2', label: 'x', members: ['a', 'b'] }]);
     ok([{ op: 'group', id: 'g2', label: 'x', members: ['b', 'c'] }]);

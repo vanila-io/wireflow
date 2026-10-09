@@ -232,6 +232,10 @@ export function planOps(input: unknown, data: Diagram): Plan {
     for (const [eid, e] of E) if (e.source === id || e.target === id) E.delete(eid);
   };
 
+  // Every id the batch has seen, so a removal can tell "already removed by an
+  // earlier id in this batch" (fine) from "never existed" (an error).
+  const known = new Set([...N.keys(), ...E.keys(), ...G.keys()]);
+
   // Auto-placement: a row to the right of everything already on the canvas.
   let cursor: { x: number; y: number } | null = null;
   const autoPlace = () => {
@@ -256,6 +260,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
     const newId = (id: unknown) => {
       if (typeof id !== 'string' || !ID_RE.test(id)) return fail(i, name, `invalid id ${JSON.stringify(id)}`);
       if (exists(id)) return fail(i, name, `id "${id}" already exists`);
+      known.add(id);
       return true;
     };
     const coord = (k: string) => {
@@ -363,6 +368,9 @@ export function planOps(input: unknown, data: Diagram): Plan {
           if (N.has(id)) removeNode(id);
           else if (E.has(id)) E.delete(id);
           else if (G.has(id)) removeGroup(id);
+          // Already removed with an earlier id of this batch (an edge of a removed
+          // screen, a screen in a removed group): nothing left to do.
+          else if (known.has(id)) continue;
           else return fail(i, name, `no screen, connection or group "${id}"`);
           actions.push({ kind: 'remove', id });
         }
