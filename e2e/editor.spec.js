@@ -15,6 +15,11 @@ import {
   connect,
 } from './helpers.js';
 
+// Saved nodes are not always in the order they were added: an id made of digits
+// only (such as "68642545") is an integer-like object key, and JavaScript lists
+// those first. The tests place nodes left to right, so read them in that order.
+const leftToRight = (nodes) => nodes.toSorted((p, q) => p.x - q.x);
+
 test('app shell loads with templates, toolbar, minimap and canvas panel', async ({ page }) => {
   await openEditor(page);
 
@@ -85,12 +90,12 @@ test('renaming a node is saved, survives a reload and does not leak into other n
   const cart = await onCanvas(page, 650, 300);
   await dropTemplate(page, 0, landing);
   await dropTemplate(page, 19, cart);
-  await expect.poll(async () => (await saved(page))?.nodes.map((node) => node.label)).toEqual(['Article', 'Cart']);
+  await expect.poll(async () => leftToRight((await saved(page))?.nodes ?? []).map((node) => node.label)).toEqual(['Article', 'Cart']);
 
   await page.mouse.click(landing.x, landing.y);
   await nodeLabelInput(page).fill('Landing page');
   await nodeLabelInput(page).blur();
-  await expect.poll(async () => (await saved(page)).nodes[0].label).toBe('Landing page');
+  await expect.poll(async () => leftToRight((await saved(page)).nodes)[0].label).toBe('Landing page');
 
   // Switching straight to another node must show (and on blur keep) that node's own label.
   await page.mouse.click(cart.x, cart.y);
@@ -100,7 +105,7 @@ test('renaming a node is saved, survives a reload and does not leak into other n
 
   await page.reload();
   await expect(page.locator('#canvas_1')).toBeVisible();
-  expect((await saved(page)).nodes.map((node) => node.label)).toEqual(['Landing page', 'Cart']);
+  expect(leftToRight((await saved(page)).nodes).map((node) => node.label)).toEqual(['Landing page', 'Cart']);
   await page.mouse.click(landing.x, landing.y);
   await expect(panelTitle(page)).toHaveText(['Node']);
   await expect(nodeLabelInput(page)).toHaveValue('Landing page');
@@ -113,7 +118,7 @@ test('connecting two nodes creates an edge whose shape, size and color are edita
   await dropTemplate(page, 0, a);
   await dropTemplate(page, 1, b);
   await expect.poll(async () => (await saved(page))?.nodes.length).toBe(2);
-  const [source, target] = (await saved(page)).nodes.map((node) => node.id);
+  const [source, target] = leftToRight((await saved(page)).nodes).map((node) => node.id);
 
   await connect(page, a, b);
   await expect
@@ -179,8 +184,13 @@ test('edge color can be typed as hex and reused from the colors already in the d
   await expect.poll(async () => (await saved(page))?.nodes.length).toBe(3);
   await connect(page, a, b);
   await connect(page, b, c);
-  await expect.poll(async () => (await saved(page)).edges.map((edge) => edge.color)).toEqual(['#a4b2c0', '#a4b2c0']);
-  const colors = async () => (await saved(page)).edges.map((edge) => edge.color);
+  // Edge colors left to right (by source node): a→b, then b→c.
+  const colors = async () => {
+    const { nodes, edges } = await saved(page);
+    const x = (id) => nodes.find((node) => node.id === id).x;
+    return edges.toSorted((p, q) => x(p.source) - x(q.source)).map((edge) => edge.color);
+  };
+  await expect.poll(colors).toEqual(['#a4b2c0', '#a4b2c0']);
   const presets = (section) =>
     colorPicker(page).locator('.ant-collapse-item').filter({ hasText: section }).locator('.ant-color-picker-presets-color');
 
@@ -326,13 +336,13 @@ test('header shortcuts change the selected node once and never an edge', async (
     await expect(nodeLabelInput(page)).toHaveValue(label);
   }
   await page.keyboard.press('Control+h');
-  await expect.poll(async () => (await saved(page)).nodes[0].shape).toBe('node-image-without-header');
+  await expect.poll(async () => leftToRight((await saved(page)).nodes)[0].shape).toBe('node-image-without-header');
 
   // So one Undo brings the header back. Undo is not autosaved: rename to save.
   await command(page, 'undo').click();
   await nodeLabelInput(page).fill('Landing');
   await nodeLabelInput(page).blur();
-  await expect.poll(async () => (await saved(page)).nodes[0]).toMatchObject({ label: 'Landing', shape: 'node-image-header', size: [96, 88] });
+  await expect.poll(async () => leftToRight((await saved(page)).nodes)[0]).toMatchObject({ label: 'Landing', shape: 'node-image-header', size: [96, 88] });
 
   // With the edge selected the shortcut does nothing; the label edit saves the edge.
   await page.mouse.click((a.x + b.x) / 2, a.y);
