@@ -106,7 +106,7 @@ After one online visit to `/app`, the editor works offline. To get a window of i
 
 - Cards name their template by the stable id in `lib/graphics.json`; image URLs are not stored and always come from this build.
 - Groups are React Flow parent nodes: a member's `position` is relative to its group (`parentId`), and a group's frame always wraps its members. Connections join cards only.
-- A connection's `type` is its line shape (`step`: polyline, `smoothstep`: rounded polyline; none: smooth) and `style.strokeWidth` its width (1 to 10; none: 1 px). The defaults are not stored.
+- A connection's `type` is its line shape (`step`: polyline, `smoothstep`: rounded polyline; none: smooth) and `style.strokeWidth` its width (1 to 10; none: 2 px). A connection without a `style.stroke` is drawn #a3a8c3. The defaults are not stored.
 - Open file also reads Export JSON from before version 2 (plain React Flow `{nodes, edges}`), the earlier gg-editor app's `{"format": "wireflow", "version": 1}` files with `Category/Name` template keys, and its plain G6 `{nodes, edges, groups}` (`lib/legacy-templates.json` maps all 102 old keys; layouts scale from 96 to 220 px cards; groups, line shapes and widths are kept).
 - It refuses non-JSON, other formats, newer versions, bad or duplicate ids, missing positions, unknown templates, broken groups or group loops, more than 2000 items or 5 MB; asks before replacing a diagram; keeps the current one if storage refuses the new one; drops loose connections with a message.
 
