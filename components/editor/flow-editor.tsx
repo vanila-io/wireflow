@@ -15,7 +15,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, serializeFile, type Opened } from "@/lib/diagram/file";
-import { isCard, isGroup, isNote, NOTE_SIZE, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
+import { cardSize, CARD_WIDTH, isCard, isGroup, isNote, NOTE_SIZE, OWN_IMAGE, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
@@ -46,6 +46,7 @@ import Menu from "./menu";
 import NoteNodeComp from "./note-node";
 import NotePanel from "./note-panel";
 import Notices, { notice, type Notice } from "./notices";
+import { IMAGE_ACCEPT, IMAGE_TYPES, ImageError, megabytes, prepareImage, STORAGE_CHARS, storageUse } from "./own-image";
 import SelectionChip from "./selection-chip";
 import ShortcutsPanel from "./shortcuts-panel";
 import { StoreContext, useStoreState } from "./store-context";
@@ -267,10 +268,61 @@ function EditorInner({ loaded }: { loaded: Start }) {
     [store, screenToFlowPosition]
   );
 
-  // What a sidebar tile adds: a template card, or a note (#83). `at` is the
-  // top-left corner where it was dropped; a click adds it near the middle of the canvas.
+  // The user's own image as a card (#86, #69): scaled down and kept in this
+  // browser's storage, so it is refused when that would be (nearly) full, and
+  // the user is warned when it is getting full. `point` is where it was dropped.
+  const imageInput = useRef<HTMLInputElement>(null);
+  const addImageFile = useCallback(
+    async (file: File, point?: { x: number; y: number }) => {
+      if (lock.readOnly) {
+        say(notice(`Couldn't add ${file.name}: this tab doesn't save (see the message above).`, "error"));
+        return;
+      }
+      let image;
+      try {
+        image = await prepareImage(file);
+      } catch (err) {
+        const reason = err instanceof ImageError ? err.message : "It couldn't be read as an image.";
+        say(notice(`Couldn't add ${file.name}. ${reason}`, "error"));
+        return;
+      }
+      const local = browserStorage("localStorage");
+      const used = local ? storageUse(local) : 0;
+      if (used + image.src.length > STORAGE_CHARS * 0.95) {
+        say(
+          notice(
+            `Couldn't add ${file.name}: this browser's storage for Wireflow is nearly full (${megabytes(used)} of about ${megabytes(STORAGE_CHARS)} MB). Remove an image you don't need, or use Export JSON to keep a copy and start a new diagram.`,
+            "error"
+          )
+        );
+        return;
+      }
+      const { height } = cardSize({ graphicId: OWN_IMAGE, ratio: image.ratio });
+      const centre = screenToFlowPosition(point ?? { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      store.addImage(image.src, image.ratio, image.label, { x: centre.x - CARD_WIDTH / 2, y: centre.y - height / 2 });
+      if (store.getState().saveFailed) {
+        store.undo();
+        say(notice(`Couldn't add ${file.name}: this browser's storage is full, so the diagram is unchanged.`, "error"));
+        return;
+      }
+      const now = local ? storageUse(local) : 0;
+      if (now > STORAGE_CHARS * 0.8) {
+        say(
+          notice(
+            `Wireflow now uses ${megabytes(now)} of the about ${megabytes(STORAGE_CHARS)} MB this browser keeps for it, mostly for images. Use Export JSON to keep a copy: once it is full, changes are no longer saved here.`
+          )
+        );
+      }
+    },
+    [store, lock, say, screenToFlowPosition]
+  );
+
+  // What a sidebar tile adds: a template card, a note (#83), or the user's own
+  // image (#86, which asks for the file first). `at` is the top-left corner
+  // where it was dropped; a click adds it near the middle of the canvas.
   const addItem = useCallback(
     (item: Addable, at?: { x: number; y: number }) => {
+      if (item === "image") return imageInput.current?.click();
       if (item !== "note") return addGraphic(item, at);
       const pos =
         at ?? screenToFlowPosition({ x: window.innerWidth / 2 - NOTE_SIZE.width / 2, y: window.innerHeight / 2 });
@@ -424,12 +476,15 @@ function EditorInner({ loaded }: { loaded: Start }) {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
+      // An image file dragged in from the computer becomes a card where it lands.
+      const file = [...event.dataTransfer.files].find((f) => IMAGE_TYPES.includes(f.type));
+      if (file) return void addImageFile(file, { x: event.clientX, y: event.clientY });
       const id = event.dataTransfer.getData(DRAG_CARD);
       const extra = event.dataTransfer.getData(DRAG_ADD);
       const item: Addable | undefined = extra === "note" ? extra : id ? graphicById(id) : undefined;
       if (item) dropAt(item, { x: event.clientX, y: event.clientY });
     },
-    [dropAt]
+    [dropAt, addImageFile]
   );
 
   // The earlier editor's toolbar commands (gg-editor's 14): undo and redo and
@@ -593,6 +648,18 @@ function EditorInner({ loaded }: { loaded: Start }) {
             Open file
           </button>
           <input
+            ref={imageInput}
+            type="file"
+            accept={IMAGE_ACCEPT}
+            hidden
+            aria-label="Image to add as a card"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void addImageFile(file);
+            }}
+          />
+          <input
             ref={fileInput}
             type="file"
             accept=".json,application/json"
@@ -650,7 +717,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
           onDrop={onDrop}
           onDragOver={(e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = "move";
+            e.dataTransfer.dropEffect = e.dataTransfer.types.includes("Files") ? "copy" : "move";
           }}
         >
           <ReactFlow

@@ -4,7 +4,8 @@
 // breaks them:
 //
 // - every node and edge has a non-empty string id, unique across the diagram;
-// - a card shows a catalog graphic, and its image URL is the catalog's;
+// - a card shows a catalog graphic, and its image URL is the catalog's, or the
+//   user's own image as a JPEG, PNG or WebP data URL of at most MAX_IMAGE_CHARS;
 // - a note has text (at most MAX_NOTE_TEXT characters) and a size within NOTE_BOUNDS;
 // - a parentId names an existing group, parent chains have no loops, and
 //   parents come before their children (React Flow requires it);
@@ -23,8 +24,12 @@ import {
   EDGE_SHAPES,
   MAX_EDGE_WIDTH,
   MIN_EDGE_WIDTH,
+  IMAGE_SRC_RE,
+  imageRatio,
+  MAX_IMAGE_CHARS,
   MAX_NOTE_TEXT,
   NOTE_BOUNDS,
+  OWN_IMAGE,
   NOTE_SIZE,
   isConnectable,
   isGroup,
@@ -54,6 +59,7 @@ function card(raw: Obj, id: string): CardNode | undefined {
   const pos = position(raw.position);
   const data = raw.data;
   if (raw.type !== "flow" || !pos || !isObject(data) || !isId(data.graphicId)) return undefined;
+  if (data.graphicId === OWN_IMAGE) return imageCard(raw, id, pos, data);
   const graphic = graphicById(data.graphicId);
   if (!graphic) return undefined;
   const headerText = text(data.headerText, MAX_LABEL);
@@ -68,6 +74,28 @@ function card(raw: Obj, id: string): CardNode | undefined {
       label: text(data.label, MAX_LABEL) ?? graphic.label,
       ...(headerText !== undefined && { headerText }),
       ...(typeof data.showHeader === "boolean" && { showHeader: data.showHeader }),
+    },
+  };
+}
+
+// A card with the user's own image: only an image data URL, never a link.
+function imageCard(raw: Obj, id: string, pos: { x: number; y: number }, data: Obj): CardNode | undefined {
+  const src = data.src;
+  if (typeof src !== "string" || src.length > MAX_IMAGE_CHARS || !IMAGE_SRC_RE.test(src)) return undefined;
+  const label = text(data.label, MAX_LABEL) || "Image";
+  const headerText = text(data.headerText, MAX_LABEL);
+  return {
+    id,
+    type: "flow",
+    position: pos,
+    ...(isId(raw.parentId) && { parentId: raw.parentId }),
+    data: {
+      graphicId: OWN_IMAGE,
+      src,
+      label,
+      ...(headerText !== undefined && { headerText }),
+      ...(typeof data.showHeader === "boolean" && { showHeader: data.showHeader }),
+      ratio: imageRatio(isNum(data.ratio) ? data.ratio : undefined),
     },
   };
 }

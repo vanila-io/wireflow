@@ -11,6 +11,7 @@
 // except that a card keeps only
 // its template id (data.graphicId, the stable ids in lib/graphics.json such as
 // "e-commerce-cart") and not the image URL, which this build derives from it.
+// A card with the user's own image keeps the image itself (a data URL).
 //
 // Open file also reads, so that no earlier file is stranded:
 // - Export JSON from before this change: React Flow's plain {nodes, edges};
@@ -19,11 +20,11 @@
 //   "<folder>/<file>" template keys;
 // - that app's plain G6 {nodes, edges, groups} (its localStorage["data"]).
 import { fromG6, legacyGraphic, type G6Diagram } from "./legacy";
-import { isCard, type Diagram } from "./model";
+import { isCard, isOwnImage, OWN_IMAGE, type Diagram } from "./model";
 import { dropProto, enforceRules, enforceRulesOnLoad, type Dropped } from "./rules";
 
 export const FILE_FORMAT = "wireflow";
-// 3: notes (#83). Version 2 files open unchanged.
+// 3: notes (#83) and the user's own images (#86). Version 2 files open unchanged.
 export const FILE_VERSION = 3;
 export const FILE_NAME = "wireflow.json";
 // Anything larger can't be a hand-made diagram and could hang the tab.
@@ -36,7 +37,7 @@ export class DiagramFileError extends Error {}
 export function serializeFile(diagram: Diagram): string {
   const { nodes, edges } = enforceRules(diagram).diagram;
   const fileNodes = nodes.map((n) => {
-    if (!isCard(n)) return n;
+    if (!isCard(n) || isOwnImage(n.data)) return n;
     const data: Partial<typeof n.data> = { ...n.data };
     delete data.src;
     return { ...n, data };
@@ -104,7 +105,9 @@ function parseCurrent(diagram: Obj): Obj {
     check(isId(data.graphicId), `The card "${n.id}" doesn't say which screen template it shows.`);
     check(
       enforceRules({ nodes: [n], edges: [] }).diagram.nodes.length === 1,
-      `It uses a screen template this version of Wireflow doesn't have: "${data.graphicId}".`
+      data.graphicId === OWN_IMAGE
+        ? `The card "${n.id}" has an image Wireflow can't show (it takes JPEG, PNG or WebP data, up to about 500 KB).`
+        : `It uses a screen template this version of Wireflow doesn't have: "${data.graphicId}".`
     );
     for (const key of ["label", "headerText"]) {
       check(

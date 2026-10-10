@@ -21,6 +21,7 @@ import {
   isConnectable,
   isGroup,
   makeCard,
+  makeImageCard,
   makeNote,
   newId,
   type Diagram,
@@ -214,6 +215,18 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
         const into = dropTargets(added.nodes, [card.id])[card.id];
         return into ? setParents(added, { [card.id]: into }) : added;
       });
+    },
+    /** Add a card with the user's own image (a data URL), selected; dropped inside a group's frame, it joins that group. */
+    addImage(src: string, ratio: number, label: string, position: { x: number; y: number }) {
+      const card = makeImageCard(src, ratio, label, position);
+      return apply(
+        (d) => {
+          const added = { nodes: [...d.nodes, card], edges: d.edges };
+          const into = dropTargets(added.nodes, [card.id])[card.id];
+          return into ? setParents(added, { [card.id]: into }) : added;
+        },
+        { select: [card.id] }
+      );
     },
     /** Add an empty note at a canvas position, selected (so it opens for typing); dropped inside a group's frame, it joins that group. */
     addNote(position: { x: number; y: number }) {

@@ -265,8 +265,8 @@ const ALLOWED: Record<string, string[]> = {
   remove: ["ids"],
 };
 
-const sizeFor = (template: string, header: boolean): [number, number] => {
-  const { width, height } = cardSize({ graphicId: template, showHeader: header });
+const sizeFor = (template: string, header: boolean, ratio?: number): [number, number] => {
+  const { width, height } = cardSize({ graphicId: template, showHeader: header, ratio });
   return [width, height];
 };
 
@@ -294,7 +294,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
 
   // Working copy of the diagram so each operation sees the effect of the previous
   // ones. N holds what a connection can join: screens, and notes (no template).
-  type S = Screen & { kind: "screen" | "note"; template: string; header: boolean };
+  type S = Screen & { kind: "screen" | "note"; template: string; header: boolean; ratio?: number };
   const boxes = absoluteBoxes(data.nodes);
   const N = new Map<string, S>(
     data.nodes.filter((n) => isCard(n) || isNote(n)).map((n) => {
@@ -309,6 +309,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
           parent: n.parentId ?? null,
           template: isCard(n) ? n.data.graphicId : "",
           header: isCard(n) ? n.data.showHeader !== false : false,
+          ...(isCard(n) && { ratio: n.data.ratio }),
         },
       ];
     })
@@ -433,7 +434,8 @@ export function planOps(input: unknown, data: Diagram): Plan {
         if (has(o, "y")) action.y = screen.y = o.y as number;
         if (has(o, "header")) action.header = screen.header = o.header as boolean;
         if (Object.keys(action).length === 2) return fail(i, name, "nothing to update");
-        screen.size = sizeFor(screen.template, screen.header);
+        if (has(o, "template")) delete screen.ratio;
+        screen.size = sizeFor(screen.template, screen.header, screen.ratio);
         actions.push(action);
         return;
       }

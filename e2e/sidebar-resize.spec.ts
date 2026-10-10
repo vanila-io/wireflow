@@ -6,10 +6,10 @@ import { expect, openEditor, test } from "./fixtures";
 const sidebar = (page: Page) => page.getByRole("complementary", { name: "Screen templates" });
 const handle = (page: Page) => page.getByRole("separator", { name: "Resize the templates panel" });
 const width = async (page: Page) => Math.round((await sidebar(page).boundingBox())!.width);
-// Columns in the first row of thumbnails.
+// Columns in the first row of tiles.
 const columns = (page: Page) =>
   sidebar(page)
-    .locator('button[draggable="true"]')
+    .locator("#graphics-panel-list > button")
     .evaluateAll((tiles) => {
       const top = tiles[0].getBoundingClientRect().top;
       return tiles.filter((t) => Math.abs(t.getBoundingClientRect().top - top) < 1).length;

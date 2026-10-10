@@ -1,12 +1,12 @@
 "use client";
 
-import { StickyNote } from "lucide-react";
+import { ImagePlus, StickyNote } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { categoryLabels, graphicsByCategory } from "@/lib/graphics";
 import type { Graphic } from "@/lib/graphics";
 
-/** What a tile adds: a screen template, or a note (#83). */
-export type Addable = Graphic | "note";
+/** What a tile adds: a screen template, a note (#83), or the user's own image (#86). */
+export type Addable = Graphic | "note" | "image";
 
 type Props = {
   onAddCard: (item: Addable) => void;
@@ -15,14 +15,31 @@ type Props = {
 };
 
 // Tiles that add something other than a template. They lead the "All" list, and
-// a search finds them by a word they start with.
-const EXTRAS: { item: Exclude<Addable, Graphic>; label: string; words: string[]; icon: ReactNode; className: string }[] = [
+// a search finds them by a word they start with. "Your image" asks for a file,
+// so it is a plain button (an image file can also be dropped on the canvas).
+const EXTRAS: {
+  item: Exclude<Addable, Graphic>;
+  label: string;
+  title: string;
+  words: string[];
+  icon: ReactNode;
+  className: string;
+}[] = [
   {
     item: "note",
     label: "Note",
+    title: "Note - drag onto canvas or click to add",
     words: ["note", "text", "comment", "sticky"],
     icon: <StickyNote size={20} aria-hidden />,
     className: "bg-[#fffcf0] ring-[#e8dcaa]",
+  },
+  {
+    item: "image",
+    label: "Your image",
+    title: "Your image - pick a picture to add as a card (or drop one onto the canvas)",
+    words: ["image", "picture", "photo", "upload", "screenshot", "mobile", "phone", "custom"],
+    icon: <ImagePlus size={20} aria-hidden />,
+    className: "bg-wire-lavender/60 ring-wire-border",
   },
 ];
 
@@ -227,7 +244,12 @@ export default function GraphicsPanel({ onAddCard, onTouchDrop }: Props) {
         className="grid flex-1 grid-cols-[repeat(auto-fill,minmax(90px,1fr))] content-start gap-2 overflow-y-auto p-3"
       >
         {extras.map((x) => (
-          <button key={x.item} {...tile(x.item)} title={`${x.label} - drag onto canvas or click to add`} className={TILE_CLASS}>
+          <button
+            key={x.item}
+            {...(x.item === "image" ? { onClick: () => onAddCard(x.item) } : tile(x.item))}
+            title={x.title}
+            className={x.item === "image" ? `${TILE_CLASS} cursor-pointer` : TILE_CLASS}
+          >
             <span
               className={`flex aspect-[127/100] w-full flex-col items-center justify-center gap-1.5 rounded-sm text-ink-soft ring-1 ${x.className}`}
             >
