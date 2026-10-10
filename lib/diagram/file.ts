@@ -2,7 +2,7 @@
 //
 //   {
 //     "format": "wireflow",
-//     "version": 2,
+//     "version": 4,
 //     "diagram": { "nodes": [...], "edges": [...], "settings": {...} }
 //   }
 //
@@ -25,8 +25,9 @@ import { dropProto, enforceRules, enforceRulesOnLoad, type Dropped } from "./rul
 
 export const FILE_FORMAT = "wireflow";
 // 3: notes (#83), the user's own images (#86), estimates and settings (#84).
-// Version 2 files open unchanged.
-export const FILE_VERSION = 3;
+// 4: project stages in the settings (#84).
+// Earlier files open unchanged.
+export const FILE_VERSION = 4;
 export const FILE_NAME = "wireflow.json";
 // Anything larger can't be a hand-made diagram and could hang the tab.
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;

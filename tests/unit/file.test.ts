@@ -42,7 +42,7 @@ const reject = (text: string, message: RegExp) => {
 describe("wireflow.json", () => {
   it("writes a versioned file that names templates by id, without image URLs", () => {
     const file = JSON.parse(serializeFile(sample()));
-    expect(file).toMatchObject({ format: "wireflow", version: 3 });
+    expect(file).toMatchObject({ format: "wireflow", version: 4 });
     expect(file.diagram.nodes.map((n: { data: { graphicId: string } }) => n.data.graphicId)).toEqual([
       "article-article-1",
       "e-commerce-cart",
@@ -86,7 +86,7 @@ describe("wireflow.json", () => {
     reject("not json", /isn't a JSON file/);
     reject('{"name":"wireflow","version":"1.0.0"}', /doesn't contain a Wireflow diagram/);
     reject('{"format":"excalidraw","version":2,"elements":[]}', /isn't a Wireflow file/);
-    reject('{"format":"wireflow","version":4,"diagram":{"nodes":[],"edges":[]}}', /newer version/);
+    reject('{"format":"wireflow","version":5,"diagram":{"nodes":[],"edges":[]}}', /newer version/);
     reject('{"format":"wireflow","version":"2","diagram":{"nodes":[],"edges":[]}}', /unknown file version/);
     reject('{"format":"wireflow","version":2}', /doesn't contain a Wireflow diagram/);
   });

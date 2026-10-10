@@ -16,12 +16,16 @@
 // settings (the hourly rate that turns hours into cost). An editor that knows
 // only version 2 would drop them, so it sees version 3 data as newer and
 // doesn't save over it (see readDiagram).
+//
+// Version 4 adds project stages to the settings (#84): cost lines that aren't
+// screens, such as design or QA. An editor that knows only version 3 would
+// drop them when it saves, so it sees version 4 data as newer.
 import type { Edge, Node } from "@xyflow/react";
 import graphicSizes from "@/lib/graphic-sizes.json";
 import { graphicById, type Graphic } from "@/lib/graphics";
 
 export const STORAGE_KEY = "wireflow-flow-v1";
-export const DIAGRAM_VERSION = 3;
+export const DIAGRAM_VERSION = 4;
 
 // The same fields flow-node.tsx has always used. A card that shows the user's
 // own image (graphicId OWN_IMAGE) has it in `src` as a data URL, and its
@@ -45,8 +49,14 @@ export type NoteNode = Node<NoteData, "note">;
 export type DiagramNode = CardNode | GroupNode | NoteNode;
 export type DiagramEdge = Edge;
 
-// Project settings, stored with the diagram: the hourly rate (#84) in a currency.
-export type DiagramSettings = { hourlyRate?: number; currency?: string };
+// A project stage (#84): work that isn't a screen, such as design, QA or project
+// management. Either a fixed number of hours, or a percentage of the hours on
+// the cards.
+export type Stage = { label: string } & ({ hours: number; percent?: never } | { percent: number; hours?: never });
+
+// Project settings, stored with the diagram (#84): the hourly rate in a
+// currency, and the project's stages.
+export type DiagramSettings = { hourlyRate?: number; currency?: string; stages?: Stage[] };
 export type Diagram = { nodes: DiagramNode[]; edges: DiagramEdge[]; settings?: DiagramSettings };
 
 // Estimates (#84): hours per card, 0 to MAX_ESTIMATE, to two decimals; an hourly
@@ -55,6 +65,10 @@ export const MAX_ESTIMATE = 10_000;
 export const MAX_RATE = 1_000_000;
 export const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "INR", "JPY", "CHF", "BRL", "PLN"] as const;
 export const DEFAULT_CURRENCY = "USD";
+// Stages: at most MAX_STAGES, each 0 to MAX_ESTIMATE hours or 0 to MAX_PERCENT
+// percent of the cards' hours.
+export const MAX_STAGES = 50;
+export const MAX_PERCENT = 1000;
 
 export const isCard = (node: Node): node is CardNode => node.type === "flow";
 export const isGroup = (node: Node): node is GroupNode => node.type === "group";
