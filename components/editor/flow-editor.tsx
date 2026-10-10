@@ -27,6 +27,7 @@ import FlowNodeComp from "./flow-node";
 import GraphicsPanel from "./graphics-panel";
 import Notices, { notice, type Notice } from "./notices";
 import { StoreContext, useStoreState } from "./store-context";
+import UpdatePrompt from "./update-prompt";
 
 // localStorage / sessionStorage, or null where the browser blocks them.
 function browserStorage(kind: "localStorage" | "sessionStorage"): Storage | null {
@@ -473,6 +474,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
             </PanelBoundary>
           )}
           <Notices notices={notices} onDismiss={dismiss} />
+          <UpdatePrompt />
           <ConfirmDialog
             open={!!pendingOpen}
             title="Replace the current diagram?"
