@@ -15,12 +15,25 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, serializeFile, type Opened } from "@/lib/diagram/file";
-import { isGroup, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
+import { isCard, isGroup, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
-import { Group, ImageDown, Sparkles, Ungroup } from "lucide-react";
+import {
+  BringToFront,
+  ClipboardPaste,
+  Copy,
+  Delete,
+  Ellipsis,
+  Group,
+  ImageDown,
+  SendToBack,
+  Sparkles,
+  SquareDashedMousePointer,
+  Ungroup,
+} from "lucide-react";
 import { LOAD_FAILED, PanelBoundary, useAiPanel } from "@/components/ai/use-ai-panel";
+import CardPanel from "./card-panel";
 import ConfirmDialog from "./confirm-dialog";
 import EdgePanel from "./edge-panel";
 import FlowNodeComp from "./flow-node";
@@ -140,26 +153,28 @@ function start(): Start {
 // Production's toolbar buttons draw their own icons; the ones added since pass a
 // lucide `icon`. A button whose command can't run now is disabled, as in the
 // earlier editor's toolbar. `title` adds the shortcut to the tooltip.
-function ToolbarButton({
-  label,
-  onClick,
-  icon,
-  disabled,
-  title,
-}: {
+type ToolbarCommand = {
   label: string;
   onClick: () => void;
   icon?: React.ReactNode;
   disabled?: boolean;
   title?: string;
-}) {
+  /** A mode that is on or off. */
+  pressed?: boolean;
+};
+
+const toolbarButtonClass =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-ink transition hover:bg-wire-canvas hover:text-wire-blue disabled:pointer-events-none disabled:opacity-35 aria-pressed:bg-wire-lavender aria-pressed:text-wire-blue";
+
+function ToolbarButton({ label, onClick, icon, disabled, title, pressed }: ToolbarCommand) {
   return (
     <button
       onClick={onClick}
       title={title ?? label}
       aria-label={label}
+      aria-pressed={pressed}
       disabled={disabled}
-      className="flex h-9 w-9 items-center justify-center rounded-md text-ink transition hover:bg-wire-canvas hover:text-wire-blue disabled:pointer-events-none disabled:opacity-35"
+      className={toolbarButtonClass}
     >
       {icon ?? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
         {label === "Zoom out" && <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />}
@@ -200,8 +215,16 @@ function EditorInner({ loaded }: { loaded: Start }) {
   const selectedNodes = nodes.filter((n) => n.selected);
   const selectedGroup =
     selectedNodes.length === 1 && isGroup(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
+  const selectedCard =
+    selectedNodes.length === 1 && isCard(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
   const canGroup = !!store.groupable();
   const canUngroup = !!store.selectedGroup();
+  const { hasClipboard } = useStoreState(store);
+  const anySelected = selectedNodes.length + selectedEdges.length > 0;
+  // Multi-select mode (the earlier editor's toolbar toggle): dragging on the
+  // canvas draws a selection box instead of panning; the middle or right mouse
+  // button still pans. Escape turns it off (#77).
+  const [boxSelect, setBoxSelect] = useState(false);
   // How edges are drawn (not stored): an edge with a colour of its own keeps it
   // when selected, so it gets a class that marks the selection another way.
   const shownEdges = useMemo(
@@ -217,7 +240,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
       })),
     [edges]
   );
-  const { screenToFlowPosition, zoomIn, zoomOut, fitView, getNodes, getNodesBounds } = useReactFlow();
+  const { screenToFlowPosition, zoomIn, zoomOut, zoomTo, fitView, getNodes, getNodesBounds } = useReactFlow();
 
   const dismiss = useCallback((id: number) => setNotices((ns) => ns.filter((n) => n.id !== id)), []);
   const say = useCallback((n: Notice) => setNotices((ns) => [...ns.slice(-3), n]), []);
@@ -277,9 +300,12 @@ function EditorInner({ loaded }: { loaded: Start }) {
   }, [store, lock, say]);
 
   // Keyboard: H toggles the header of selected cards; Backspace/Delete removes
-  // the selection (cards with their connections, as one undo step);
+  // the selection (cards with their connections, as one undo step); Escape
+  // clears the selection and leaves multi-select mode (#77, #82);
   // Ctrl/Cmd+Z undo; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redo; Ctrl/Cmd+C and V
-  // copy and paste cards (a paste is one undo step).
+  // copy and paste cards (a paste is one undo step). From the earlier editor:
+  // Ctrl/Cmd+= and - zoom, Ctrl/Cmd+0 actual size, Ctrl/Cmd+A selects all,
+  // Ctrl+H hides and Ctrl+K shows the header of selected cards.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey;
@@ -297,7 +323,39 @@ function EditorInner({ loaded }: { loaded: Start }) {
           if (!store.selectedIds().length) return;
           e.preventDefault();
           store.removeSelected();
+        } else if (e.key === "Escape") {
+          setBoxSelect(false);
+          store.clearSelection();
         }
+        return;
+      }
+      if (e.altKey) return;
+      if (k === "=" || k === "+") {
+        e.preventDefault();
+        zoomIn({ duration: 150 });
+        return;
+      }
+      if (k === "-") {
+        e.preventDefault();
+        zoomOut({ duration: 150 });
+        return;
+      }
+      if (k === "0") {
+        e.preventDefault();
+        zoomTo(1, { duration: 150 });
+        return;
+      }
+      if (k === "a" && !e.shiftKey) {
+        e.preventDefault();
+        store.selectAll();
+        return;
+      }
+      if ((k === "h" || k === "k") && !e.shiftKey) {
+        // Only with cards selected; otherwise the browser keeps them (history, search).
+        const ids = store.getState().nodes.filter((n) => n.selected && isCard(n)).map((n) => n.id);
+        if (!ids.length) return;
+        e.preventDefault();
+        store.setHeaders(ids, k === "k");
         return;
       }
       if (k === "g") {
@@ -322,7 +380,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [store]);
+  }, [store, zoomIn, zoomOut, zoomTo]);
 
   // A template dragged with a finger from the sidebar, dropped on the canvas.
   const canvas = useRef<HTMLDivElement>(null);
@@ -347,6 +405,37 @@ function EditorInner({ loaded }: { loaded: Start }) {
     },
     [addGraphic, screenToFlowPosition]
   );
+
+  // The earlier editor's toolbar commands (gg-editor's 14): undo and redo and
+  // the zoom buttons are production's; these join them.
+  const editCommands: ToolbarCommand[] = [
+    { label: "Copy", title: "Copy (Ctrl + C)", icon: <Copy size={16} aria-hidden />, disabled: !selectedNodes.length, onClick: () => void store.copy() },
+    { label: "Paste", title: "Paste (Ctrl + V)", icon: <ClipboardPaste size={16} aria-hidden />, disabled: !hasClipboard, onClick: () => void store.paste() },
+    { label: "Delete", title: "Delete the selection (Backspace)", icon: <Delete size={16} aria-hidden />, disabled: !anySelected, onClick: store.removeSelected },
+  ];
+  const actualSize: ToolbarCommand = {
+    label: "Actual size",
+    title: "Actual size, 1:1 (Ctrl + 0)",
+    icon: (
+      <span className="text-[11px] font-bold leading-none" aria-hidden>
+        1:1
+      </span>
+    ),
+    onClick: () => zoomTo(1, { duration: 150 }),
+  };
+  const arrangeCommands: ToolbarCommand[] = [
+    { label: "To back", title: "Send to back", icon: <SendToBack size={16} aria-hidden />, disabled: !anySelected, onClick: () => store.reorder("back") },
+    { label: "To front", title: "Bring to front", icon: <BringToFront size={16} aria-hidden />, disabled: !anySelected, onClick: () => store.reorder("front") },
+    {
+      label: "Multi-select",
+      title: "Multi-select: drag on the canvas to select (Esc to stop)",
+      icon: <SquareDashedMousePointer size={16} aria-hidden />,
+      pressed: boxSelect,
+      onClick: () => setBoxSelect((on) => !on),
+    },
+    { label: "Group", title: "Group the selection (Ctrl + G)", icon: <Group size={16} aria-hidden />, disabled: !canGroup, onClick: () => void store.group() },
+    { label: "Ungroup", title: "Ungroup, keeping the cards (Ctrl + Shift + G)", icon: <Ungroup size={16} aria-hidden />, disabled: !canUngroup, onClick: () => void store.ungroup() },
+  ];
 
   // Export the whole diagram as wireflow.jpg or wireflow.png (export-image.ts).
   const [exporting, setExporting] = useState(false);
@@ -518,6 +607,8 @@ function EditorInner({ loaded }: { loaded: Start }) {
             isValidConnection={store.isValidConnection}
             // Deleting goes through the store: cards and their connections are one undo step.
             deleteKeyCode={null}
+            selectionOnDrag={boxSelect}
+            panOnDrag={boxSelect ? [1, 2] : true}
             defaultEdgeOptions={{ markerEnd: { type: MarkerType.ArrowClosed } }}
             fitView
             proOptions={{ hideAttribution: true }}
@@ -544,54 +635,96 @@ function EditorInner({ loaded }: { loaded: Start }) {
             {pendingOpen?.name} will replace what is on the canvas. You can undo this.
           </ConfirmDialog>
 
-          <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl bg-white px-2 py-1.5 shadow-[0_8px_30px_rgba(29,28,40,0.15)] ring-1 ring-wire-border">
+          {/* Production's toolbar, plus the earlier editor's commands: inline on wide
+              screens, under More below that. On a phone it spans the screen and scrolls
+              sideways, so every button stays reachable. */}
+          <div
+            role="toolbar"
+            aria-label="Diagram"
+            className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl lg:left-[calc(50%-128px)] bg-white px-2 py-1.5 shadow-[0_8px_30px_rgba(29,28,40,0.15)] ring-1 ring-wire-border max-sm:fixed max-sm:inset-x-2 max-sm:bottom-3 max-sm:translate-x-0 max-sm:overflow-x-auto"
+          >
             <ToolbarButton label="Undo" onClick={store.undo} />
             <ToolbarButton label="Redo" onClick={store.redo} />
-            <span className="mx-1 h-5 w-px bg-wire-border" />
+            <span className="mx-1 h-5 w-px shrink-0 bg-wire-border" />
+            <span className="hidden items-center gap-1 min-[1400px]:flex">
+              {editCommands.map((c) => (
+                <ToolbarButton key={c.label} {...c} />
+              ))}
+              <span className="mx-1 h-5 w-px bg-wire-border" />
+            </span>
             <ToolbarButton label="Zoom out" onClick={() => zoomOut({ duration: 150 })} />
             <ToolbarButton label="Zoom in" onClick={() => zoomIn({ duration: 150 })} />
             <ToolbarButton label="Fit view" onClick={() => fitView({ duration: 250, padding: 0.2 })} />
-            <span className="mx-1 h-5 w-px bg-wire-border" />
-            <ToolbarButton
-              label="Group"
-              title="Group the selection (Ctrl + G)"
-              icon={<Group size={16} aria-hidden />}
-              disabled={!canGroup}
-              onClick={store.group}
-            />
-            <ToolbarButton
-              label="Ungroup"
-              title="Ungroup, keeping the cards (Ctrl + Shift + G)"
-              icon={<Ungroup size={16} aria-hidden />}
-              disabled={!canUngroup}
-              onClick={store.ungroup}
-            />
-            <span className="mx-1 h-5 w-px bg-wire-border" />
+            <span className="hidden items-center gap-1 min-[1400px]:flex">
+              <ToolbarButton {...actualSize} />
+              <span className="mx-1 h-5 w-px bg-wire-border" />
+              {arrangeCommands.map((c) => (
+                <ToolbarButton key={c.label} {...c} />
+              ))}
+            </span>
+            <span className="mx-1 h-5 w-px shrink-0 bg-wire-border" />
             <ToolbarButton label="Open file" onClick={chooseFile} />
             <ToolbarButton label="Export JSON" onClick={exportJson} />
-            <Menu
-              trigger={
-                <button
-                  title="Export the whole diagram as an image"
-                  aria-label="Export image"
-                  disabled={!nodes.length || exporting}
-                  className="flex h-9 w-9 items-center justify-center rounded-md text-ink transition hover:bg-wire-canvas hover:text-wire-blue disabled:pointer-events-none disabled:opacity-35"
-                >
-                  <ImageDown size={16} aria-hidden />
-                </button>
-              }
-              items={[
-                { label: "JPG image", onSelect: () => void exportImage("jpg") },
-                { label: "PNG image", onSelect: () => void exportImage("png") },
-              ]}
-            />
+            <span className="hidden min-[1400px]:flex">
+              <Menu
+                label="Export image"
+                trigger={
+                  <button
+                    title="Export the whole diagram as an image"
+                    aria-label="Export image"
+                    disabled={!nodes.length || exporting}
+                    className={toolbarButtonClass}
+                  >
+                    <ImageDown size={16} aria-hidden />
+                  </button>
+                }
+                items={[
+                  { label: "JPG image", onSelect: () => void exportImage("jpg") },
+                  { label: "PNG image", onSelect: () => void exportImage("png") },
+                ]}
+              />
+            </span>
             <ToolbarButton label="Clear canvas" onClick={clearCanvas} />
+            <span className="flex min-[1400px]:hidden">
+              <Menu
+                label="More tools"
+                align="end"
+                trigger={
+                  <button title="More tools" aria-label="More tools" className={toolbarButtonClass}>
+                    <Ellipsis size={16} aria-hidden />
+                  </button>
+                }
+                items={[
+                  ...[...editCommands, actualSize, ...arrangeCommands].map((c) => ({
+                    label: c.label,
+                    icon: c.icon,
+                    disabled: c.disabled,
+                    onSelect: c.onClick,
+                    ...(c.pressed !== undefined && { checked: c.pressed }),
+                  })),
+                  {
+                    label: "Export JPG image",
+                    icon: <ImageDown size={14} aria-hidden />,
+                    disabled: !nodes.length || exporting,
+                    onSelect: () => void exportImage("jpg"),
+                    separated: true,
+                  },
+                  {
+                    label: "Export PNG image",
+                    icon: <ImageDown size={14} aria-hidden />,
+                    disabled: !nodes.length || exporting,
+                    onSelect: () => void exportImage("png"),
+                  },
+                ]}
+              />
+            </span>
           </div>
 
           {/* A selected connection or group shows its panel in this place instead. */}
           {selectedEdge && <EdgePanel edge={selectedEdge} edges={edges} />}
           {selectedGroup && isGroup(selectedGroup) && <GroupPanel group={selectedGroup} />}
-          <aside className={`absolute right-4 top-4 hidden w-60 rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border ${selectedEdge || selectedGroup ? "" : "lg:block"}`}>
+          {selectedCard && isCard(selectedCard) && <CardPanel card={selectedCard} />}
+          <aside className={`absolute right-4 top-4 hidden w-60 rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border ${selectedEdge || selectedGroup || selectedCard ? "" : "lg:block"}`}>
             <h3 className="text-sm font-bold text-ink">Keyboard shortcuts</h3>
             <dl className="mt-3 space-y-2 text-xs">
               {[
@@ -604,6 +737,8 @@ function EditorInner({ loaded }: { loaded: Start }) {
                 ["Delete selected", "Backspace"],
                 ["Copy / paste", "Ctrl + C / V"],
                 ["Group / ungroup", "Ctrl + G / ⇧G"],
+                ["Actual size", "Ctrl + 0"],
+                ["Select all / none", "Ctrl + A / Esc"],
               ].map(([action, keys]) => (
                 <div key={action} className="flex items-center justify-between">
                   <dt className="text-ink-soft">{action}</dt>
@@ -618,10 +753,8 @@ function EditorInner({ loaded }: { loaded: Start }) {
               <li>Double-click a card&rsquo;s header to rename it, press H to hide/show it</li>
               <li>Click a card and press Backspace to remove it</li>
               <li>Click a connection to label or colour it</li>
-              <li>Select cards and press Group; drag a card onto a group to add it</li>
               <li>Your flow autosaves in this browser</li>
               <li>Export JSON saves it as a file; Open file opens it again</li>
-              <li>The image button exports the whole diagram as JPG or PNG</li>
             </ul>
           </aside>
         </div>

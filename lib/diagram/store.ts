@@ -23,7 +23,9 @@ import {
   groupItems,
   pasteItems,
   removeItems,
+  reorder,
   setGroupLabel,
+  setHeaders,
   setHeaderText,
   setParents,
   toggleHeaders,
@@ -43,6 +45,8 @@ export type StoreState = {
   saveFailed: boolean;
   /** While a card is dragged: the group it would join if dropped now. */
   dropTarget: string | null;
+  /** Copy has put something on this tab's clipboard, so Paste can run. */
+  hasClipboard: boolean;
 };
 
 export type StoreOptions = {
@@ -64,6 +68,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     canRedo: canRedo(history),
     saveFailed: false,
     dropTarget: null,
+    hasClipboard: false,
   };
   const listeners = new Set<() => void>();
   let clipboard: Clip | null = null;
@@ -219,6 +224,30 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     setGroupLabel(id: string, value: string) {
       apply((d) => setGroupLabel(d, id, value));
     },
+    /** Move the selection to the front or the back (drawing order): one undo step. */
+    reorder(where: "front" | "back") {
+      const ids = selectedIds();
+      if (ids.length) apply((d) => reorder(d, ids, where));
+    },
+    /** Select every card, group and connection (no undo step: selection isn't stored). */
+    selectAll() {
+      commit({
+        nodes: state.nodes.map((n) => (n.selected ? n : { ...n, selected: true })),
+        edges: state.edges.map((e) => (e.selected ? e : { ...e, selected: true })),
+      });
+    },
+    /** Clear the selection (#82). Returns false if nothing was selected. */
+    clearSelection() {
+      if (!selectedIds().length) return false;
+      commit({
+        nodes: state.nodes.map((n) => (n.selected ? { ...n, selected: false } : n)),
+        edges: state.edges.map((e) => (e.selected ? { ...e, selected: false } : e)),
+      });
+      return true;
+    },
+    setHeaders(ids: string[], show: boolean) {
+      if (ids.length) apply((d) => setHeaders(d, ids, show));
+    },
     toggleHeaders(ids: string[]) {
       if (ids.length) apply((d) => toggleHeaders(d, ids));
     },
@@ -236,6 +265,10 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       if (!ids.length) return false;
       clipboard = copyItems(current(), ids);
       pastes = 0;
+      if (!state.hasClipboard) {
+        state = { ...state, hasClipboard: true };
+        emit();
+      }
       return true;
     },
     /** Paste with new ids, a little further down each time, and select the copy: one undo step. */

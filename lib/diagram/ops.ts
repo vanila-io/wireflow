@@ -181,6 +181,28 @@ export function dropTargets(nodes: DiagramNode[], movedIds: string[]): Record<st
   return changes;
 }
 
+// To Front / To Back, as in the earlier editor: the given items move to the end
+// (drawn last, on top) or the start of their list. The rules keep parents
+// before their children, so an item only changes places among its siblings.
+export function reorder(d: Diagram, ids: Iterable<string>, where: "front" | "back"): Diagram {
+  const set = new Set(ids);
+  const move = <T extends { id: string }>(list: T[]) => {
+    const moved = list.filter((i) => set.has(i.id));
+    const rest = list.filter((i) => !set.has(i.id));
+    return where === "front" ? [...rest, ...moved] : [...moved, ...rest];
+  };
+  return { nodes: move(d.nodes), edges: move(d.edges) };
+}
+
+// The earlier editor's Ctrl+H (hide) and Ctrl+K (show) on the given cards.
+export function setHeaders(d: Diagram, ids: string[], show: boolean): Diagram {
+  const set = new Set(ids);
+  const nodes = d.nodes.map((n): DiagramNode =>
+    set.has(n.id) && isCard(n) ? { ...n, data: { ...n.data, showHeader: show } } : n
+  );
+  return { nodes: fitGroups(nodes), edges: d.edges };
+}
+
 // The H shortcut: show or hide the header of each given card.
 export function toggleHeaders(d: Diagram, ids: string[]): Diagram {
   const set = new Set(ids);
