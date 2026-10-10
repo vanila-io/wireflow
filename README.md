@@ -127,7 +127,7 @@ After one online visit to `/app`, the editor works offline. To get a window of i
 
 ## Quick start
 
-Requirements: [Node.js](https://nodejs.org/) 20.9 or later (Node 24 LTS recommended; CI and the Docker image use 24) and npm.
+Requirements: [Node.js](https://nodejs.org/) 20.9 or later (Node 24 LTS recommended; `.nvmrc` and the Docker image use 24) and npm.
 
 ```bash
 git clone https://github.com/vanila-io/wireflow.git
@@ -161,7 +161,7 @@ npm run preview        # OpenNext build + local Cloudflare Workers runtime (wran
 - `E2E_PORT` picks another port; `E2E_SKIP_BUILD=1` reuses the last build; `E2E_BASE_URL=http://host:port` runs the suite against a server that is already running (for example an older commit, to see a test fail without its fix).
 - Every e2e test fails on a console error or an uncaught page error, so the suite also checks that the Content-Security-Policy blocks nothing the app needs.
 - Live AI test (spends real money, about $0.003 per run with Claude Haiku 5.5): `AI_LIVE=1 npx vitest run tests/unit/ai-live.test.ts`. It reads `ANTHROPIC_API_KEY` from the environment or `.env` (`AI_ENV_FILE` names another file) and never prints it.
-- CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests and the Cloudflare build; the e2e suite on Chromium against `next start` and against the Worker; and builds the Docker image and smoke-tests it.
+- There is no CI, so run the checks locally before merging: `npm run lint && npm run typecheck && npm test`, then `npx playwright test` (against `next start`) and `E2E_SERVER=preview npx playwright test` (against the OpenNext build in workerd, which is what production runs; a framework upgrade can pass the first and fail this one). For Docker changes, also `docker compose up --build` and open http://localhost:8083.
 
 ## Environment variables
 
