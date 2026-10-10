@@ -1,0 +1,24 @@
+Production parity: https://wireflow.co (live, 2026-10-10) vs branch production-ports (next start, no env vars)
+Chromium (Playwright 1.63), deviceScaleFactor 1, service workers blocked, analytics and sponsor
+avatars (third-party) blocked on both sides. Differing pixels: exact RGB, and pixelmatch threshold 0.1.
+
+live vs branch
+app-desktop.png            1440x900   exact 3.52%  pixelmatch 1.03%   (intended additions, see below)
+app-mobile.png             390x844    exact 1.65%  pixelmatch 0.17%   (toolbar: one more icon)
+landing-desktop.png        1440x900   exact 0.00%  pixelmatch 0.00%
+landing-mobile.png         390x844    exact 0.00%  pixelmatch 0.00%
+landing-desktop-full.png   1440x5977 vs 1440x5750  exact 1.59%  pixelmatch 0.91%  (sponsor list, see below)
+landing-mobile-full.png    504x8949   exact 0.00%  pixelmatch 0.00%
+
+/app outside the areas the port changes on purpose:
+app-desktop.png  outside header buttons, shortcuts panel (+shadow), toolbar (+shadow): 87 of 1,020,390 px differ (0.01%), max channel delta 2
+app-mobile.png   outside toolbar (+shadow): 153 of 299,000 px differ (0.05%), max channel delta 2
+
+Control: live vs a local build of main at dff6546 (production's own code)
+app-desktop.png            exact 0.01%  pixelmatch 0.00%
+app-mobile.png             exact 0.05%  pixelmatch 0.00%
+landing-desktop-full.png   1440x5977 vs 1440x5750  exact 1.59%  pixelmatch 0.91%
+others                     0.00%
+So the residual 87 / 153 px are rasterisation noise also present between production and its own
+code, and the full-page landing difference is the Open Collective sponsor list fetched at build
+time (the live build lists more sponsors). Branch vs local build of dff6546: landing 0.00% everywhere.
