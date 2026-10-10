@@ -73,3 +73,6 @@ package-lock.json
 __error_bridge.js
 .git-token-*
 .git-askpass-*
+
+# Claude Code: per-agent git worktrees (local only)
+/.claude/worktrees/
