@@ -17,7 +17,7 @@ import {
 import { STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
-import { readDiagram, writeDiagram } from "@/lib/diagram/storage";
+import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
 import FlowNodeComp from "./flow-node";
 import GraphicsPanel from "./graphics-panel";
 import Notices, { notice, type Notice } from "./notices";
@@ -98,9 +98,12 @@ function start(): Start {
     }
   }
 
+  const session = browserStorage("sessionStorage");
   const store = createDiagramStore({
     initial,
     save: (json) => !lock.readOnly && !!local && writeDiagram(local, json),
+    // The undo history of this tab, if it ends at the diagram just loaded.
+    history: session && !lock.readOnly ? readHistory(session) : null,
   });
 
   const hadDiagram = initial.nodes.length > 0;
@@ -172,6 +175,20 @@ function EditorInner({ loaded }: { loaded: Start }) {
     if (!hadDiagram) setTimeout(() => fitView({ padding: 0.3 }), 80);
   }, [hadDiagram, fitView]);
 
+  // Keep the undo history across a reload of this tab.
+  useEffect(() => {
+    const session = browserStorage("sessionStorage");
+    if (!session) return;
+    const persist = () => !lock.readOnly && writeHistory(session, store.history());
+    const onVisibility = () => document.visibilityState === "hidden" && persist();
+    window.addEventListener("pagehide", persist);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", persist);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [store, lock]);
+
   // Another tab saved the diagram: show its version here, so this tab's next
   // save doesn't overwrite it with an older one. A newer version of Wireflow in
   // the other tab makes this one read-only.
@@ -195,7 +212,8 @@ function EditorInner({ loaded }: { loaded: Start }) {
 
   // Keyboard: H toggles the header of selected cards; Backspace/Delete removes
   // the selection (cards with their connections, as one undo step);
-  // Ctrl/Cmd+Z undo; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redo.
+  // Ctrl/Cmd+Z undo; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redo; Ctrl/Cmd+C and V
+  // copy and paste cards (a paste is one undo step).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTyping(e.target)) return;
@@ -222,6 +240,12 @@ function EditorInner({ loaded }: { loaded: Start }) {
       } else if ((k === "z" && e.shiftKey) || k === "y") {
         e.preventDefault();
         store.redo();
+      } else if (k === "c") {
+        // Leave text selections to the browser.
+        if (window.getSelection()?.toString()) return;
+        if (store.copy()) e.preventDefault();
+      } else if (k === "v") {
+        if (store.paste()) e.preventDefault();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -346,6 +370,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
                 ["Toggle header", "H"],
                 ["Edit header", "Double-click"],
                 ["Delete selected", "Backspace"],
+                ["Copy / paste", "Ctrl + C / V"],
               ].map(([action, keys]) => (
                 <div key={action} className="flex items-center justify-between">
                   <dt className="text-ink-soft">{action}</dt>

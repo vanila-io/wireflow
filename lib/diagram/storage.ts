@@ -1,8 +1,9 @@
 // Autosave in this browser. The diagram lives in localStorage["wireflow-flow-v1"],
 // the key the editor has always used, so every diagram saved before this
 // change opens unchanged.
+import { parseHistory, type History, type Step } from "./history";
 import { DIAGRAM_VERSION, STORAGE_KEY, type Diagram } from "./model";
-import { dropProto, enforceRules, type Dropped } from "./rules";
+import { dropProto, enforceRules, serialize, type Dropped } from "./rules";
 
 // Where stored data is copied before anything could overwrite it (unreadable
 // data, or data the rules trimmed on load); later copies get a time suffix.
@@ -89,5 +90,47 @@ export function writeDiagram(storage: Storage, diagramJson: string): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+// The undo history, per tab (sessionStorage), so it survives a reload.
+export const HISTORY_KEY = "wireflow-history-v1";
+
+// The tab's undo history, every step through the rules (it may come from an
+// older build, and undo writes steps straight back to storage). Null if any
+// step isn't a diagram.
+export function readHistory(storage: Storage): History | null {
+  try {
+    const history = parseHistory(JSON.parse(storage.getItem(HISTORY_KEY) ?? "null"));
+    if (!history) return null;
+    const clean = (step: Step): Step => ({
+      ...step,
+      json: serialize(enforceRules(JSON.parse(step.json, dropProto)).diagram),
+    });
+    return { past: history.past.map(clean), present: clean(history.present), future: history.future.map(clean) };
+  } catch {
+    return null;
+  }
+}
+
+// Keeps as much recent history as fits; history is a convenience, never an error.
+export function writeHistory(storage: Storage, history: History) {
+  for (let keep = history.past.length; ; keep = Math.floor(keep / 2)) {
+    try {
+      storage.setItem(
+        HISTORY_KEY,
+        JSON.stringify({ ...history, past: history.past.slice(history.past.length - keep) })
+      );
+      return;
+    } catch {
+      if (keep === 0) {
+        try {
+          storage.removeItem(HISTORY_KEY);
+        } catch {
+          // Storage blocked: the history just isn't kept.
+        }
+        return;
+      }
+    }
   }
 }

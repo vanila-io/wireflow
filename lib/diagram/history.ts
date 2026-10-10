@@ -50,3 +50,14 @@ export function stepState(h: History, id: number): "latest" | "applied" | "repla
   const later = [...h.past.slice(index + 1), h.present];
   return later.some((s) => s.kind === "open") ? "replaced" : "applied";
 }
+
+// A history read back from session storage, if it is well-formed.
+export function parseHistory(value: unknown): History | null {
+  const isStep = (s: unknown): s is Step =>
+    typeof s === "object" && s !== null && typeof (s as Step).json === "string" && Number.isInteger((s as Step).id);
+  if (typeof value !== "object" || value === null) return null;
+  const h = value as History;
+  if (!isStep(h.present) || !Array.isArray(h.past) || !Array.isArray(h.future)) return null;
+  if (!h.past.every(isStep) || !h.future.every(isStep)) return null;
+  return { past: h.past.slice(-HISTORY_LIMIT), present: h.present, future: h.future.slice(0, HISTORY_LIMIT) };
+}

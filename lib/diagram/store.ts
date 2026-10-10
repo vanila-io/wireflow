@@ -15,7 +15,7 @@ import {
 import type { Graphic } from "@/lib/graphics";
 import { canRedo, canUndo, createHistory, record, redo, undo, type History } from "./history";
 import { ARROW, makeCard, type Diagram, type DiagramEdge, type DiagramNode } from "./model";
-import { removeItems, setHeaderText, toggleHeaders } from "./ops";
+import { copyItems, pasteItems, removeItems, setHeaderText, toggleHeaders, type Clip } from "./ops";
 import { enforceRules, serialize } from "./rules";
 
 export type StoreState = {
@@ -47,6 +47,8 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     saveFailed: false,
   };
   const listeners = new Set<() => void>();
+  let clipboard: Clip | null = null;
+  let pastes = 0;
   const emit = () => listeners.forEach((l) => l());
 
   const live = (): Diagram => ({ nodes: state.nodes, edges: state.edges });
@@ -148,6 +150,22 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     },
     setHeaderText(id: string, value: string) {
       apply((d) => setHeaderText(d, id, value));
+    },
+    /** Copy the selected cards (and the connections between them). Returns false if nothing is selected. */
+    copy() {
+      const ids = state.nodes.filter((n) => n.selected).map((n) => n.id);
+      if (!ids.length) return false;
+      clipboard = copyItems(current(), ids);
+      pastes = 0;
+      return true;
+    },
+    /** Paste with new ids, a little further down each time, and select the copy: one undo step. */
+    paste() {
+      if (!clipboard) return false;
+      pastes += 1;
+      const { diagram, ids } = pasteItems(current(), clipboard, { x: 20 * pastes, y: 20 * pastes });
+      apply(() => diagram, { select: ids });
+      return true;
     },
     clear() {
       if (state.nodes.length) apply(() => ({ nodes: [], edges: [] }));
