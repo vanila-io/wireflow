@@ -10,11 +10,6 @@
   --color-wire-lavender: #eef0ff;
   --color-wire-canvas: #f0f2f5;
   --color-wire-border: #e6e6ec;
-  /* Landing page only (components/landing); the editor uses none of these. */
-  --color-paper: #fcf8f2;
-  --color-paper-deep: #f5efe6;
-  --color-night: #1b1a1f;
-  --color-line: #e9e2d7;
 }
 
 /* ---- Landing page (components/landing) ---- */
@@ -32,11 +27,11 @@
 /* The warm, brand-blue wash behind the product shot and the footer card. */
 .landing-aura {
   background:
-    radial-gradient(55% 75% at 0% 0%, #ffd7b5 0%, transparent 65%),
-    radial-gradient(50% 70% at 100% 0%, #d4c6ff 0%, transparent 65%),
-    radial-gradient(65% 85% at 85% 100%, #6c78ff 0%, transparent 65%),
-    radial-gradient(55% 80% at 10% 100%, #ff9d83 0%, transparent 65%),
-    #f3e3d9;
+    radial-gradient(55% 75% at 0% 0%, #dde1ff 0%, transparent 65%),
+    radial-gradient(50% 70% at 100% 0%, #c9cfff 0%, transparent 65%),
+    radial-gradient(65% 85% at 85% 100%, #8b95ff 0%, transparent 65%),
+    radial-gradient(55% 80% at 10% 100%, #b4bcff 0%, transparent 65%),
+    #eef0ff;
 }
 
 body {

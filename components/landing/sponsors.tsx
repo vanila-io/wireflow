@@ -18,7 +18,7 @@ function SponsorCard({ sponsor, tier }: { sponsor: Sponsor; tier: keyof typeof T
       href={sponsor.website ?? "https://opencollective.com/wireflow"}
       target="_blank"
       rel={meta.rel}
-      className="group flex items-center gap-3 rounded-2xl border border-line bg-white p-3.5 transition hover:border-night/20 hover:shadow-[0_16px_36px_-22px_rgba(27,26,31,0.4)]"
+      className="group flex items-center gap-3 rounded-2xl border border-wire-border bg-white p-3.5 transition hover:border-wire-blue/30 hover:shadow-[0_16px_36px_-22px_rgba(27,26,31,0.4)]"
     >
       {sponsor.image ? (
         // Any https host: Open Collective serves avatars from several (lib/security.ts allows https images).
@@ -35,15 +35,15 @@ function SponsorCard({ sponsor, tier }: { sponsor: Sponsor; tier: keyof typeof T
         />
       ) : (
         <span
-          className="flex shrink-0 items-center justify-center rounded-xl bg-paper-deep text-sm font-semibold text-night"
+          className="flex shrink-0 items-center justify-center rounded-xl bg-wire-canvas text-sm font-semibold text-ink"
           style={size}
           aria-hidden
         >
           {sponsor.name.charAt(0)}
         </span>
       )}
-      <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-night">{sponsor.name}</span>
-      <ArrowUpRight size={16} className="shrink-0 text-ink-soft group-hover:text-night" aria-hidden />
+      <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink">{sponsor.name}</span>
+      <ArrowUpRight size={16} className="shrink-0 text-ink-soft group-hover:text-ink" aria-hidden />
       <span className="sr-only"> (opens in a new tab)</span>
     </a>
   );
@@ -54,7 +54,7 @@ export default function Sponsors({ tiers }: { tiers: TieredSponsors }) {
   const hasAny = order.some((t) => tiers[t].length > 0);
 
   return (
-    <section id="sponsors" aria-labelledby="sponsors-title" className="bg-paper-deep py-16 sm:py-24">
+    <section id="sponsors" aria-labelledby="sponsors-title" className="bg-wire-canvas py-16 sm:py-24">
       <div className={container}>
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>
@@ -91,7 +91,7 @@ export default function Sponsors({ tiers }: { tiers: TieredSponsors }) {
             })}
           </div>
         ) : (
-          <p className="mt-12 rounded-2xl border border-dashed border-line bg-white/60 p-8 text-center text-sm text-ink-soft">
+          <p className="mt-12 rounded-2xl border border-dashed border-wire-border bg-white/60 p-8 text-center text-sm text-ink-soft">
             No active sponsor packages right now — be the first.
           </p>
         )}

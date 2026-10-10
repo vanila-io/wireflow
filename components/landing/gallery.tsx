@@ -8,7 +8,7 @@ import { categoryLabels, graphicsByCategory } from "@/lib/graphics";
 import { container, sectionTitle } from "./ui";
 
 // "All" opens on the first rows (three rows of six; four rows of two on a
-// phone); the rest is one click away. A category shows all of its flows.
+// phone); the rest is one click away. A category shows all of its screens.
 const FIRST_ROWS = 18;
 const FIRST_ROWS_PHONE = 8;
 const PHONE = "(max-width: 639px)"; // Tailwind's max-sm
@@ -25,7 +25,7 @@ export default function Gallery() {
   const filters = [{ slug: "all", label: "All" }, ...categoryLabels];
   const current = filters.find((f) => f.slug === category)!;
 
-  // "Show all" removes its own button, so focus moves to the first newly shown flow.
+  // "Show all" removes its own button, so focus moves to the first newly shown screen.
   const showAll = () => {
     flushSync(() => setExpanded(true));
     const first = window.matchMedia(PHONE).matches ? FIRST_ROWS_PHONE : FIRST_ROWS;
@@ -36,12 +36,12 @@ export default function Gallery() {
     <section id="templates" aria-labelledby="gallery-title" className="py-16 sm:py-24">
       <div className={container}>
         <h2 id="gallery-title" className={`${sectionTitle} max-w-[18ch]`}>
-          Choose from {total} flows in {categoryLabels.length} categories
+          Choose from {total} screens in {categoryLabels.length} categories
         </h2>
 
         {/* Phones scroll the chips sideways inside the page's gutter; wider screens wrap them. */}
         <div className="-mx-5 mt-8 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:overflow-visible sm:px-0">
-          <div role="group" aria-label="Filter flows by category" className="flex w-max gap-2 py-1 sm:w-auto sm:flex-wrap">
+          <div role="group" aria-label="Filter screens by category" className="flex w-max gap-2 py-1 sm:w-auto sm:flex-wrap">
             {filters.map((f) => {
               const active = category === f.slug;
               return (
@@ -52,8 +52,8 @@ export default function Gallery() {
                   onClick={() => setCategory(f.slug)}
                   className={`h-9 shrink-0 rounded-full border px-4 text-sm font-medium transition-colors ${
                     active
-                      ? "border-night bg-night text-white"
-                      : "border-line bg-white text-ink-soft hover:border-night/30 hover:text-night"
+                      ? "border-wire-blue bg-wire-blue text-white"
+                      : "border-wire-border bg-white text-ink-soft hover:border-wire-blue/40 hover:text-ink"
                   }`}
                 >
                   {f.label}
@@ -63,7 +63,7 @@ export default function Gallery() {
           </div>
         </div>
         <p className="sr-only" aria-live="polite">
-          {category === "all" ? `Showing ${shown.length} of ${total} flows` : `${items.length} ${current.label} flows`}
+          {category === "all" ? `Showing ${shown.length} of ${total} screens` : `${items.length} ${current.label} screens`}
         </p>
 
         <ul ref={grid} className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
@@ -74,9 +74,9 @@ export default function Gallery() {
               <li key={g.id} className={collapsed && i >= FIRST_ROWS_PHONE ? "max-sm:hidden" : undefined}>
                 <a
                   href={`/app?card=${encodeURIComponent(g.id)}`}
-                  className="group flex h-full flex-col rounded-2xl border border-line bg-white p-2 transition hover:border-night/20 hover:shadow-[0_16px_36px_-20px_rgba(27,26,31,0.4)] motion-safe:hover:-translate-y-0.5"
+                  className="group flex h-full flex-col rounded-2xl border border-wire-border bg-white p-2 transition hover:border-wire-blue/30 hover:shadow-[0_16px_36px_-20px_rgba(27,26,31,0.4)] motion-safe:hover:-translate-y-0.5"
                 >
-                  <span className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-xl bg-paper p-2.5">
+                  <span className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-xl bg-wire-canvas p-2.5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={g.src}
@@ -104,9 +104,9 @@ export default function Gallery() {
             <button
               type="button"
               onClick={showAll}
-              className="h-12 rounded-xl border border-line bg-white px-6 text-[15px] font-medium text-night transition-colors hover:border-night/30"
+              className="h-12 rounded-xl border border-wire-border bg-white px-6 text-[15px] font-medium text-ink transition-colors hover:border-wire-blue/40"
             >
-              Show all {total} flows
+              Show all {total} screens
             </button>
           </div>
         )}

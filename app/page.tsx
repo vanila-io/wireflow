@@ -16,10 +16,10 @@ export const revalidate = 3600;
 export default async function Home() {
   const [stars, sponsors] = await Promise.all([getStars(), getSponsors()]);
   return (
-    <div className="landing flex min-h-screen flex-col bg-paper text-night">
+    <div className="landing flex min-h-screen flex-col bg-white text-ink">
       <a
         href="#main"
-        className="sr-only z-50 rounded-lg bg-night px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        className="sr-only z-50 rounded-lg bg-wire-blue px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
       >
         Skip to content
       </a>

@@ -1,3 +1,4 @@
+import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import graphics from "../lib/graphics.json";
 
@@ -24,6 +25,22 @@ test("keeps the headline, tagline, CTAs and the free-forever line", async ({ pag
   await expect(page.locator(".react-flow__pane")).toBeVisible();
 });
 
+test("uses the editor's colours: the CTA matches the editor's primary button, on a white page", async ({ page }) => {
+  await page.goto("/app");
+  // The header's blue "Export JSON" (the toolbar's icon button has no visible text).
+  const editorPrimary = await page.evaluate(() => {
+    const button = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === "Export JSON");
+    return button ? getComputedStyle(button).backgroundColor : null;
+  });
+  expect(editorPrimary).toBe("rgb(67, 83, 255)"); // wire blue, #4353ff
+
+  await page.goto("/");
+  const cta = page.getByRole("main").getByRole("link", { name: "Start designing" });
+  expect(await cta.evaluate((a) => getComputedStyle(a).backgroundColor)).toBe(editorPrimary);
+  const landing = page.locator(".landing");
+  expect(await landing.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(255, 255, 255)");
+});
+
 test("keeps the nav links, the features, the open-source section and the footer", async ({ page }) => {
   await page.goto("/");
   const nav = page.locator("header nav:visible");
@@ -32,22 +49,30 @@ test("keeps the nav links, the features, the open-source section and the footer"
   await expect(nav.getByRole("link", { name: "Crafted by Automatio team" })).toHaveAttribute("href", "https://automatio.ai/");
 
   await expect(page.getByRole("heading", { name: "Everything you need to map a flow" })).toBeVisible();
+  // Only features the editor has today (no collaboration, permissions or chat).
   for (const title of [
-    "100+ graphics to use",
-    "Real-time collaboration",
-    "Project permissions",
-    "Live chat",
+    `${graphics.length} screen templates`,
     "Easy to use interface",
+    "AI assistant",
+    "Save, open and export",
+    "Groups, notes and estimates",
     "No Photoshop required",
   ]) {
     await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
+  }
+  for (const gone of ["Real-time collaboration", "Project permissions", "Live chat", "100+ graphics to use"]) {
+    await expect(page.getByText(gone)).toHaveCount(0);
   }
 
   const oss = page.locator("#open-source");
   await expect(oss.getByRole("heading", { name: "Fully Open Source" })).toBeVisible();
   await expect(oss.getByRole("link", { name: "Check on GitHub" })).toHaveAttribute("href", "https://github.com/vanila-io/wireflow");
   await expect(oss.getByRole("link", { name: /Support us/ })).toHaveAttribute("href", "https://opencollective.com/wireflow/contribute");
-  for (const tech of ["Node.js", "Next.js", "React.js"]) await expect(oss.getByText(tech, { exact: true })).toBeVisible();
+  // What Wireflow is built on, not encyclopedia blurbs.
+  for (const tech of ["Next.js and React", "React Flow", "Cloudflare, through OpenNext", "Claude API"]) {
+    await expect(oss.getByText(tech, { exact: true })).toBeVisible();
+  }
+  await expect(oss.getByText("Node.js", { exact: true })).toHaveCount(0);
 
   const footer = page.locator("footer");
   for (const [name, href] of [
@@ -60,6 +85,13 @@ test("keeps the nav links, the features, the open-source section and the footer"
     await expect(footer.getByRole("link", { name, exact: true })).toHaveAttribute("href", href);
   }
   await expect(footer).toContainText("Wireflow - user flow chart tool. MIT licensed, built by the Vanila team.");
+});
+
+test("the templates feature counts the template list", async ({ page }) => {
+  await page.goto("/");
+  const card = page.locator("#features article").filter({ has: page.getByRole("heading", { name: /screen templates$/ }) });
+  await expect(card.getByRole("heading")).toHaveText(`${graphics.length} screen templates`);
+  await expect(card).toContainText(`Ready-made wireframe screens in ${categories.length} categories`);
 });
 
 test("keeps the title, description, Open Graph tags, manifest and icons", async ({ page }) => {
@@ -126,9 +158,9 @@ test("the gallery is built from the template list, and its filters work", async 
   await page.goto("/");
   const gallery = page.locator("#templates");
   await expect(gallery.getByRole("heading", { level: 2 })).toHaveText(
-    `Choose from ${graphics.length} flows in ${categories.length} categories`
+    `Choose from ${graphics.length} screens in ${categories.length} categories`
   );
-  const filters = gallery.getByRole("group", { name: "Filter flows by category" }).getByRole("button");
+  const filters = gallery.getByRole("group", { name: "Filter screens by category" }).getByRole("button");
   await expect(filters).toHaveCount(categories.length + 1);
   const cards = gallery.getByRole("listitem");
   await expect(cards).toHaveCount(18);
@@ -141,7 +173,7 @@ test("the gallery is built from the template list, and its filters work", async 
   await expect(cards.first().getByRole("link")).toHaveAttribute("href", `/app?card=${mobile[0].id}`);
 
   await gallery.getByRole("button", { name: "All", exact: true }).click();
-  await gallery.getByRole("button", { name: `Show all ${graphics.length} flows` }).click();
+  await gallery.getByRole("button", { name: `Show all ${graphics.length} screens` }).click();
   await expect(cards).toHaveCount(graphics.length);
   await expect(cards.nth(18).getByRole("link")).toBeFocused();
 
@@ -174,6 +206,7 @@ for (const viewport of [
   { width: 390, height: 844 },
   { width: 820, height: 1180 },
   { width: 1280, height: 800 },
+  { width: 1440, height: 900 },
 ]) {
   test(`has no horizontal overflow at ${viewport.width} px`, async ({ page }) => {
     await page.setViewportSize(viewport);
@@ -197,9 +230,143 @@ test.describe("on a phone", () => {
 
     const cards = page.locator("#templates li:visible");
     await expect(cards).toHaveCount(8);
-    await page.getByRole("button", { name: `Show all ${graphics.length} flows` }).click();
+    await page.getByRole("button", { name: `Show all ${graphics.length} screens` }).click();
     await expect(cards).toHaveCount(graphics.length);
     await expect(page.locator("#templates li").nth(8).getByRole("link")).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  });
+});
+
+// ---- The animated illustrations (components/landing/anim) ----
+
+const ILLUSTRATIONS = ["hero-animation", "templates-animation", "interface-animation"];
+// The SVG shown in an illustration (the hero has a desktop and a phone one).
+const scene = (page: Page, id: string) => page.getByTestId(id).locator("svg:visible");
+// The play states of its animations, without repeats: ["running"], ["paused"] or [].
+const states = (svg: Locator) =>
+  svg.evaluate((el) => [...new Set(el.getAnimations({ subtree: true }).map((a) => a.playState))].sort());
+// How visible an element is: its opacity times its ancestors'.
+const opacity = (el: Locator) =>
+  el.evaluate((node) => {
+    let o = 1;
+    for (let n: Element | null = node; n; n = n.parentElement) o *= Number(getComputedStyle(n).opacity);
+    return o;
+  });
+
+test.describe("animated illustrations", () => {
+  test("the hero and both feature cards are animated SVGs in place of images", async ({ page }) => {
+    const failed: string[] = [];
+    page.on("response", (r) => {
+      if (r.url().includes("/graphics/") && r.status() >= 400) failed.push(r.url());
+    });
+    await page.goto("/");
+    await expect(page.getByRole("img", { name: /^The Wireflow editor: three screens are dragged/ })).toBeVisible();
+    for (const id of ILLUSTRATIONS) {
+      const wrapper = page.getByTestId(id);
+      await wrapper.scrollIntoViewIfNeeded();
+      await expect(wrapper.locator("img, picture")).toHaveCount(0);
+      await expect(scene(page, id)).toHaveCount(1);
+      await expect.poll(() => states(scene(page, id))).toEqual(["running"]);
+    }
+    // The feature cards' text says what their animations show.
+    for (const id of ILLUSTRATIONS.slice(1)) await expect(scene(page, id)).toHaveAttribute("aria-hidden", "true");
+    expect(failed).toEqual([]);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  });
+
+  test("animates only transform, opacity and stroke-dashoffset", async ({ page }) => {
+    await page.goto("/");
+    const properties = await page.evaluate(() => [
+      ...new Set(
+        document
+          .getAnimations()
+          .flatMap((a) => (a.effect as KeyframeEffect).getKeyframes())
+          .flatMap((k) => Object.keys(k))
+      ),
+    ]);
+    expect(properties.filter((p) => !["offset", "computedOffset", "easing", "composite"].includes(p)).sort()).toEqual([
+      "opacity",
+      "strokeDashoffset",
+      "transform",
+    ]);
+  });
+
+  test("an illustration off screen is paused, and every one while the tab is hidden", async ({ page }) => {
+    await page.goto("/");
+    const hero = scene(page, "hero-animation");
+    const sketch = scene(page, "interface-animation");
+    // At the top of the page the feature cards are below the fold.
+    await expect.poll(() => states(hero)).toEqual(["running"]);
+    await expect.poll(() => states(sketch)).toEqual(["paused"]);
+
+    await sketch.scrollIntoViewIfNeeded();
+    await expect.poll(() => states(sketch)).toEqual(["running"]);
+    await page.locator("footer").scrollIntoViewIfNeeded();
+    await expect.poll(() => states(hero)).toEqual(["paused"]);
+    await expect.poll(() => states(sketch)).toEqual(["paused"]);
+
+    await sketch.scrollIntoViewIfNeeded();
+    await expect.poll(() => states(sketch)).toEqual(["running"]);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { value: true, configurable: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await expect.poll(() => states(sketch)).toEqual(["paused"]);
+  });
+
+  test.describe("with reduced motion", () => {
+    test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+    test("nothing moves, and each illustration shows its final frame", async ({ page }) => {
+      await page.goto("/");
+      expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+
+      // The hero: three screens in place, both connections drawn and labelled,
+      // the group; no pointer, selection or highlighted tile.
+      const hero = scene(page, "hero-animation");
+      for (const text of ["Home", "Product", "Cart", "Browse", "Add to cart", "CHECKOUT"]) {
+        expect(await opacity(hero.locator("text").getByText(text, { exact: true }))).toBe(1);
+      }
+      for (const card of await hero.locator(".c1, .c2, .c3").all()) {
+        expect(await card.evaluate((el) => getComputedStyle(el).transform)).toBe("none");
+      }
+      for (const path of await hero.locator("path[pathLength]").all()) {
+        expect(await path.evaluate((el) => getComputedStyle(el).strokeDashoffset)).toBe("0px");
+      }
+      for (const hidden of await hero.locator(".cur, .s1, .s2, .s3, .t1, .t2, .t3, .grp-sel").all()) {
+        expect(await opacity(hidden)).toBe(0);
+      }
+
+      // Templates: the first category's eight templates, under its blue chip.
+      const templates = scene(page, "templates-animation");
+      const sets = templates.locator(".set");
+      await expect(sets).toHaveCount(4);
+      for (const tile of await sets.first().locator(".tile").all()) expect(await opacity(tile)).toBe(1);
+      for (const tile of await sets.nth(1).locator(".tile").all()) expect(await opacity(tile)).toBe(0);
+      expect(await opacity(templates.locator(".chip").first())).toBe(1);
+
+      // The interface: all three screens and both connections; no pointer, no pressed button.
+      const sketch = scene(page, "interface-animation");
+      expect(await opacity(sketch.locator("text").getByText("Checkout", { exact: true }))).toBe(1);
+      for (const hidden of await sketch.locator(".cur, .pu, .pr").all()) expect(await opacity(hidden)).toBe(0);
+    });
+  });
+
+  test.describe("on a phone", () => {
+    test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+    test("the hero shows the closer view of the canvas, inside the screen", async ({ page }) => {
+      await page.goto("/");
+      const svg = scene(page, "hero-animation");
+      await expect(svg).toHaveCount(1);
+      await expect(svg).toHaveAttribute("viewBox", "0 0 480 480");
+      await expect(page.getByRole("img", { name: /^The Wireflow editor: two screens/ })).toBeVisible();
+      await expect.poll(() => states(svg)).toEqual(["running"]);
+      const box = (await svg.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(390);
+      expect(Math.abs(box.width - box.height)).toBeLessThan(1); // square, as its frame
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    });
   });
 });
