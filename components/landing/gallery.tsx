@@ -52,8 +52,8 @@ export default function Gallery() {
                   onClick={() => setCategory(f.slug)}
                   className={`h-9 shrink-0 rounded-full border px-4 text-sm font-medium transition-colors ${
                     active
-                      ? "border-night bg-night text-white"
-                      : "border-line bg-white text-ink-soft hover:border-night/30 hover:text-night"
+                      ? "border-wire-blue bg-wire-blue text-white"
+                      : "border-wire-border bg-white text-ink-soft hover:border-wire-blue/40 hover:text-ink"
                   }`}
                 >
                   {f.label}
@@ -74,9 +74,9 @@ export default function Gallery() {
               <li key={g.id} className={collapsed && i >= FIRST_ROWS_PHONE ? "max-sm:hidden" : undefined}>
                 <a
                   href={`/app?card=${encodeURIComponent(g.id)}`}
-                  className="group flex h-full flex-col rounded-2xl border border-line bg-white p-2 transition hover:border-night/20 hover:shadow-[0_16px_36px_-20px_rgba(27,26,31,0.4)] motion-safe:hover:-translate-y-0.5"
+                  className="group flex h-full flex-col rounded-2xl border border-wire-border bg-white p-2 transition hover:border-wire-blue/30 hover:shadow-[0_16px_36px_-20px_rgba(27,26,31,0.4)] motion-safe:hover:-translate-y-0.5"
                 >
-                  <span className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-xl bg-paper p-2.5">
+                  <span className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-xl bg-wire-canvas p-2.5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={g.src}
@@ -104,7 +104,7 @@ export default function Gallery() {
             <button
               type="button"
               onClick={showAll}
-              className="h-12 rounded-xl border border-line bg-white px-6 text-[15px] font-medium text-night transition-colors hover:border-night/30"
+              className="h-12 rounded-xl border border-wire-border bg-white px-6 text-[15px] font-medium text-ink transition-colors hover:border-wire-blue/40"
             >
               Show all {total} flows
             </button>

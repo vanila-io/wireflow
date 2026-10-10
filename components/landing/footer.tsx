@@ -20,12 +20,12 @@ const columns = [
   },
 ];
 
-const linkClass = "rounded-md text-[15px] text-night/80 transition-colors hover:text-wire-blue";
+const linkClass = "rounded-md text-[15px] text-ink/80 transition-colors hover:text-wire-blue";
 
 // A white card that sits on the warm wash, which shows below and beside it.
 export default function Footer() {
   return (
-    <footer className="relative bg-paper-deep px-3 pt-4 sm:px-6 sm:pt-8">
+    <footer className="relative bg-wire-canvas px-3 pt-4 sm:px-6 sm:pt-8">
       <div className="landing-aura absolute inset-x-0 bottom-0 top-1/3" aria-hidden />
       <div className="relative mx-auto max-w-[1240px] rounded-[24px] bg-white px-6 py-10 shadow-[0_30px_80px_-40px_rgba(27,26,31,0.35)] sm:rounded-[28px] sm:px-12 sm:py-14 lg:px-16">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
@@ -57,7 +57,7 @@ export default function Footer() {
             </div>
           ))}
         </div>
-        <p className="mt-12 border-t border-line pt-6 text-sm text-ink-soft">
+        <p className="mt-12 border-t border-wire-border pt-6 text-sm text-ink-soft">
           Wireflow - user flow chart tool. MIT licensed, built by the Vanila team.
         </p>
       </div>

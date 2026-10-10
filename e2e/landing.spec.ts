@@ -24,6 +24,22 @@ test("keeps the headline, tagline, CTAs and the free-forever line", async ({ pag
   await expect(page.locator(".react-flow__pane")).toBeVisible();
 });
 
+test("uses the editor's colours: the CTA matches the editor's primary button, on a white page", async ({ page }) => {
+  await page.goto("/app");
+  // The header's blue "Export JSON" (the toolbar's icon button has no visible text).
+  const editorPrimary = await page.evaluate(() => {
+    const button = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === "Export JSON");
+    return button ? getComputedStyle(button).backgroundColor : null;
+  });
+  expect(editorPrimary).toBe("rgb(67, 83, 255)"); // wire blue, #4353ff
+
+  await page.goto("/");
+  const cta = page.getByRole("main").getByRole("link", { name: "Start designing" });
+  expect(await cta.evaluate((a) => getComputedStyle(a).backgroundColor)).toBe(editorPrimary);
+  const landing = page.locator(".landing");
+  expect(await landing.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(255, 255, 255)");
+});
+
 test("keeps the nav links, the features, the open-source section and the footer", async ({ page }) => {
   await page.goto("/");
   const nav = page.locator("header nav:visible");

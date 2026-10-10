@@ -78,7 +78,7 @@ function InterfaceSketch() {
       </div>
       <div className="flex items-center gap-1 rounded-2xl bg-white px-3 py-2 shadow-[0_12px_30px_-14px_rgba(27,26,31,0.35)] ring-1 ring-black/5">
         {tools.map((Icon, i) => (
-          <span key={i} className="flex h-8 w-8 items-center justify-center text-night/70">
+          <span key={i} className="flex h-8 w-8 items-center justify-center text-ink/70">
             <Icon size={16} />
           </span>
         ))}
@@ -89,10 +89,10 @@ function InterfaceSketch() {
 
 function LargeCard({ title, text, children }: { title: string; text: string; children: React.ReactNode }) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-[20px] border border-line bg-white">
-      <div className="h-56 bg-paper-deep/70 sm:h-64">{children}</div>
+    <article className="flex flex-col overflow-hidden rounded-[20px] border border-wire-border bg-white">
+      <div className="h-56 bg-wire-canvas/70 sm:h-64">{children}</div>
       <div className="p-6 sm:p-7">
-        <h3 className="text-[17px] font-medium tracking-[-0.01em] text-night">{title}</h3>
+        <h3 className="text-[17px] font-medium tracking-[-0.01em] text-ink">{title}</h3>
         <p className="mt-2 text-[15px] leading-6 text-ink-soft">{text}</p>
       </div>
     </article>
@@ -117,7 +117,7 @@ export default function Features() {
         <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
           {more.map(({ title, text, Icon }) => (
             <li key={title}>
-              <h3 className="flex items-center gap-2.5 text-[15px] font-medium text-night">
+              <h3 className="flex items-center gap-2.5 text-[15px] font-medium text-ink">
                 <Icon size={18} strokeWidth={1.9} className="text-wire-blue" aria-hidden />
                 {title}
               </h3>

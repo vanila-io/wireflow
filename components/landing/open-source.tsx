@@ -22,7 +22,7 @@ const techs = [
 // couldn't be read) and its licence.
 function RepoCard({ stars }: { stars: number | null }) {
   return (
-    <div className="relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-[28px] bg-night p-8 text-white sm:min-h-[420px] sm:p-10">
+    <div className="relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-[28px] bg-ink p-8 text-white sm:min-h-[420px] sm:p-10">
       <div
         className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-wire-blue/40 blur-3xl"
         aria-hidden
@@ -75,12 +75,12 @@ export default function OpenSource({ stars }: { stars: number | null }) {
               Support us
             </Button>
           </div>
-          <ul className="mt-10 divide-y divide-line border-y border-line">
+          <ul className="mt-10 divide-y divide-line border-y border-wire-border">
             {techs.map((t) => (
               <li key={t.name} className="flex gap-3 py-4">
-                <Check size={18} strokeWidth={2.2} className="mt-0.5 shrink-0 text-night" aria-hidden />
+                <Check size={18} strokeWidth={2.2} className="mt-0.5 shrink-0 text-ink" aria-hidden />
                 <p className="text-sm leading-6 text-ink-soft">
-                  <span className="font-medium text-night">{t.name}</span>
+                  <span className="font-medium text-ink">{t.name}</span>
                   <span className="block">{t.text}</span>
                 </p>
               </li>

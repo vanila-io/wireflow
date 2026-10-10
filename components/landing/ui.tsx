@@ -7,7 +7,7 @@ export const container = "mx-auto w-full max-w-[1120px] px-5 sm:px-8";
 
 // Type scale (Geist): display 44/56/64, section title 32/44, card title 17, body 16-18, label 12.
 export const sectionTitle =
-  "text-[32px] font-medium leading-[1.12] tracking-[-0.03em] text-night sm:text-[44px]";
+  "text-[32px] font-medium leading-[1.12] tracking-[-0.03em] text-ink sm:text-[44px]";
 export const label = "text-xs font-medium uppercase tracking-[0.12em] text-ink-soft";
 
 type ButtonProps = {
@@ -35,8 +35,8 @@ export function Button({
 }: ButtonProps) {
   const look =
     variant === "primary"
-      ? "bg-night text-white hover:bg-black"
-      : "border border-line bg-white text-night hover:border-night/30";
+      ? "bg-wire-blue text-white hover:bg-wire-blue-dark"
+      : "border border-wire-border bg-white text-ink hover:border-wire-blue/40";
   const size = compact ? "h-10 text-sm" : "h-12 text-[15px]";
   const padding = arrow ? (compact ? "pl-4 pr-1" : "pl-5 pr-1.5") : compact ? "px-4" : "px-6";
   const classes = `group inline-flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl font-medium transition-colors ${look} ${size} ${padding} ${className}`;
@@ -45,7 +45,7 @@ export function Button({
       {children}
       {arrow && (
         <span
-          className={`flex items-center justify-center rounded-lg bg-white text-night ${compact ? "h-8 w-8" : "h-9 w-9"}`}
+          className={`flex items-center justify-center rounded-lg bg-white text-wire-blue ${compact ? "h-8 w-8" : "h-9 w-9"}`}
           aria-hidden
         >
           <ArrowRight size={16} strokeWidth={2.2} className="motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />

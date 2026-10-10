@@ -8,7 +8,7 @@ function StarLine({ stars }: { stars: number | null }) {
   return (
     <a
       href={REPO_URL}
-      className="inline-flex items-center gap-2 rounded-md text-sm text-ink-soft transition-colors hover:text-night"
+      className="inline-flex items-center gap-2 rounded-md text-sm text-ink-soft transition-colors hover:text-ink"
       data-testid="hero-stars"
     >
       <Star size={16} className="fill-amber-400 text-amber-500" aria-hidden />
@@ -16,7 +16,7 @@ function StarLine({ stars }: { stars: number | null }) {
         <span>Open source on GitHub</span>
       ) : (
         <span>
-          <strong className="font-semibold text-night">{formatCount(stars)}</strong> stars on GitHub
+          <strong className="font-semibold text-ink">{formatCount(stars)}</strong> stars on GitHub
         </span>
       )}
     </a>
@@ -52,15 +52,15 @@ export default function Hero({ stars }: { stars: number | null }) {
       <div className={container}>
         <h1
           id="hero-title"
-          className="text-[44px] font-medium leading-[1.04] tracking-[-0.04em] text-night sm:text-[56px] lg:text-[64px]"
+          className="text-[44px] font-medium leading-[1.04] tracking-[-0.04em] text-ink sm:text-[56px] lg:text-[64px]"
         >
           Free Wire /<br />
           User Flow Tool
         </h1>
         <p className="mt-5 max-w-[34rem] text-[17px] leading-[1.65] text-ink-soft sm:text-lg">
-          Wireflow is a <strong className="font-medium text-night">free, online and open source tool</strong>{" "}
+          Wireflow is a <strong className="font-medium text-ink">free, online and open source tool</strong>{" "}
           for creating beautiful user flow prototypes.{" "}
-          <strong className="font-medium text-night">No Photoshop</strong> skills required!
+          <strong className="font-medium text-ink">No Photoshop</strong> skills required!
         </p>
         <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
           <Button href="/app">Start designing</Button>
