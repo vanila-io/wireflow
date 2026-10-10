@@ -396,12 +396,13 @@ function EditorInner({ loaded }: { loaded: Start }) {
           >
             {saveFailed ? "Not saved in this browser" : "All changes saved"}
           </span>
+          {/* On a phone the header keeps only Export JSON, as before (Open file is in the toolbar). */}
           <button
             onClick={() => void ai.toggle()}
             aria-expanded={ai.open}
             aria-label={ai.failed ? LOAD_FAILED : "AI assistant"}
             title={ai.failed ? LOAD_FAILED : "AI assistant (your own Anthropic key)"}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 transition ${
+            className={`hidden items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 transition sm:flex ${
               ai.failed ? "text-rose-600 ring-rose-300" : "text-wire-blue ring-wire-blue/40 hover:bg-wire-lavender"
             }`}
           >
@@ -411,7 +412,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
           <button
             onClick={chooseFile}
             title="Open a wireflow.json file"
-            className="rounded-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-wire-blue ring-1 ring-wire-blue/40 transition hover:bg-wire-lavender"
+            className="hidden rounded-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-wire-blue ring-1 ring-wire-blue/40 transition hover:bg-wire-lavender sm:block"
           >
             Open file
           </button>
