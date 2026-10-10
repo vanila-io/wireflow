@@ -70,12 +70,15 @@ test("a template drags from anywhere on its tile, and Enter adds one from the ke
 test("a dropped template lands where it was dropped, however many cards there are", async ({ page }) => {
   await seed(page, SAMPLE);
   await openEditor(page);
-  const pane = (await page.locator(".react-flow__pane").boundingBox())!;
   const at = { x: 500, y: 650 };
-  await page
-    .locator('aside button[draggable="true"]')
-    .nth(20)
-    .dragTo(page.locator(".react-flow__pane"), { targetPosition: { x: at.x - pane.x, y: at.y - pane.y } });
+  // A mouse drag in steps rather than dragTo: under load, dragTo now and then
+  // dropped nothing (about 1 run in 30), which a drag in steps hasn't done.
+  const tile = page.locator('aside button[draggable="true"]').nth(20);
+  await tile.scrollIntoViewIfNeeded();
+  await tile.hover();
+  await page.mouse.down();
+  await page.mouse.move(at.x, at.y, { steps: 10 });
+  await page.mouse.up();
   await expect(page.locator(".react-flow__node")).toHaveCount(3);
   // The new card is drawn last.
   const box = (await page.locator(".react-flow__node").last().boundingBox())!;
