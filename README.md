@@ -28,7 +28,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 - **Connect screens** from a card's bottom dot to another card. Each connection has its own label, line shape (smooth, polyline, rounded polyline), width (1 to 10 px) and colour.
 - **Edit cards**: rename the header (double-click it, or in the Card panel), and hide or show it (H, Ctrl+H / Ctrl+K, or the panel).
 - **Groups**: group a selection, nest groups, rename them, drag a card onto a group to add it or out of it to take it out. Ungroup keeps the cards; Delete removes the group with its cards.
-- **Organize**: multi-select (a box), select all, bring to front and send to back.
+- **Organize**: multi-select (a box), select all, bring to front and send to back. While two or more items are selected, a small "N selected · Clear" chip above the toolbar drops the selection in one click (so does Esc, or a click on empty canvas).
 - **Edit history**: undo, redo, copy, paste (connections between copied cards come along) and delete. Undo survives a reload of the tab.
 - **Navigate**: zoom in and out, fit to screen, actual size (1:1) and a minimap.
 - **Export** the whole diagram as a JPG or PNG at twice the screen's pixel density, however large it is and whatever part of it is on screen.
@@ -47,7 +47,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 2. **Connect the flow.** Hover a card, grab its bottom dot and drop it on another card. Select a card, connection or group to edit it in the panel on the right.
 3. **Export.** Use the image button in the toolbar for a JPG or PNG of the whole diagram. You don't need to save; the diagram is stored in your browser as you work. To keep an editable copy or move it to another browser, use **Export JSON**, and **Open file** to load it back.
 
-On screens narrower than 1400 px, the toolbar's less common commands (copy, paste, delete, actual size, arrange, multi-select, group, export image) are under **More tools**. On a phone, **AI** and **Open file** are under the **More** button in the header, and the toolbar scrolls sideways.
+On screens narrower than 1400 px, the toolbar's less common commands (copy, paste, delete, actual size, arrange, multi-select, group, export image) are under **More tools**. On a phone, **AI** and **Open file** are under the **More** button in the header, and the toolbar scrolls sideways. The **Keyboard shortcuts** panel collapses from its heading and remembers that choice; in windows shorter than 941 px, where it would cover the minimap, it starts collapsed.
 
 ## Keyboard shortcuts
 
