@@ -154,6 +154,40 @@ describe("planOps", () => {
     expect(label).toMatch(/^hi there/);
     expect(label.length).toBe(80);
   });
+
+  // Review pass findings.
+  it("keeps a diagram that is already over the screen limit editable, but doesn't let a batch grow it", () => {
+    const big: Diagram = {
+      nodes: Array.from({ length: 301 }, (_, i) => at(`s${i}`, "misc-404", i * 300, 0)),
+      edges: [],
+    };
+    ok([{ op: "update_screen", id: "s0", label: "First" }], big);
+    ok([{ op: "remove", ids: ["s1"] }], big);
+    expect(bad([{ op: "add_screen", id: "more", template: "misc-404", label: "M", x: 0, y: 900 }], big)).toEqual([
+      { index: -1, op: null, message: "diagram would exceed 300 screens" },
+    ]);
+  });
+
+  it("after a clear, an id from before the clear is unknown", () => {
+    expect(bad([{ op: "clear" }, { op: "remove", ids: ["a"] }])).toEqual([
+      { index: 1, op: "remove", message: 'no screen or connection "a"' },
+    ]);
+  });
+
+  it("an empty label shows the template's label, and the default colour is no colour of its own", () => {
+    const d = applyActions(
+      base(),
+      ok([
+        { op: "add_screen", id: "n", template: "misc-404", label: "", x: 0, y: 900 },
+        { op: "update_screen", id: "a", label: "  " },
+        { op: "update_connection", id: "e1", color: "#E8590C" },
+        { op: "update_connection", id: "e1", color: "#A3A8C3" },
+      ]).actions
+    );
+    expect(d.nodes.find((n) => n.id === "n")!.data.headerText).toBe("Not Found 404");
+    expect(d.nodes.find((n) => n.id === "a")!.data.headerText).toBe("e-commerce-cart");
+    expect(d.edges[0]).toEqual(edge("e1", "a", "b"));
+  });
 });
 
 describe("layout warnings", () => {

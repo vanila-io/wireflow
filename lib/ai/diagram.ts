@@ -3,7 +3,7 @@
 // Wireflow's diagram; `applyActions` is the React Flow apply step: a pure
 // function whose result the store records as ONE undo step.
 import { graphicById } from "@/lib/graphics";
-import { ARROW, cardSize, makeCard, type Diagram } from "@/lib/diagram/model";
+import { ARROW, cardSize, DEFAULT_EDGE_COLOR, makeCard, type Diagram } from "@/lib/diagram/model";
 import { removeItems, updateEdge } from "@/lib/diagram/ops";
 import { templateExists } from "./catalog";
 import { layoutIssues, type Screen } from "./layout";
@@ -277,6 +277,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
         if (i !== 0) return fail(i, name, "clear is only allowed as the first operation");
         N.clear();
         E.clear();
+        known.clear();
         actions.push({ kind: "clear" });
         return;
       }
@@ -374,7 +375,9 @@ export function planOps(input: unknown, data: Diagram): Plan {
     }
   });
 
-  if (!errors.length && N.size > MAX_NODES) {
+  // Only growth is limited: a diagram opened from a file may already be larger,
+  // and must stay editable (renames, removals).
+  if (!errors.length && N.size > MAX_NODES && N.size > data.nodes.length) {
     errors.push({ index: -1, op: null, message: `diagram would exceed ${MAX_NODES} screens` });
   }
   if (errors.length) return { errors };
@@ -398,7 +401,7 @@ function applyAction(d: Diagram, a: Action): Diagram {
       const g = graphicById(a.template)!;
       const { width, height } = cardSize({ graphicId: g.id, showHeader: a.header });
       const card = makeCard(g, { x: a.x - width / 2, y: a.y - height / 2 }, a.id);
-      card.data.headerText = a.label;
+      card.data.headerText = a.label || g.label;
       card.data.showHeader = a.header;
       return { nodes: [...d.nodes, card], edges: d.edges };
     }
@@ -414,7 +417,7 @@ function applyAction(d: Diagram, a: Action): Diagram {
             const g = graphicById(a.template)!;
             Object.assign(data, { graphicId: g.id, src: g.src, label: g.label });
           }
-          if (a.label !== undefined) data.headerText = a.label;
+          if (a.label !== undefined) data.headerText = a.label || data.label;
           if (a.header !== undefined) data.showHeader = a.header;
           const { width, height } = cardSize(data);
           const x = (a.x ?? before.x) - width / 2;
@@ -435,7 +438,7 @@ function applyAction(d: Diagram, a: Action): Diagram {
     case "update_connection":
       return updateEdge(d, a.id, {
         ...(a.label !== undefined && { label: a.label }),
-        ...(a.color && { color: a.color }),
+        ...(a.color && { color: a.color === DEFAULT_EDGE_COLOR ? null : a.color }),
       });
     case "remove":
       return removeItems(d, [a.id]);

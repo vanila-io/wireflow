@@ -200,6 +200,23 @@ test("an invalid batch is reported back to the model and nothing is applied", as
   expect(await page.evaluate((k) => localStorage.getItem(k), STORAGE_KEY)).toBeNull();
 });
 
+// Review pass finding: a panel closed during a request reported a visible area of width 0.
+test("closing the panel during a request reports the whole canvas as visible", async ({ page }) => {
+  const badBatch = { summary: "x", operations: [{ op: "connect", id: "c", from: "nope", to: "nada" }] };
+  const requests = await mockAnthropic(page, [toolTurn(badBatch), textTurn("Sorry.")], { slow: 0 });
+  await openPanel(page);
+  const first = (await page.locator(".react-flow").boundingBox())!;
+  await ask(page, "connect things");
+  await panel(page).getByRole("button", { name: "Close the AI assistant" }).click();
+  await expect.poll(() => requests.length, { timeout: 10_000 }).toBe(2);
+  const result = requests[1].body.messages.at(-1)!.content.find((b) => b.type === "tool_result") as unknown as {
+    content: string;
+  };
+  const { view } = JSON.parse(result.content).diagram;
+  // The canvas is at zoom 1 when empty, so the view is about as wide as the canvas.
+  expect(view.width).toBeGreaterThan(first.width * 0.9);
+});
+
 test("the panel offers Undo only while the AI change is the latest one, and shows changes replaced by an opened file", async ({
   page,
 }) => {

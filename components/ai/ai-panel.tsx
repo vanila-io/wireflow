@@ -123,10 +123,10 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
   // minus what the open panel covers. The model places new screens in it.
   const visibleArea = () => {
     const canvas = document.querySelector(".react-flow")!.getBoundingClientRect();
-    const right = Math.max(
-      canvas.left,
-      Math.min(canvas.right, panel.current?.getBoundingClientRect().left ?? canvas.right)
-    );
+    // A closed panel (closed while a request runs) covers nothing.
+    const box = panel.current?.getBoundingClientRect();
+    const covered = box && box.width > 0 ? box.left : canvas.right;
+    const right = Math.max(canvas.left, Math.min(canvas.right, covered));
     const from = rf.screenToFlowPosition({ x: canvas.left, y: canvas.top });
     const to = rf.screenToFlowPosition({ x: right, y: canvas.bottom });
     return {
