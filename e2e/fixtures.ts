@@ -52,8 +52,8 @@ export async function openEditor(page: Page, query = "") {
 export const card = (page: Page, label: string) =>
   page.locator(".react-flow__node").filter({ has: page.getByRole("img", { name: label, exact: true }) });
 
-// The template tiles in the sidebar.
-export const tiles = (page: Page) => page.locator('aside button[draggable="true"]');
+// The template tiles in the sidebar (not the Note tile and the like, which have no image).
+export const tiles = (page: Page) => page.locator('aside button[draggable="true"]:has(img)');
 
 export async function centre(locator: Locator) {
   const b = (await locator.boundingBox())!;

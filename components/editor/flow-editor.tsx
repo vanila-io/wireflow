@@ -15,7 +15,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, serializeFile, type Opened } from "@/lib/diagram/file";
-import { isCard, isGroup, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
+import { isCard, isGroup, isNote, NOTE_SIZE, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
@@ -38,11 +38,13 @@ import CardPanel from "./card-panel";
 import ConfirmDialog from "./confirm-dialog";
 import EdgePanel from "./edge-panel";
 import FlowNodeComp from "./flow-node";
-import GraphicsPanel from "./graphics-panel";
+import GraphicsPanel, { DRAG_ADD, DRAG_CARD, type Addable } from "./graphics-panel";
 import GroupNodeComp from "./group-node";
 import GroupPanel from "./group-panel";
 import { download, renderImage, type ImageFormat } from "./export-image";
 import Menu from "./menu";
+import NoteNodeComp from "./note-node";
+import NotePanel from "./note-panel";
 import Notices, { notice, type Notice } from "./notices";
 import SelectionChip from "./selection-chip";
 import ShortcutsPanel from "./shortcuts-panel";
@@ -205,7 +207,7 @@ function ToolbarButton({ label, onClick, icon, disabled, title, pressed }: Toolb
   );
 }
 
-const nodeTypes = { flow: FlowNodeComp, group: GroupNodeComp };
+const nodeTypes = { flow: FlowNodeComp, group: GroupNodeComp, note: NoteNodeComp };
 
 function EditorInner({ loaded }: { loaded: Start }) {
   const { store, notices: initialNotices, hadDiagram, lock } = loaded;
@@ -220,6 +222,8 @@ function EditorInner({ loaded }: { loaded: Start }) {
     selectedNodes.length === 1 && isGroup(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
   const selectedCard =
     selectedNodes.length === 1 && isCard(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
+  const selectedNote =
+    selectedNodes.length === 1 && isNote(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
   const canGroup = !!store.groupable();
   const canUngroup = !!store.selectedGroup();
   const { hasClipboard } = useStoreState(store);
@@ -261,6 +265,18 @@ function EditorInner({ loaded }: { loaded: Start }) {
       store.addCard(g, { x: pos.x + offset.x, y: pos.y + offset.y });
     },
     [store, screenToFlowPosition]
+  );
+
+  // What a sidebar tile adds: a template card, or a note (#83). `at` is the
+  // top-left corner where it was dropped; a click adds it near the middle of the canvas.
+  const addItem = useCallback(
+    (item: Addable, at?: { x: number; y: number }) => {
+      if (item !== "note") return addGraphic(item, at);
+      const pos =
+        at ?? screenToFlowPosition({ x: window.innerWidth / 2 - NOTE_SIZE.width / 2, y: window.innerHeight / 2 });
+      store.addNote(pos);
+    },
+    [store, addGraphic, screenToFlowPosition]
   );
 
   useEffect(() => {
@@ -387,26 +403,33 @@ function EditorInner({ loaded }: { loaded: Start }) {
 
   // A template dragged with a finger from the sidebar, dropped on the canvas.
   const canvas = useRef<HTMLDivElement>(null);
+  // Dropped items are centred where they land (a card at about its centre).
+  const dropAt = useCallback(
+    (item: Addable, point: { x: number; y: number }) => {
+      const pos = screenToFlowPosition(point);
+      const half = item === "note" ? { x: NOTE_SIZE.width / 2, y: NOTE_SIZE.height / 2 } : { x: 120, y: 100 };
+      addItem(item, { x: pos.x - half.x, y: pos.y - half.y });
+    },
+    [addItem, screenToFlowPosition]
+  );
   const touchDrop = useCallback(
-    (g: Graphic, point: { x: number; y: number }) => {
+    (item: Addable, point: { x: number; y: number }) => {
       const r = canvas.current?.getBoundingClientRect();
       if (!r || point.x < r.left || point.x > r.right || point.y < r.top || point.y > r.bottom) return;
-      const pos = screenToFlowPosition(point);
-      addGraphic(g, { x: pos.x - 120, y: pos.y - 100 });
+      dropAt(item, point);
     },
-    [addGraphic, screenToFlowPosition]
+    [dropAt]
   );
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      const id = event.dataTransfer.getData("application/wireflow-card");
-      const g = id ? graphicById(id) : undefined;
-      if (!g) return;
-      const pos = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-      addGraphic(g, { x: pos.x - 120, y: pos.y - 100 });
+      const id = event.dataTransfer.getData(DRAG_CARD);
+      const extra = event.dataTransfer.getData(DRAG_ADD);
+      const item: Addable | undefined = extra === "note" ? extra : id ? graphicById(id) : undefined;
+      if (item) dropAt(item, { x: event.clientX, y: event.clientY });
     },
-    [addGraphic, screenToFlowPosition]
+    [dropAt]
   );
 
   // The earlier editor's toolbar commands (gg-editor's 14): undo and redo and
@@ -617,7 +640,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <GraphicsPanel onAddCard={(g) => addGraphic(g)} onTouchDrop={touchDrop} />
+        <GraphicsPanel onAddCard={(item) => addItem(item)} onTouchDrop={touchDrop} />
         <div
           ref={canvas}
           // Focusable from script only, so focus has somewhere to go when a
@@ -769,7 +792,8 @@ function EditorInner({ loaded }: { loaded: Start }) {
           {selectedEdge && <EdgePanel edge={selectedEdge} edges={edges} />}
           {selectedGroup && isGroup(selectedGroup) && <GroupPanel group={selectedGroup} />}
           {selectedCard && isCard(selectedCard) && <CardPanel card={selectedCard} />}
-          <ShortcutsPanel hidden={!!(selectedEdge || selectedGroup || selectedCard)} />
+          {selectedNote && isNote(selectedNote) && <NotePanel note={selectedNote} />}
+          <ShortcutsPanel hidden={!!(selectedEdge || selectedGroup || selectedCard || selectedNote)} />
         </div>
       </div>
     </div>

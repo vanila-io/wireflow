@@ -5,9 +5,10 @@
 //
 // - every node and edge has a non-empty string id, unique across the diagram;
 // - a card shows a catalog graphic, and its image URL is the catalog's;
+// - a note has text (at most MAX_NOTE_TEXT characters) and a size within NOTE_BOUNDS;
 // - a parentId names an existing group, parent chains have no loops, and
 //   parents come before their children (React Flow requires it);
-// - every edge connects two existing cards (no loose or dangling edges), and
+// - every edge connects two existing cards or notes (no loose or dangling edges), and
 //   its shape, width and colour are ones the editor offers;
 // - only known fields are kept, so nothing like "__proto__" gets through, and
 //   React Flow's selection, drag state and measurements never reach storage.
@@ -22,8 +23,12 @@ import {
   EDGE_SHAPES,
   MAX_EDGE_WIDTH,
   MIN_EDGE_WIDTH,
+  MAX_NOTE_TEXT,
+  NOTE_BOUNDS,
+  NOTE_SIZE,
+  isConnectable,
   isGroup,
-  type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode } from "./model";
+  type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode, type NoteNode } from "./model";
 
 // `parents` (only when there were any): items taken out of a group that doesn't
 // exist or contains itself.
@@ -86,6 +91,23 @@ function group(raw: Obj, id: string): GroupNode | undefined {
   };
 }
 
+function note(raw: Obj, id: string): NoteNode | undefined {
+  const pos = position(raw.position);
+  if (raw.type !== "note" || !pos) return undefined;
+  const data = isObject(raw.data) ? raw.data : {};
+  const size = (v: unknown, min: number, max: number, fallback: number) =>
+    isNum(v) && v > 0 ? Math.round(Math.min(max, Math.max(min, v))) : fallback;
+  return {
+    id,
+    type: "note",
+    position: pos,
+    ...(isId(raw.parentId) && { parentId: raw.parentId }),
+    width: size(raw.width, NOTE_BOUNDS.minWidth, NOTE_BOUNDS.maxWidth, NOTE_SIZE.width),
+    height: size(raw.height, NOTE_BOUNDS.minHeight, NOTE_BOUNDS.maxHeight, NOTE_SIZE.height),
+    data: { text: text(data.text, MAX_NOTE_TEXT) ?? "" },
+  };
+}
+
 function edge(raw: Obj, id: string): DiagramEdge | undefined {
   if (!isId(raw.source) || !isId(raw.target)) return undefined;
   const label = text(raw.label, MAX_LABEL);
@@ -119,7 +141,7 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
   const nodes: DiagramNode[] = [];
   for (const raw of rawNodes) {
     const id = isObject(raw) && isId(raw.id) && !ids.has(raw.id) ? raw.id : undefined;
-    const node = id === undefined ? undefined : (card(raw as Obj, id) ?? group(raw as Obj, id));
+    const node = id === undefined ? undefined : (card(raw as Obj, id) ?? group(raw as Obj, id) ?? note(raw as Obj, id));
     if (!node) {
       dropped.nodes++;
       continue;
@@ -160,8 +182,8 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
     .sort((a, b) => a.depth - b.depth || a.index - b.index)
     .map((o) => o.node);
 
-  // Groups have no handles, so a connection joins two cards.
-  const nodeIds = new Set(nodes.filter((n) => n.type === "flow").map((n) => n.id));
+  // Groups have no handles, so a connection joins two cards or notes.
+  const nodeIds = new Set(nodes.filter(isConnectable).map((n) => n.id));
   const edges: DiagramEdge[] = [];
   for (const raw of rawEdges) {
     const id = isObject(raw) && isId(raw.id) && !ids.has(raw.id) ? raw.id : undefined;

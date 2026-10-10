@@ -217,7 +217,7 @@ test("an invalid batch is reported back to the model and nothing is applied", as
     content: string;
   };
   expect(result.is_error).toBe(true);
-  expect(JSON.parse(result.content).errors).toEqual([{ index: 0, op: "connect", message: 'no screen "nope"' }]);
+  expect(JSON.parse(result.content).errors).toEqual([{ index: 0, op: "connect", message: 'no screen or note "nope"' }]);
   expect(await page.evaluate((k) => localStorage.getItem(k), STORAGE_KEY)).toBeNull();
 });
 

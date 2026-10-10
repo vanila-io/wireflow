@@ -1,14 +1,34 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { StickyNote } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { categoryLabels, graphicsByCategory } from "@/lib/graphics";
 import type { Graphic } from "@/lib/graphics";
 
+/** What a tile adds: a screen template, or a note (#83). */
+export type Addable = Graphic | "note";
+
 type Props = {
-  onAddCard: (g: Graphic) => void;
+  onAddCard: (item: Addable) => void;
   /** A touch drag ended at this screen point (the canvas decides if it is on it). */
-  onTouchDrop: (g: Graphic, point: { x: number; y: number }) => void;
+  onTouchDrop: (item: Addable, point: { x: number; y: number }) => void;
 };
+
+// Tiles that add something other than a template. They lead the "All" list, and
+// a search finds them by a word they start with.
+const EXTRAS: { item: Exclude<Addable, Graphic>; label: string; words: string[]; icon: ReactNode; className: string }[] = [
+  {
+    item: "note",
+    label: "Note",
+    words: ["note", "text", "comment", "sticky"],
+    icon: <StickyNote size={20} aria-hidden />,
+    className: "bg-[#fffcf0] ring-[#e8dcaa]",
+  },
+];
+
+/** The drag data a tile carries: a template id, or what else it adds. */
+export const DRAG_CARD = "application/wireflow-card";
+export const DRAG_ADD = "application/wireflow-add";
 
 // How far a finger moves before the gesture is a drag (sideways) or a scroll.
 const SLOP = 8;
@@ -71,6 +91,12 @@ export default function GraphicsPanel({ onAddCard, onTouchDrop }: Props) {
     }
     return list;
   }, [query, shown]);
+  const q = query.trim().toLowerCase();
+  const extras = searching
+    ? EXTRAS.filter((x) => q.length >= 2 && x.words.some((w) => w.startsWith(q)))
+    : shown === "all"
+      ? EXTRAS
+      : [];
 
   const list = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -79,7 +105,7 @@ export default function GraphicsPanel({ onAddCard, onTouchDrop }: Props) {
 
   // Touch drag: a ghost image follows the finger. It lives outside React state,
   // so moving it doesn't re-render the list.
-  const touch = useRef<{ g: Graphic; id: number; x: number; y: number; ghost?: HTMLElement } | null>(null);
+  const touch = useRef<{ item: Addable; id: number; x: number; y: number; ghost?: HTMLElement } | null>(null);
   const droppedAt = useRef(-Infinity);
   const endTouch = () => {
     touch.current?.ghost?.remove();
@@ -200,57 +226,23 @@ export default function GraphicsPanel({ onAddCard, onTouchDrop }: Props) {
         id="graphics-panel-list"
         className="grid flex-1 grid-cols-[repeat(auto-fill,minmax(90px,1fr))] content-start gap-2 overflow-y-auto p-3"
       >
+        {extras.map((x) => (
+          <button key={x.item} {...tile(x.item)} title={`${x.label} - drag onto canvas or click to add`} className={TILE_CLASS}>
+            <span
+              className={`flex aspect-[127/100] w-full flex-col items-center justify-center gap-1.5 rounded-sm text-ink-soft ring-1 ${x.className}`}
+            >
+              {x.icon}
+              <span className="text-[10px] font-bold uppercase tracking-wide">{x.label}</span>
+            </span>
+          </button>
+        ))}
         {items.map((g) => (
-          <button
-            key={g.id}
-            draggable
-            onDragStart={(e) => {
-              e.dataTransfer.setData("application/wireflow-card", g.id);
-              e.dataTransfer.effectAllowed = "move";
-            }}
-            onClick={(e) => {
-              // A touch drag that just ended is not also a tap.
-              if (e.timeStamp - droppedAt.current > 500) onAddCard(g);
-            }}
-            onPointerDown={(e) => {
-              if (e.pointerType !== "touch") return;
-              touch.current = { g, id: e.pointerId, x: e.clientX, y: e.clientY };
-            }}
-            onPointerMove={(e) => {
-              const t = touch.current;
-              if (!t || t.id !== e.pointerId) return;
-              if (!t.ghost) {
-                const dx = Math.abs(e.clientX - t.x);
-                const dy = Math.abs(e.clientY - t.y);
-                if (dx < SLOP && dy < SLOP) return;
-                // Mostly vertical: the browser scrolls the list (touch-action: pan-y).
-                if (dy >= dx) return endTouch();
-                const ghost = e.currentTarget.querySelector("img")!.cloneNode() as HTMLElement;
-                ghost.className = "touch-drag-ghost";
-                ghost.removeAttribute("alt");
-                document.body.append(ghost);
-                t.ghost = ghost;
-                e.currentTarget.setPointerCapture(e.pointerId);
-              }
-              t.ghost.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
-            }}
-            onPointerUp={(e) => {
-              const t = touch.current;
-              if (t?.ghost && t.id === e.pointerId) {
-                droppedAt.current = e.timeStamp;
-                onTouchDrop(t.g, { x: e.clientX, y: e.clientY });
-              }
-              endTouch();
-            }}
-            onPointerCancel={endTouch}
-            title={`${g.label} - drag onto canvas or click to add`}
-            className="touch-pan-y cursor-grab rounded-md border border-wire-border bg-white p-2 transition hover:border-wire-blue/50 hover:shadow-md active:cursor-grabbing"
-          >
+          <button key={g.id} {...tile(g)} title={`${g.label} - drag onto canvas or click to add`} className={TILE_CLASS}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={g.src} alt={g.label} className="h-auto w-full" />
           </button>
         ))}
-        {items.length === 0 && (
+        {items.length === 0 && extras.length === 0 && (
           <p className="col-span-full py-8 text-center text-sm text-ink-soft">
             No graphics match &ldquo;{query}&rdquo;
           </p>
@@ -258,4 +250,55 @@ export default function GraphicsPanel({ onAddCard, onTouchDrop }: Props) {
       </div>
     </aside>
   );
+
+  // A tile's drag, click and touch handling, the same for templates and extras.
+  function tile(item: Addable) {
+    return {
+      draggable: true,
+      onDragStart: (e: React.DragEvent) => {
+        if (typeof item === "string") e.dataTransfer.setData(DRAG_ADD, item);
+        else e.dataTransfer.setData(DRAG_CARD, item.id);
+        e.dataTransfer.effectAllowed = "move";
+      },
+      onClick: (e: React.MouseEvent) => {
+        // A touch drag that just ended is not also a tap.
+        if (e.timeStamp - droppedAt.current > 500) onAddCard(item);
+      },
+      onPointerDown: (e: React.PointerEvent) => {
+        if (e.pointerType !== "touch") return;
+        touch.current = { item, id: e.pointerId, x: e.clientX, y: e.clientY };
+      },
+      onPointerMove: (e: React.PointerEvent<HTMLButtonElement>) => {
+        const t = touch.current;
+        if (!t || t.id !== e.pointerId) return;
+        if (!t.ghost) {
+          const dx = Math.abs(e.clientX - t.x);
+          const dy = Math.abs(e.clientY - t.y);
+          if (dx < SLOP && dy < SLOP) return;
+          // Mostly vertical: the browser scrolls the list (touch-action: pan-y).
+          if (dy >= dx) return endTouch();
+          // The tile's picture (a template's image, an extra's card) follows the finger.
+          const ghost = e.currentTarget.firstElementChild!.cloneNode(true) as HTMLElement;
+          ghost.classList.add("touch-drag-ghost");
+          ghost.removeAttribute("alt");
+          document.body.append(ghost);
+          t.ghost = ghost;
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }
+        t.ghost.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+      },
+      onPointerUp: (e: React.PointerEvent) => {
+        const t = touch.current;
+        if (t?.ghost && t.id === e.pointerId) {
+          droppedAt.current = e.timeStamp;
+          onTouchDrop(t.item, { x: e.clientX, y: e.clientY });
+        }
+        endTouch();
+      },
+      onPointerCancel: endTouch,
+    };
+  }
 }
+
+const TILE_CLASS =
+  "touch-pan-y cursor-grab rounded-md border border-wire-border bg-white p-2 transition hover:border-wire-blue/50 hover:shadow-md active:cursor-grabbing";

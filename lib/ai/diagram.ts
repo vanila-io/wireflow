@@ -10,7 +10,12 @@ import {
   DEFAULT_EDGE_COLOR,
   isCard,
   isGroup,
+  isNote,
   makeCard,
+  makeNote,
+  MAX_NOTE_TEXT,
+  NOTE_BOUNDS,
+  NOTE_SIZE,
   type Diagram,
   type DiagramNode,
 } from "@/lib/diagram/model";
@@ -58,6 +63,18 @@ export function snapshot({ data, selected = [], view }: { data: Diagram; selecte
       label: typeof e.label === "string" ? e.label : "",
     })),
     groups: data.nodes.filter(isGroup).map((g) => ({ id: g.id, label: g.data.label, parent: g.parentId ?? null })),
+    notes: data.nodes.filter(isNote).map((n) => {
+      const b = boxes.get(n.id)!;
+      return {
+        id: n.id,
+        text: n.data.text,
+        x: round(b.x + b.width / 2),
+        y: round(b.y + b.height / 2),
+        width: round(b.width),
+        height: round(b.height),
+        group: n.parentId ?? null,
+      };
+    }),
   };
 }
 
@@ -122,12 +139,38 @@ export const EDIT_DIAGRAM_TOOL = {
               ["id"]
             ),
             op(
+              "add_note",
+              "Add a note: a box of free text (several lines allowed) for comments, requirements or annotations.",
+              {
+                id: str('New unique id, e.g. "note_login". Letters, digits, _ and -; must start with a letter.'),
+                text: str(`The note's text, at most ${MAX_NOTE_TEXT} characters; line breaks are kept.`),
+                x: num("Centre x in canvas pixels. Omit to auto-place."),
+                y: num("Centre y in canvas pixels. Omit to auto-place."),
+                width: num(`Width in px (${NOTE_BOUNDS.minWidth} to ${NOTE_BOUNDS.maxWidth}). Default ${NOTE_SIZE.width}.`),
+                height: num(`Height in px (${NOTE_BOUNDS.minHeight} to ${NOTE_BOUNDS.maxHeight}). Default ${NOTE_SIZE.height}.`),
+              },
+              ["id", "text"]
+            ),
+            op(
+              "update_note",
+              "Change an existing note. Only the given fields change.",
+              {
+                id: str("Note id."),
+                text: str("New text (replaces the old text)."),
+                x: num("New centre x."),
+                y: num("New centre y."),
+                width: num("New width in px."),
+                height: num("New height in px."),
+              },
+              ["id"]
+            ),
+            op(
               "connect",
-              "Draw an arrow from one screen to another.",
+              "Draw an arrow from one screen or note to another.",
               {
                 id: str("New unique connection id."),
-                from: str("Source screen id."),
-                to: str("Target screen id."),
+                from: str("Source screen or note id."),
+                to: str("Target screen or note id."),
                 label: str("Optional arrow label, e.g. the action that triggers it."),
               },
               ["id", "from", "to"]
@@ -144,18 +187,18 @@ export const EDIT_DIAGRAM_TOOL = {
             ),
             op(
               "group",
-              "Put two or more screens (or groups) into a new labelled group frame.",
+              "Put two or more screens, notes or groups into a new labelled group frame.",
               {
                 id: str("New unique group id."),
                 label: str("Group label."),
-                members: { type: "array", items: { type: "string" }, description: "Ids of screens or groups to include." },
+                members: { type: "array", items: { type: "string" }, description: "Ids of screens, notes or groups to include." },
               },
               ["id", "label", "members"]
             ),
             op("ungroup", "Dissolve a group, keeping its screens.", { id: str("Group id.") }, ["id"]),
             op(
               "remove",
-              "Delete screens, connections or groups.",
+              "Delete screens, notes, connections or groups.",
               { ids: { type: "array", items: { type: "string" } } },
               ["ids"]
             ),
@@ -174,6 +217,8 @@ export type Action =
   | { kind: "clear" }
   | { kind: "add_screen"; id: string; template: string; label: string; x: number; y: number; header: boolean }
   | { kind: "update_screen"; id: string; template?: string; label?: string; x?: number; y?: number; header?: boolean }
+  | { kind: "add_note"; id: string; text: string; x: number; y: number; width: number; height: number }
+  | { kind: "update_note"; id: string; text?: string; x?: number; y?: number; width?: number; height?: number }
   | { kind: "connect"; id: string; from: string; to: string; label?: string }
   | { kind: "update_connection"; id: string; label?: string; color?: string }
   | { kind: "group"; id: string; label: string; members: string[] }
@@ -197,12 +242,22 @@ const cleanLabel = (s: unknown) =>
     .trim()
     .slice(0, MAX_LABEL);
 
+// A note's text keeps its line breaks; other control characters become spaces.
+const cleanText = (s: unknown) =>
+  String(s)
+    .replace(/\r\n?/g, "\n")
+    .replace(/[^\P{Cc}\n]/gu, " ")
+    .replace(/\s+$/, "")
+    .slice(0, MAX_NOTE_TEXT);
+
 const has = (o: Record<string, unknown>, k: string) => o[k] !== undefined && o[k] !== null;
 
 const ALLOWED: Record<string, string[]> = {
   clear: [],
   add_screen: ["id", "template", "label", "x", "y", "header"],
   update_screen: ["id", "template", "label", "x", "y", "header"],
+  add_note: ["id", "text", "x", "y", "width", "height"],
+  update_note: ["id", "text", "x", "y", "width", "height"],
   connect: ["id", "from", "to", "label"],
   update_connection: ["id", "label", "color"],
   group: ["id", "label", "members"],
@@ -237,21 +292,23 @@ export function planOps(input: unknown, data: Diagram): Plan {
   if (ops.length > MAX_OPS)
     return { errors: [{ index: -1, op: null, message: `at most ${MAX_OPS} operations per call` }] };
 
-  // Working copy of the diagram so each operation sees the effect of the previous ones.
-  type S = Screen & { template: string; header: boolean };
+  // Working copy of the diagram so each operation sees the effect of the previous
+  // ones. N holds what a connection can join: screens, and notes (no template).
+  type S = Screen & { kind: "screen" | "note"; template: string; header: boolean };
   const boxes = absoluteBoxes(data.nodes);
   const N = new Map<string, S>(
-    data.nodes.filter(isCard).map((n) => {
+    data.nodes.filter((n) => isCard(n) || isNote(n)).map((n) => {
       const b = boxes.get(n.id)!;
       return [
         n.id,
         {
+          kind: isCard(n) ? "screen" : "note",
           x: b.x + b.width / 2,
           y: b.y + b.height / 2,
           size: [b.width, b.height],
           parent: n.parentId ?? null,
-          template: n.data.graphicId,
-          header: n.data.showHeader !== false,
+          template: isCard(n) ? n.data.graphicId : "",
+          header: isCard(n) ? n.data.showHeader !== false : false,
         },
       ];
     })
@@ -315,6 +372,12 @@ export function planOps(input: unknown, data: Diagram): Plan {
     const template = () => templateExists(o.template) || fail(i, name, `unknown template "${o.template}"`);
     const text = (k: string) => !has(o, k) || typeof o[k] === "string" || fail(i, name, `${k} must be a string`);
     const bool = (k: string) => !has(o, k) || typeof o[k] === "boolean" || fail(i, name, `${k} must be a boolean`);
+    const size = (k: "width" | "height") => {
+      if (!has(o, k)) return true;
+      const [min, max] = k === "width" ? [NOTE_BOUNDS.minWidth, NOTE_BOUNDS.maxWidth] : [NOTE_BOUNDS.minHeight, NOTE_BOUNDS.maxHeight];
+      const v = o[k];
+      return (typeof v === "number" && Number.isFinite(v) && v >= min && v <= max) || fail(i, name, `${k} must be a number from ${min} to ${max}`);
+    };
 
     switch (name) {
       case "clear": {
@@ -339,6 +402,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
         }
         const header = o.header !== false;
         N.set(o.id as string, {
+          kind: "screen",
           x,
           y,
           size: sizeFor(o.template as string, header),
@@ -359,7 +423,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
       }
       case "update_screen": {
         const screen = N.get(o.id as string);
-        if (!screen) return fail(i, name, `no screen "${o.id}"`);
+        if (!screen || screen.kind !== "screen") return fail(i, name, `no screen "${o.id}"`);
         if (has(o, "template") && !template()) return;
         if (!coord("x") || !coord("y") || !bool("header") || !text("label")) return;
         const action: Action = { kind: "update_screen", id: o.id as string };
@@ -373,11 +437,42 @@ export function planOps(input: unknown, data: Diagram): Plan {
         actions.push(action);
         return;
       }
+      case "add_note": {
+        if (!newId(o.id) || !coord("x") || !coord("y") || !size("width") || !size("height")) return;
+        if (typeof o.text !== "string") return fail(i, name, "text must be a string");
+        let x = o.x as number;
+        let y = o.y as number;
+        if (!has(o, "x") || !has(o, "y")) {
+          const p = autoPlace();
+          x = has(o, "x") ? x : p.x;
+          y = has(o, "y") ? y : p.y;
+          placed[o.id as string] = [x, y];
+        }
+        const width = has(o, "width") ? Math.round(o.width as number) : NOTE_SIZE.width;
+        const height = has(o, "height") ? Math.round(o.height as number) : NOTE_SIZE.height;
+        N.set(o.id as string, { kind: "note", x, y, size: [width, height], parent: null, template: "", header: false });
+        actions.push({ kind: "add_note", id: o.id as string, text: cleanText(o.text), x, y, width, height });
+        return;
+      }
+      case "update_note": {
+        const note = N.get(o.id as string);
+        if (!note || note.kind !== "note") return fail(i, name, `no note "${o.id}"`);
+        if (!coord("x") || !coord("y") || !size("width") || !size("height") || !text("text")) return;
+        const action: Action = { kind: "update_note", id: o.id as string };
+        if (has(o, "text")) action.text = cleanText(o.text);
+        if (has(o, "x")) action.x = note.x = o.x as number;
+        if (has(o, "y")) action.y = note.y = o.y as number;
+        if (has(o, "width")) note.size = [(action.width = Math.round(o.width as number)), note.size[1]];
+        if (has(o, "height")) note.size = [note.size[0], (action.height = Math.round(o.height as number))];
+        if (Object.keys(action).length === 2) return fail(i, name, "nothing to update");
+        actions.push(action);
+        return;
+      }
       case "connect": {
         if (!newId(o.id)) return;
-        if (!N.has(o.from as string)) return fail(i, name, `no screen "${o.from}"`);
-        if (!N.has(o.to as string)) return fail(i, name, `no screen "${o.to}"`);
-        if (o.from === o.to) return fail(i, name, "a screen cannot connect to itself");
+        if (!N.has(o.from as string)) return fail(i, name, `no screen or note "${o.from}"`);
+        if (!N.has(o.to as string)) return fail(i, name, `no screen or note "${o.to}"`);
+        if (o.from === o.to) return fail(i, name, "a screen or note cannot connect to itself");
         if (!text("label")) return;
         E.set(o.id as string, { source: o.from as string, target: o.to as string });
         actions.push({
@@ -442,7 +537,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
           // Already removed with an earlier id of this batch (an edge of a
           // removed screen, a screen in a removed group): nothing left to do.
           else if (known.has(id)) continue;
-          else return fail(i, name, `no screen, connection or group "${id}"`);
+          else return fail(i, name, `no screen, note, connection or group "${id}"`);
           actions.push({ kind: "remove", id });
         }
         return;
@@ -507,6 +602,25 @@ function applyAction(d: Diagram, a: Action): Diagram {
         if (a.label !== undefined) data.headerText = a.label || data.label;
         if (a.header !== undefined) data.showHeader = a.header;
         return { ...n, data };
+      });
+      const centre = { x: a.x ?? before.x + before.width / 2, y: a.y ?? before.y + before.height / 2 };
+      return { nodes: moveCentre({ nodes, edges: d.edges }, a.id, centre), edges: d.edges };
+    }
+    case "add_note": {
+      const note = makeNote({ x: a.x - a.width / 2, y: a.y - a.height / 2 }, a.text, a.id);
+      return { nodes: [...d.nodes, { ...note, width: a.width, height: a.height }], edges: d.edges };
+    }
+    case "update_note": {
+      // Size first, then the centre (the old one if none is given).
+      const before = absoluteBoxes(d.nodes).get(a.id)!;
+      const nodes = d.nodes.map((n): DiagramNode => {
+        if (n.id !== a.id || !isNote(n)) return n;
+        return {
+          ...n,
+          ...(a.width !== undefined && { width: a.width }),
+          ...(a.height !== undefined && { height: a.height }),
+          ...(a.text !== undefined && { data: { ...n.data, text: a.text } }),
+        };
       });
       const centre = { x: a.x ?? before.x + before.width / 2, y: a.y ?? before.y + before.height / 2 };
       return { nodes: moveCentre({ nodes, edges: d.edges }, a.id, centre), edges: d.edges };

@@ -6,8 +6,8 @@
 //     "diagram": { "nodes": [...], "edges": [...] }
 //   }
 //
-// `diagram` is the stored diagram (see model.ts): cards, groups (React Flow
-// parent nodes: a member's position is relative to its group) and connections,
+// `diagram` is the stored diagram (see model.ts): cards, notes, groups (React
+// Flow parent nodes: a member's position is relative to its group) and connections,
 // except that a card keeps only
 // its template id (data.graphicId, the stable ids in lib/graphics.json such as
 // "e-commerce-cart") and not the image URL, which this build derives from it.
@@ -23,7 +23,8 @@ import { isCard, type Diagram } from "./model";
 import { dropProto, enforceRules, enforceRulesOnLoad, type Dropped } from "./rules";
 
 export const FILE_FORMAT = "wireflow";
-export const FILE_VERSION = 2;
+// 3: notes (#83). Version 2 files open unchanged.
+export const FILE_VERSION = 3;
 export const FILE_NAME = "wireflow.json";
 // Anything larger can't be a hand-made diagram and could hang the tab.
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -89,11 +90,15 @@ function parseCurrent(diagram: Obj): Obj {
   nodes.forEach((n) => check(isObject(n), "It doesn't contain a Wireflow diagram."));
   checkStructure(nodes as Obj[], edges, [], "parentId");
   for (const n of nodes as Obj[]) {
-    check(n.type === "flow" || n.type === "group", `The item "${n.id}" isn't a card or a group.`);
+    check(n.type === "flow" || n.type === "group" || n.type === "note", `The item "${n.id}" isn't a card, a note or a group.`);
     check(isObject(n.position) && finite(n.position.x) && finite(n.position.y), `The item "${n.id}" has no position.`);
     const data = isObject(n.data) ? n.data : {};
     if (n.type === "group") {
       check(data.label === undefined || typeof data.label === "string", `The group "${n.id}" has a label that isn't text.`);
+      continue;
+    }
+    if (n.type === "note") {
+      check(data.text === undefined || typeof data.text === "string", `The note "${n.id}" has text that isn't text.`);
       continue;
     }
     check(isId(data.graphicId), `The card "${n.id}" doesn't say which screen template it shows.`);

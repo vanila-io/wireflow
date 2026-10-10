@@ -5,6 +5,8 @@ import {
   edgeType,
   isCard,
   isGroup,
+  isNote,
+  MAX_NOTE_TEXT,
   newCardId,
   newId,
   type Diagram,
@@ -60,7 +62,7 @@ export function copyItems(d: Diagram, ids: Iterable<string>): Clip {
 // top-level nodes, so the editor can select them.
 export function pasteItems(d: Diagram, clip: Clip, offset: { x: number; y: number }): { diagram: Diagram; ids: string[] } {
   const ids = new Map<string, string>();
-  clip.nodes.forEach((n) => ids.set(n.id, isCard(n) ? newCardId(n.data.graphicId) : newId("group")));
+  clip.nodes.forEach((n) => ids.set(n.id, isCard(n) ? newCardId(n.data.graphicId) : newId(isNote(n) ? "note" : "group")));
   clip.edges.forEach((e) => ids.set(e.id, newId("edge")));
   const nodes = clip.nodes.map((n): DiagramNode => {
     const top = n.parentId === undefined;
@@ -216,6 +218,15 @@ export function toggleHeaders(d: Diagram, ids: string[]): Diagram {
 export function setHeaderText(d: Diagram, id: string, value: string): Diagram {
   return {
     nodes: d.nodes.map((n): DiagramNode => (n.id === id && isCard(n) ? { ...n, data: { ...n.data, headerText: value.trim() || n.data.label } } : n)),
+    edges: d.edges,
+  };
+}
+
+// A note's text, as typed (line breaks kept; only the end is trimmed of blank lines).
+export function setNoteText(d: Diagram, id: string, value: string): Diagram {
+  const text = value.replace(/\s+$/, "").slice(0, MAX_NOTE_TEXT);
+  return {
+    nodes: d.nodes.map((n): DiagramNode => (n.id === id && isNote(n) ? { ...n, data: { ...n.data, text } } : n)),
     edges: d.edges,
   };
 }

@@ -40,8 +40,9 @@ export async function renderImage(viewport: HTMLElement, bounds: Rect, format: I
     height,
     pixelRatio,
     style: { width: `${width}px`, height: `${height}px`, transform: `translate(${x}px, ${y}px) scale(${zoom})` },
-    // Handles are editing controls, not part of the diagram.
-    filter: (node: HTMLElement) => !node.classList?.contains("react-flow__handle"),
+    // Handles and a note's resize controls are editing controls, not part of the diagram.
+    filter: (node: HTMLElement) =>
+      !node.classList?.contains("react-flow__handle") && !node.classList?.contains("react-flow__resize-control"),
   };
   const url = format === "jpg" ? await toJpeg(viewport, { ...options, quality: 0.95 }) : await toPng(viewport, options);
   return { url, width: Math.round(width * pixelRatio), height: Math.round(height * pixelRatio) };

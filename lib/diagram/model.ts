@@ -9,12 +9,16 @@
 // can still read what version 2 writes (a group is React Flow's built-in
 // "group" node type there). Edges may also carry a line shape (React Flow's
 // edge `type`) and a width (style.strokeWidth), as in the earlier editor.
+//
+// Version 3 adds note nodes (#83): free text in a resizable box that connects
+// like a card. An editor that knows only version 2 would drop them, so it sees
+// version 3 data as newer and doesn't save over it (see readDiagram).
 import type { Edge, Node } from "@xyflow/react";
 import graphicSizes from "@/lib/graphic-sizes.json";
 import { graphicById, type Graphic } from "@/lib/graphics";
 
 export const STORAGE_KEY = "wireflow-flow-v1";
-export const DIAGRAM_VERSION = 2;
+export const DIAGRAM_VERSION = 3;
 
 // The same fields flow-node.tsx has always used.
 export type CardData = {
@@ -25,16 +29,31 @@ export type CardData = {
   showHeader?: boolean;
 };
 export type GroupData = { label: string };
+export type NoteData = { text: string };
 
 export type CardNode = Node<CardData, "flow">;
 export type GroupNode = Node<GroupData, "group">;
-export type DiagramNode = CardNode | GroupNode;
+export type NoteNode = Node<NoteData, "note">;
+export type DiagramNode = CardNode | GroupNode | NoteNode;
 export type DiagramEdge = Edge;
 
 export type Diagram = { nodes: DiagramNode[]; edges: DiagramEdge[] };
 
 export const isCard = (node: Node): node is CardNode => node.type === "flow";
 export const isGroup = (node: Node): node is GroupNode => node.type === "group";
+export const isNote = (node: Node): node is NoteNode => node.type === "note";
+/** What a connection can join: cards and notes (groups have no handles). */
+export const isConnectable = (node: Node): node is CardNode | NoteNode => isCard(node) || isNote(node);
+
+// Notes (#83): a box of free text, stored with its size (React Flow's node
+// width and height), resizable within these bounds.
+export const NOTE_SIZE = { width: 220, height: 120 };
+export const NOTE_BOUNDS = { minWidth: 120, minHeight: 48, maxWidth: 800, maxHeight: 800 };
+export const MAX_NOTE_TEXT = 2000;
+
+export function makeNote(position: { x: number; y: number }, text = "", id = newId("note")): NoteNode {
+  return { id, type: "note", position, ...NOTE_SIZE, data: { text } };
+}
 
 // Card geometry, from components/editor/editor.css: a 220px wide box with a 1px
 // border, a 24px header and the graphic drawn at the inner width.

@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, openEditor, SAMPLE, saved, seed, test } from "./fixtures";
 
 const sidebar = (page: Page) => page.getByRole("complementary", { name: "Screen templates" });
-const tiles = (page: Page) => sidebar(page).locator('button[draggable="true"]');
+const tiles = (page: Page) => sidebar(page).locator('button[draggable="true"]:has(img)');
 
 // #108: the editor searched only the picked category.
 test("search looks in every category, whatever category is picked", async ({ page }) => {
@@ -73,7 +73,7 @@ test("a dropped template lands where it was dropped, however many cards there ar
   const at = { x: 500, y: 650 };
   // A mouse drag in steps rather than dragTo: under load, dragTo now and then
   // dropped nothing (about 1 run in 30), which a drag in steps hasn't done.
-  const tile = page.locator('aside button[draggable="true"]').nth(20);
+  const tile = tiles(page).nth(20);
   await tile.scrollIntoViewIfNeeded();
   await tile.hover();
   await page.mouse.down();

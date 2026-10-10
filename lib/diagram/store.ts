@@ -1,7 +1,7 @@
 // The one diagram store. React Flow and every editor feature read it with
 // useSyncExternalStore and change it only through these methods, and every
-// change ends in `commit`, the single save boundary: unless a drag is still in
-// progress, the diagram goes through the rules (rules.ts), is saved, and is
+// change ends in `commit`, the single save boundary: unless a drag or a resize
+// is still in progress, the diagram goes through the rules (rules.ts), is saved, and is
 // recorded as one undo step. A change that leaves the stored JSON as it was
 // (selection, React Flow's measurements) is neither saved nor recorded.
 import {
@@ -15,7 +15,18 @@ import {
 import type { Graphic } from "@/lib/graphics";
 import { canRedo, canUndo, createHistory, record, redo, undo, type History } from "./history";
 import { fitGroups } from "./groups";
-import { ARROW, DEFAULT_EDGE_COLOR, isGroup, makeCard, newId, type Diagram, type DiagramEdge, type DiagramNode } from "./model";
+import {
+  ARROW,
+  DEFAULT_EDGE_COLOR,
+  isConnectable,
+  isGroup,
+  makeCard,
+  makeNote,
+  newId,
+  type Diagram,
+  type DiagramEdge,
+  type DiagramNode,
+} from "./model";
 import {
   canGroup,
   copyItems,
@@ -27,6 +38,7 @@ import {
   setGroupLabel,
   setHeaders,
   setHeaderText,
+  setNoteText,
   setParents,
   toggleHeaders,
   ungroupItem,
@@ -84,7 +96,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
   function commit(next: Partial<Pick<StoreState, "nodes" | "edges" | "dropTarget">>, kind?: string): number | null {
     state = { ...state, ...next };
     let recorded: number | null = null;
-    if (!state.nodes.some((n) => n.dragging)) {
+    if (!state.nodes.some((n) => n.dragging || n.resizing)) {
       const json = serialize(live());
       if (json !== history.present.json) {
         state.saveFailed = !save(json);
@@ -126,11 +138,11 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
 
   const selectedIds = () => [...state.nodes, ...state.edges].filter((i) => i.selected).map((i) => i.id);
 
-  // Only a handle-to-handle connection between two existing cards becomes an
-  // edge. React Flow asks while dragging, so an invalid target never
+  // Only a handle-to-handle connection between two existing cards or notes
+  // becomes an edge. React Flow asks while dragging, so an invalid target never
   // highlights, and a release anywhere else creates nothing.
   const isValidConnection = (c: Connection | DiagramEdge) => {
-    const ids = new Set(state.nodes.filter((n) => n.type === "flow").map((n) => n.id));
+    const ids = new Set(state.nodes.filter(isConnectable).map((n) => n.id));
     return !!c.source && !!c.target && ids.has(c.source) && ids.has(c.target);
   };
 
@@ -165,6 +177,8 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       let nodes = applyNodeChanges(changes, state.nodes);
       const moving = changes.filter((c) => c.type === "position");
       const ended = moving.filter((c) => c.dragging === false).map((c) => c.id);
+      // A note resized: the frame of its group wraps it again.
+      const resized = changes.some((c) => c.type === "dimensions" && c.resizing === false);
       let dropTarget: string | null = null;
       if (ended.length) {
         // A drag ended: a card dropped into a frame joins that group (#81), one
@@ -173,6 +187,8 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
         nodes = Object.keys(parents).length
           ? setParents({ nodes, edges: state.edges }, parents).nodes
           : fitGroups(nodes);
+      } else if (resized) {
+        nodes = fitGroups(nodes);
       } else if (moving.some((c) => c.dragging)) {
         // While dragging, highlight the group the card would join.
         const targets = dropTargets(
@@ -198,6 +214,22 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
         const into = dropTargets(added.nodes, [card.id])[card.id];
         return into ? setParents(added, { [card.id]: into }) : added;
       });
+    },
+    /** Add an empty note at a canvas position, selected (so it opens for typing); dropped inside a group's frame, it joins that group. */
+    addNote(position: { x: number; y: number }) {
+      const note = makeNote(position);
+      apply(
+        (d) => {
+          const added = { nodes: [...d.nodes, note], edges: d.edges };
+          const into = dropTargets(added.nodes, [note.id])[note.id];
+          return into ? setParents(added, { [note.id]: into }) : added;
+        },
+        { select: [note.id] }
+      );
+      return note.id;
+    },
+    setNoteText(id: string, value: string) {
+      apply((d) => setNoteText(d, id, value));
     },
     /** Nodes with their edges, and selected edges: one undo step. */
     removeSelected() {

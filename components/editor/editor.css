@@ -87,13 +87,41 @@
   filter: drop-shadow(0 0 2px rgb(67 83 255 / 0.9));
 }
 
+/* Notes (#83): free text on a light, warm card, quieter than the screens. */
+.flow-note {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background: #fffcf0;
+  border: 1px solid #e8dcaa;
+  box-shadow: 0 1px 2px rgb(29 28 40 / 0.06);
+  outline: 2px solid transparent;
+  transition: outline-color 120ms ease;
+}
+
+.flow-note.selected {
+  outline-color: var(--color-wire-blue);
+}
+
+.flow-note-text {
+  height: 100%;
+  overflow: hidden;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--color-ink);
+}
+
 /* While an image is exported (flow-editor.tsx sets data-exporting on the
    canvas), the selection isn't drawn: the image shows the diagram, not what
    happens to be selected. Transitions are off so the capture sees the result. */
 [data-exporting] .react-flow {
   --xy-edge-stroke-selected-default: #a3a8c3;
 }
-[data-exporting] .flow-node.selected {
+[data-exporting] .flow-node.selected,
+[data-exporting] .flow-note.selected {
   outline-color: transparent;
   transition: none;
 }
