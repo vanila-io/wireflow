@@ -151,6 +151,23 @@ describe("diagram store", () => {
     expect(store.diagram().nodes.find((n) => n.id === "a")!.data).toMatchObject({ showHeader: false });
   });
 
+  // #109: opening a file that can't be stored must leave everything as it was.
+  it("replaces the diagram as one undo step, or not at all if it cannot be saved", () => {
+    const { store, last, fill } = setup();
+    expect(store.replace({ nodes: [card("x")], edges: [] })).toBe(true);
+    expect(last().nodes.map((n) => n.id)).toEqual(["x"]);
+    expect(store.history().present.kind).toBe("open");
+    store.undo();
+    expect(last().nodes.map((n) => n.id)).toEqual(["a", "b"]);
+
+    fill();
+    const before = store.getState();
+    expect(store.replace({ nodes: [card("y")], edges: [] })).toBe(false);
+    expect(store.getState()).toBe(before);
+    expect(store.diagram().nodes.map((n) => n.id)).toEqual(["a", "b"]);
+    expect(store.getState().canRedo).toBe(true);
+  });
+
   it("takes another tab's saved diagram as an undo step without saving it again", () => {
     const { store, saves } = setup();
     store.adopt({ nodes: [card("a"), card("b", 400), card("from-other-tab", 800)], edges: [] });

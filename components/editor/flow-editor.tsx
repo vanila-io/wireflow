@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import "@xyflow/react/dist/style.css";
 import "./editor.css";
 import { graphicById, type Graphic } from "@/lib/graphics";
@@ -14,10 +14,12 @@ import {
   ReactFlowProvider,
   useReactFlow,
 } from "@xyflow/react";
+import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, serializeFile, type Opened } from "@/lib/diagram/file";
 import { STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
+import ConfirmDialog from "./confirm-dialog";
 import FlowNodeComp from "./flow-node";
 import GraphicsPanel from "./graphics-panel";
 import Notices, { notice, type Notice } from "./notices";
@@ -135,6 +137,9 @@ function ToolbarButton({ label, onClick }: { label: string; onClick: () => void 
         )}
         {label === "Redo" && (
           <path d="M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        )}
+        {label === "Open file" && (
+          <path d="M12 21V9M7 14l5-5 5 5M4 5h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         )}
         {label === "Export JSON" && (
           <path d="M12 3v12M7 10l5 5 5-5M4 19h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -264,17 +269,64 @@ function EditorInner({ loaded }: { loaded: Start }) {
     [addGraphic, screenToFlowPosition]
   );
 
+  // Save the diagram as a versioned wireflow.json (lib/diagram/file.ts).
   const exportJson = useCallback(() => {
-    const data = JSON.stringify(store.diagram(), null, 2);
-    const blob = new Blob([data], { type: "application/json" });
+    const blob = new Blob([serializeFile(store.diagram())], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "wireflow.json";
+    a.download = FILE_NAME;
     a.click();
     // Revoking at once can cancel the download in some browsers.
     setTimeout(() => URL.revokeObjectURL(url), 30_000);
   }, [store]);
+
+  // Open file: check the file, ask before replacing a diagram, then replace it
+  // as one undo step. If the browser can't store it, the current diagram stays.
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [pendingOpen, setPendingOpen] = useState<({ name: string } & Opened) | null>(null);
+
+  const replaceWith = useCallback(
+    ({ name, diagram, dropped, groups }: { name: string } & Opened) => {
+      setPendingOpen(null);
+      if (lock.readOnly) {
+        say(notice(`Couldn't open ${name}: this tab doesn't save (see the message above). Reload the page, then open the file.`, "error"));
+        return;
+      }
+      if (!store.replace(diagram, "open")) {
+        say(notice(`Couldn't open ${name}. It's too big to keep in this browser's storage, so your diagram is unchanged.`, "error"));
+        return;
+      }
+      setNotices((ns) => [
+        ...ns.slice(-2),
+        notice(`Opened ${name}.`),
+        ...droppedNotices(dropped),
+        ...(groups
+          ? [notice(`Left out ${plural(groups, "group", "groups")} from the earlier editor; ${groups === 1 ? "its" : "their"} cards are kept.`)]
+          : []),
+      ]);
+      setTimeout(() => fitView({ padding: 0.2, duration: 250 }), 60);
+    },
+    [store, lock, say, fitView]
+  );
+
+  const openFile = useCallback(
+    async (file: File) => {
+      let parsed;
+      try {
+        if (file.size > MAX_FILE_BYTES) throw new DiagramFileError("It's too big to be a Wireflow diagram.");
+        parsed = { name: file.name, ...parseFile(await file.text()) };
+      } catch (err) {
+        const reason = err instanceof DiagramFileError ? err.message : "It couldn't be read.";
+        say(notice(`Couldn't open ${file.name}. ${reason}`, "error"));
+        return;
+      }
+      if (store.getState().nodes.length) setPendingOpen(parsed);
+      else replaceWith(parsed);
+    },
+    [store, say, replaceWith]
+  );
+  const chooseFile = useCallback(() => fileInput.current?.click(), []);
 
   const clearCanvas = useCallback(() => {
     if (store.getState().nodes.length === 0) return;
@@ -307,7 +359,27 @@ function EditorInner({ loaded }: { loaded: Start }) {
             {saveFailed ? "Not saved in this browser" : "All changes saved"}
           </span>
           <button
+            onClick={chooseFile}
+            title="Open a wireflow.json file"
+            className="rounded-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-wire-blue ring-1 ring-wire-blue/40 transition hover:bg-wire-lavender"
+          >
+            Open file
+          </button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".json,application/json"
+            hidden
+            aria-label="Diagram file to open"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void openFile(file);
+            }}
+          />
+          <button
             onClick={exportJson}
+            title="Save the diagram as wireflow.json"
             className="rounded-md bg-wire-blue px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-wire-blue-dark"
           >
             Export JSON
@@ -346,6 +418,15 @@ function EditorInner({ loaded }: { loaded: Start }) {
           </ReactFlow>
 
           <Notices notices={notices} onDismiss={dismiss} />
+          <ConfirmDialog
+            open={!!pendingOpen}
+            title="Replace the current diagram?"
+            confirmLabel="Replace"
+            onConfirm={() => pendingOpen && replaceWith(pendingOpen)}
+            onCancel={() => setPendingOpen(null)}
+          >
+            {pendingOpen?.name} will replace what is on the canvas. You can undo this.
+          </ConfirmDialog>
 
           <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl bg-white px-2 py-1.5 shadow-[0_8px_30px_rgba(29,28,40,0.15)] ring-1 ring-wire-border">
             <ToolbarButton label="Undo" onClick={store.undo} />
@@ -355,6 +436,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
             <ToolbarButton label="Zoom in" onClick={() => zoomIn({ duration: 150 })} />
             <ToolbarButton label="Fit view" onClick={() => fitView({ duration: 250, padding: 0.2 })} />
             <span className="mx-1 h-5 w-px bg-wire-border" />
+            <ToolbarButton label="Open file" onClick={chooseFile} />
             <ToolbarButton label="Export JSON" onClick={exportJson} />
             <ToolbarButton label="Clear canvas" onClick={clearCanvas} />
           </div>
@@ -385,6 +467,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
               <li>Double-click a card&rsquo;s header to rename it, press H to hide/show it</li>
               <li>Click a card and press Backspace to remove it</li>
               <li>Your flow autosaves in this browser</li>
+              <li>Export JSON saves it as a file; Open file opens it again</li>
             </ul>
           </aside>
         </div>

@@ -171,6 +171,21 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       if (state.nodes.length) apply(() => ({ nodes: [], edges: [] }));
     },
     /**
+     * Replace the whole diagram (Open file) as one undo step of `kind`. It is
+     * saved first: if the browser refuses, nothing changes and this returns false.
+     */
+    replace(next: Diagram, kind = "open") {
+      const { diagram: d } = enforceRules(next);
+      const json = serialize(d);
+      if (json !== history.present.json) {
+        if (!save(json)) return false;
+        history = record(history, json, kind);
+      }
+      state = { ...state, ...show(d, []), saveFailed: false, canUndo: canUndo(history), canRedo: canRedo(history) };
+      emit();
+      return true;
+    },
+    /**
      * Show a diagram another tab has just saved, as an undo step of its own,
      * without writing it back (it is already stored).
      */
