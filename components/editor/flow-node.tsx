@@ -18,7 +18,7 @@ function truncateLabel(label: string): string {
   return label.length > 23 ? `${label.slice(0, 20)}...` : label;
 }
 
-export default function FlowNode({ id, data }: NodeProps) {
+export default function FlowNode({ id, data, selected }: NodeProps) {
   const d = data as unknown as FlowNodeData;
   const store = useStore();
   const [editing, setEditing] = useState(false);
@@ -50,7 +50,9 @@ export default function FlowNode({ id, data }: NodeProps) {
   };
 
   return (
-    <div className="flow-node group relative">
+    // `selected` gives the card the blue outline editor.css has always defined for
+    // .flow-node.selected (#82: it was never applied, so a selection didn't show).
+    <div className={`flow-node group relative ${selected ? "selected" : ""}`}>
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />
 

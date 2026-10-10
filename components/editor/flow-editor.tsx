@@ -44,6 +44,7 @@ import GroupPanel from "./group-panel";
 import { download, renderImage, type ImageFormat } from "./export-image";
 import Menu from "./menu";
 import Notices, { notice, type Notice } from "./notices";
+import SelectionChip from "./selection-chip";
 import { StoreContext, useStoreState } from "./store-context";
 import UpdatePrompt from "./update-prompt";
 
@@ -615,7 +616,10 @@ function EditorInner({ loaded }: { loaded: Start }) {
         <GraphicsPanel onAddCard={(g) => addGraphic(g)} onTouchDrop={touchDrop} />
         <div
           ref={canvas}
-          className="relative min-w-0 flex-1"
+          // Focusable from script only, so focus has somewhere to go when a
+          // control it was on goes away (the selection chip).
+          tabIndex={-1}
+          className="relative min-w-0 flex-1 outline-none"
           onDrop={onDrop}
           onDragOver={(e) => {
             e.preventDefault();
@@ -653,6 +657,14 @@ function EditorInner({ loaded }: { loaded: Start }) {
             </PanelBoundary>
           )}
           <Notices notices={notices} onDismiss={dismiss} />
+          <SelectionChip
+            count={selectedNodes.length + selectedEdges.length}
+            onClear={() => {
+              store.clearSelection();
+              // The chip goes away with the selection: keep focus in the canvas.
+              canvas.current?.focus();
+            }}
+          />
           <UpdatePrompt />
           <ConfirmDialog
             open={!!pendingOpen}
