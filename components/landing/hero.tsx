@@ -1,5 +1,7 @@
 import { Star } from "lucide-react";
 import { formatCount, REPO_URL } from "@/lib/github";
+import HeroScene from "./anim/hero-scene";
+import PlayWhenVisible from "./anim/play-when-visible";
 import { Button, container } from "./ui";
 
 // The live star count (null when GitHub couldn't be read: the line then says
@@ -23,25 +25,18 @@ function StarLine({ stars }: { stars: number | null }) {
   );
 }
 
-// A real screenshot of the editor, framed on the warm wash. Phones get a
-// square crop of the canvas instead of the whole (tiny) window.
+// The editor, animated (anim/hero-scene.tsx), framed on the wire-blue wash.
+// Phones get a closer view of the canvas instead of the whole (tiny) window.
+// Both SVGs have a fixed aspect ratio, so nothing moves when the page loads.
 function ProductShot() {
   return (
     <div className="landing-aura relative mt-12 aspect-square overflow-hidden rounded-[24px] pl-5 pt-5 sm:mt-16 sm:aspect-[16/10] sm:rounded-[28px] sm:pl-10 sm:pt-10 lg:pl-14 lg:pt-14">
-      <picture>
-        <source media="(max-width: 639px)" srcSet="/landing/editor-canvas-800.webp" width={800} height={800} />
-        <img
-          src="/landing/editor-1200.webp"
-          srcSet="/landing/editor-1200.webp 1200w, /landing/editor-2400.webp 2400w"
-          sizes="(min-width: 1120px) 1000px, 92vw"
-          width={1200}
-          height={750}
-          fetchPriority="high"
-          decoding="async"
-          alt="The Wireflow editor: a checkout flow of wireframe screens joined by labelled connections, with the template sidebar on the left and the toolbar below"
-          className="block h-auto w-[115%] max-w-none rounded-tl-[14px] bg-white shadow-[0_30px_80px_-30px_rgba(27,26,31,0.55)] ring-1 ring-black/5 sm:w-full"
-        />
-      </picture>
+      <PlayWhenVisible
+        testId="hero-animation"
+        className="overflow-hidden rounded-tl-[14px] bg-white shadow-[0_30px_80px_-30px_rgba(27,26,31,0.55)] ring-1 ring-black/5"
+      >
+        <HeroScene />
+      </PlayWhenVisible>
     </div>
   );
 }

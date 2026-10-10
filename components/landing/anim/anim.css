@@ -1,0 +1,239 @@
+/* The landing page's animated illustrations (components/landing/anim).
+
+   Rules:
+   - Only transform, opacity and stroke-dashoffset are animated, so the
+     browser composites them without layout or main-thread work per frame.
+   - The static styles are the scene's final frame. With
+     prefers-reduced-motion: reduce the animations are removed and that frame
+     is what shows; the keyframes only describe how it is reached.
+   - PlayWhenVisible sets data-paused while an illustration is off screen or
+     the tab is hidden.
+   - Geometry (where a card is dragged from, where the pointer goes) comes
+     from the components as CSS variables; the timing is here. Percentages are
+     of each loop: the seconds are in the comments.
+   - Longhands, not the `animation` shorthand: without a name in it, the
+     build's CSS minifier turned `animation: 12s ease-in-out infinite` into
+     `animation: none`. */
+
+.landing .wf-anim[data-paused] *,
+.landing .wf-anim[data-paused] {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing .wf-anim * {
+    animation: none !important;
+  }
+}
+
+/* Selection outlines, tile highlights, pressed buttons and the pointer are
+   not part of the final frame. */
+.landing .wf-anim :is(.s1, .s2, .s3, .t1, .t2, .t3, .grp-sel, .pu, .pr, .cur) {
+  opacity: 0;
+}
+
+/* ---- Hero, desktop (hero-scene.tsx Desktop): 12 s ----
+   0.2-1.0 pointer to the first tile; 1.2-2.2 drags Home onto the canvas;
+   3.2-4.2 Product; 5.2-6.2 Cart; 6.6-7.3 and 7.4-8.1 the connections draw,
+   then their labels; 8.6-9.1 the two are grouped (selected, then not);
+   11.2-11.7 the canvas clears. */
+.landing .wfa-hero :is(.c1, .c2, .c3, .s1, .s2, .s3, .t1, .t2, .t3, .e1, .e2, .a1, .a2, .l1, .l2, .grp, .grp-sel, .scene, .cur) {
+  animation-duration: 12s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.landing .wfa-hero .scene { animation-name: wfa-h-scene; }
+.landing .wfa-hero .c1 { animation-name: wfa-h-c1; }
+.landing .wfa-hero .c2 { animation-name: wfa-h-c2; }
+.landing .wfa-hero .c3 { animation-name: wfa-h-c3; }
+.landing .wfa-hero .s1 { animation-name: wfa-h-s1; }
+.landing .wfa-hero .s2 { animation-name: wfa-h-s2; }
+.landing .wfa-hero .s3 { animation-name: wfa-h-s3; }
+.landing .wfa-hero .t1 { animation-name: wfa-h-t1; }
+.landing .wfa-hero .t2 { animation-name: wfa-h-t2; }
+.landing .wfa-hero .t3 { animation-name: wfa-h-t3; }
+.landing .wfa-hero .e1 { animation-name: wfa-h-e1; }
+.landing .wfa-hero .e2 { animation-name: wfa-h-e2; }
+.landing .wfa-hero .a1 { animation-name: wfa-h-a1; }
+.landing .wfa-hero .a2 { animation-name: wfa-h-a2; }
+.landing .wfa-hero .l1 { animation-name: wfa-h-l1; }
+.landing .wfa-hero .l2 { animation-name: wfa-h-l2; }
+.landing .wfa-hero .grp { animation-name: wfa-h-grp; }
+.landing .wfa-hero .grp-sel { animation-name: wfa-h-grp-sel; }
+.landing .wfa-hero .cur { animation-name: wfa-h-cur; }
+
+@keyframes wfa-h-scene { 0%, 93.33% { opacity: 1; } 97.5%, 100% { opacity: 0; } }
+/* A card appears over its tile when pressed, follows the pointer, and lands. */
+@keyframes wfa-h-c1 {
+  0%, 9.17% { opacity: 0; transform: var(--from); }
+  10% { opacity: 0.92; transform: var(--from); }
+  18.33% { opacity: 0.92; transform: none; }
+  19.17%, 100% { opacity: 1; transform: none; }
+}
+@keyframes wfa-h-c2 {
+  0%, 25.83% { opacity: 0; transform: var(--from); }
+  26.67% { opacity: 0.92; transform: var(--from); }
+  35% { opacity: 0.92; transform: none; }
+  35.83%, 100% { opacity: 1; transform: none; }
+}
+@keyframes wfa-h-c3 {
+  0%, 42.5% { opacity: 0; transform: var(--from); }
+  43.33% { opacity: 0.92; transform: var(--from); }
+  51.67% { opacity: 0.92; transform: none; }
+  52.5%, 100% { opacity: 1; transform: none; }
+}
+/* Selected once dropped, until the next one is picked up. */
+@keyframes wfa-h-s1 { 0%, 18.33% { opacity: 0; } 18.75%, 26.67% { opacity: 1; } 28.33%, 100% { opacity: 0; } }
+@keyframes wfa-h-s2 { 0%, 35% { opacity: 0; } 35.42%, 43.33% { opacity: 1; } 45%, 100% { opacity: 0; } }
+@keyframes wfa-h-s3 { 0%, 51.67% { opacity: 0; } 52.08%, 60% { opacity: 1; } 61.67%, 100% { opacity: 0; } }
+@keyframes wfa-h-t1 { 0%, 8.33% { opacity: 0; } 9.17%, 18.33% { opacity: 1; } 20%, 100% { opacity: 0; } }
+@keyframes wfa-h-t2 { 0%, 25% { opacity: 0; } 25.83%, 35% { opacity: 1; } 36.67%, 100% { opacity: 0; } }
+@keyframes wfa-h-t3 { 0%, 41.67% { opacity: 0; } 42.5%, 51.67% { opacity: 1; } 53.33%, 100% { opacity: 0; } }
+@keyframes wfa-h-e1 { 0%, 55% { stroke-dashoffset: 1; } 60.83%, 100% { stroke-dashoffset: 0; } }
+@keyframes wfa-h-e2 { 0%, 61.67% { stroke-dashoffset: 1; } 67.5%, 100% { stroke-dashoffset: 0; } }
+@keyframes wfa-h-a1 { 0%, 60.42% { opacity: 0; } 61.25%, 100% { opacity: 1; } }
+@keyframes wfa-h-a2 { 0%, 67.08% { opacity: 0; } 67.92%, 100% { opacity: 1; } }
+@keyframes wfa-h-l1 { 0%, 60.83% { opacity: 0; } 63.33%, 100% { opacity: 1; } }
+@keyframes wfa-h-l2 { 0%, 67.5% { opacity: 0; } 70%, 100% { opacity: 1; } }
+@keyframes wfa-h-grp { 0%, 71.67% { opacity: 0; } 75.83%, 100% { opacity: 1; } }
+@keyframes wfa-h-grp-sel { 0%, 71.67% { opacity: 0; } 75.83%, 83.33% { opacity: 1; } 85%, 100% { opacity: 0; } }
+/* The pointer: to a tile, press, drag (holding it at the same spot of the
+   card as the card moves), release; three times; then it leaves. */
+@keyframes wfa-h-cur {
+  0% { opacity: 0; transform: translate(720px, 600px); }
+  1.67% { opacity: 1; transform: translate(720px, 600px); }
+  8.33% { transform: var(--p1); }
+  9.17%, 10% { transform: var(--p1) scale(0.9); }
+  18.33% { transform: var(--d1) scale(0.9); }
+  19.17%, 20% { transform: var(--d1); }
+  25% { transform: var(--p2); }
+  25.83%, 26.67% { transform: var(--p2) scale(0.9); }
+  35% { transform: var(--d2) scale(0.9); }
+  35.83%, 36.67% { transform: var(--d2); }
+  41.67% { transform: var(--p3); }
+  42.5%, 43.33% { transform: var(--p3) scale(0.9); }
+  51.67% { transform: var(--d3) scale(0.9); }
+  52.5% { transform: var(--d3); }
+  53.33% { opacity: 1; transform: var(--d3); }
+  60%, 100% { opacity: 0; transform: translate(1010px, 640px); }
+}
+
+/* ---- Hero, phones (hero-scene.tsx Phone): 10 s ----
+   1.1-2.1 Home is dragged in; 3.1-4.1 Product; 4.8-5.5 the connection
+   draws, then its label; 9-9.5 the canvas clears. */
+.landing .wfa-hero-sm :is(.c1, .c2, .s1, .s2, .t1, .t2, .e1, .a1, .l1, .scene, .cur) {
+  animation-duration: 10s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.landing .wfa-hero-sm .scene { animation-name: wfa-hs-scene; }
+.landing .wfa-hero-sm .c1 { animation-name: wfa-hs-c1; }
+.landing .wfa-hero-sm .c2 { animation-name: wfa-hs-c2; }
+.landing .wfa-hero-sm .s1 { animation-name: wfa-hs-s1; }
+.landing .wfa-hero-sm .s2 { animation-name: wfa-hs-s2; }
+.landing .wfa-hero-sm .t1 { animation-name: wfa-hs-t1; }
+.landing .wfa-hero-sm .t2 { animation-name: wfa-hs-t2; }
+.landing .wfa-hero-sm .e1 { animation-name: wfa-hs-e1; }
+.landing .wfa-hero-sm .a1 { animation-name: wfa-hs-a1; }
+.landing .wfa-hero-sm .l1 { animation-name: wfa-hs-l1; }
+.landing .wfa-hero-sm .cur { animation-name: wfa-hs-cur; }
+
+@keyframes wfa-hs-scene { 0%, 90% { opacity: 1; } 95%, 100% { opacity: 0; } }
+@keyframes wfa-hs-c1 {
+  0%, 10% { opacity: 0; transform: var(--from); }
+  11% { opacity: 0.92; transform: var(--from); }
+  21% { opacity: 0.92; transform: none; }
+  22%, 100% { opacity: 1; transform: none; }
+}
+@keyframes wfa-hs-c2 {
+  0%, 30% { opacity: 0; transform: var(--from); }
+  31% { opacity: 0.92; transform: var(--from); }
+  41% { opacity: 0.92; transform: none; }
+  42%, 100% { opacity: 1; transform: none; }
+}
+@keyframes wfa-hs-s1 { 0%, 21% { opacity: 0; } 21.5%, 30% { opacity: 1; } 32%, 100% { opacity: 0; } }
+@keyframes wfa-hs-s2 { 0%, 41% { opacity: 0; } 41.5%, 50% { opacity: 1; } 52%, 100% { opacity: 0; } }
+@keyframes wfa-hs-t1 { 0%, 9% { opacity: 0; } 10%, 21% { opacity: 1; } 23%, 100% { opacity: 0; } }
+@keyframes wfa-hs-t2 { 0%, 29% { opacity: 0; } 30%, 41% { opacity: 1; } 43%, 100% { opacity: 0; } }
+@keyframes wfa-hs-e1 { 0%, 48% { stroke-dashoffset: 1; } 55%, 100% { stroke-dashoffset: 0; } }
+@keyframes wfa-hs-a1 { 0%, 54.5% { opacity: 0; } 55.5%, 100% { opacity: 1; } }
+@keyframes wfa-hs-l1 { 0%, 55% { opacity: 0; } 58%, 100% { opacity: 1; } }
+@keyframes wfa-hs-cur {
+  0% { opacity: 0; transform: translate(300px, 420px); }
+  3% { opacity: 1; transform: translate(300px, 420px); }
+  9% { transform: var(--p1); }
+  10%, 11% { transform: var(--p1) scale(0.9); }
+  21% { transform: var(--d1) scale(0.9); }
+  22%, 23% { transform: var(--d1); }
+  29% { transform: var(--p2); }
+  30%, 31% { transform: var(--p2) scale(0.9); }
+  41% { transform: var(--d2) scale(0.9); }
+  42% { transform: var(--d2); }
+  43% { opacity: 1; transform: var(--d2); }
+  50%, 100% { opacity: 0; transform: translate(440px, 440px); }
+}
+
+/* ---- Templates (graphics-cycle.tsx): 10 s, 2.5 s a category ----
+   Every set and chip runs the same keyframes, a quarter loop apart
+   (animation-delay inline); `backwards` keeps the later ones hidden until
+   their turn. The final frame is the first category. */
+.landing .wfa-graphics :is(.chip, .tile) {
+  animation-duration: 10s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: backwards;
+}
+.landing .wfa-graphics .chip { animation-name: wfa-g-chip; }
+.landing .wfa-graphics .tile { animation-name: wfa-g-tile; }
+.landing .wfa-graphics :is(.chip, .set .tile) { opacity: 0; }
+.landing .wfa-graphics :is(.chip.first, .set.first .tile) { opacity: 1; }
+
+@keyframes wfa-g-chip { 0% { opacity: 0; } 2%, 23% { opacity: 1; } 25%, 100% { opacity: 0; } }
+@keyframes wfa-g-tile {
+  0% { opacity: 0; transform: translateY(6px); }
+  4% { opacity: 1; transform: none; }
+  22% { opacity: 1; transform: none; }
+  25%, 100% { opacity: 0; transform: none; }
+}
+
+/* ---- Interface (undo-redo.tsx): 10 s ----
+   0.8-1.3 a third screen joins and 1.3-1.9 its connection draws; the pointer
+   presses Undo at 3.0 (it goes) and Redo at 4.6 (it comes back); 9.4-9.9 the
+   flow fades and the loop starts again. */
+.landing .wfa-undo :is(.scene, .c, .e, .a, .added, .pu, .pr, .cur) {
+  animation-duration: 10s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.landing .wfa-undo .scene { animation-name: wfa-u-scene; }
+.landing .wfa-undo .c { animation-name: wfa-u-c; }
+.landing .wfa-undo .e { animation-name: wfa-u-e; }
+.landing .wfa-undo .a { animation-name: wfa-u-a; }
+.landing .wfa-undo .added { animation-name: wfa-u-added; }
+.landing .wfa-undo .pu { animation-name: wfa-u-pu; }
+.landing .wfa-undo .pr { animation-name: wfa-u-pr; }
+.landing .wfa-undo .cur { animation-name: wfa-u-cur; }
+
+@keyframes wfa-u-scene { 0% { opacity: 0; } 4%, 94% { opacity: 1; } 99%, 100% { opacity: 0; } }
+@keyframes wfa-u-c {
+  0%, 8% { opacity: 0; transform: translateY(-10px); }
+  13%, 100% { opacity: 1; transform: none; }
+}
+@keyframes wfa-u-e { 0%, 13% { stroke-dashoffset: 1; } 19%, 100% { stroke-dashoffset: 0; } }
+@keyframes wfa-u-a { 0%, 18.5% { opacity: 0; } 19.5%, 100% { opacity: 1; } }
+/* Undo takes the screen and its connection away; Redo brings them back. */
+@keyframes wfa-u-added { 0%, 31% { opacity: 1; } 34%, 46% { opacity: 0; } 49%, 100% { opacity: 1; } }
+@keyframes wfa-u-pu { 0%, 30% { opacity: 0; } 30.5%, 34% { opacity: 1; } 36%, 100% { opacity: 0; } }
+@keyframes wfa-u-pr { 0%, 46% { opacity: 0; } 46.5%, 50% { opacity: 1; } 52%, 100% { opacity: 0; } }
+@keyframes wfa-u-cur {
+  0%, 20% { opacity: 0; transform: translate(480px, 250px); }
+  22% { opacity: 1; transform: translate(480px, 250px); }
+  29% { transform: var(--u); }
+  30% { transform: var(--u) scale(0.85); }
+  31.5%, 40% { transform: var(--u); }
+  45% { transform: var(--r); }
+  46% { transform: var(--r) scale(0.85); }
+  47.5% { transform: var(--r); }
+  53% { opacity: 1; transform: var(--r); }
+  61%, 100% { opacity: 0; transform: translate(300px, 250px); }
+}

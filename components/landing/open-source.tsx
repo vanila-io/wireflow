@@ -3,18 +3,24 @@ import { Check, Star } from "lucide-react";
 import { formatCount, REPO, REPO_URL } from "@/lib/github";
 import { Button, container, GitHubMark, sectionTitle } from "./ui";
 
+// What Wireflow is built on (package.json, next.config.ts, open-next.config.ts,
+// wrangler.jsonc, Dockerfile), in its own words. No version numbers: they go stale.
 const techs = [
   {
-    name: "Node.js",
-    text: "Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine, using an event-driven, non-blocking I/O model.",
+    name: "Next.js and React",
+    text: "The editor and this page. The page is prerendered and refreshed in the background every hour.",
   },
   {
-    name: "Next.js",
-    text: "Next.js is a React framework that gives you building blocks to create fast, full-stack web applications.",
+    name: "React Flow",
+    text: "The diagram editor: the canvas, cards, connections and groups.",
   },
   {
-    name: "React.js",
-    text: "React is a declarative, efficient and flexible JavaScript library for building user interfaces.",
+    name: "Cloudflare, through OpenNext",
+    text: "Where Wireflow runs. A Docker image is there for self-hosting.",
+  },
+  {
+    name: "Claude API",
+    text: "The AI assistant, through Anthropic's official SDK, with your own API key.",
   },
 ];
 
@@ -75,7 +81,7 @@ export default function OpenSource({ stars }: { stars: number | null }) {
               Support us
             </Button>
           </div>
-          <ul className="mt-10 divide-y divide-line border-y border-wire-border">
+          <ul className="mt-10 divide-y divide-wire-border border-y border-wire-border">
             {techs.map((t) => (
               <li key={t.name} className="flex gap-3 py-4">
                 <Check size={18} strokeWidth={2.2} className="mt-0.5 shrink-0 text-ink" aria-hidden />
