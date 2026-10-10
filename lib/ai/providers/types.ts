@@ -44,6 +44,8 @@ export type Turn = {
 };
 
 export type SendOptions = {
+  /** The provider is re-sending the same turn: drop what onText/onThinking streamed for it so far. */
+  onRetry?: () => void;
   onText?: (delta: string) => void;
   onThinking?: (delta: string) => void;
   signal?: AbortSignal;

@@ -175,6 +175,27 @@ test("a mocked AI reply edits the diagram as one undo step that survives a reloa
   await expect(page.locator(".react-flow__node")).toHaveCount(3);
 });
 
+// Review pass finding: a step that is re-sent showed its streamed text twice.
+test.describe("a stream that breaks off", () => {
+  // The SDK logs the event it couldn't parse.
+  test.use({ allowErrors: /Could not parse message into JSON|From chunk/ });
+
+  test("is re-sent, and the reply shows its text once", async ({ page }) => {
+    const broken =
+      sse([
+        start(),
+        { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } },
+        { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "Here is the flow." } },
+      ]) + "event: content_block_delta\ndata: {not json\n\n";
+    const requests = await mockAnthropic(page, [broken, textTurn("Here is the flow.")]);
+    await openPanel(page);
+    await ask(page, "hi");
+    await expect(panel(page).locator('.ai-msg[data-status="done"]')).toBeVisible();
+    expect(requests).toHaveLength(2);
+    await expect(panel(page).locator(".ai-msg").getByText("Here is the flow.", { exact: true })).toBeVisible();
+  });
+});
+
 test("model output is shown as plain text, never as markup", async ({ page }) => {
   const reply = '<b>bold</b> <img src="x" onerror="window.__xss = 1"> [link](javascript:alert(1))';
   await mockAnthropic(page, [textTurn(reply)]);

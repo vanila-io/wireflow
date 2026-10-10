@@ -85,6 +85,34 @@ const userTexts = (body: Body) =>
     .flatMap((m) => m.content.filter((b) => b.type === "text").map((b) => b.text));
 
 describe("anthropic chat history", () => {
+  // Review pass finding: a re-sent turn streamed its text a second time on top
+  // of the first, and the first attempt's tokens were not counted. A stream that
+  // breaks off with something other than an API error (here, an event that isn't
+  // JSON) is re-sent.
+  it("re-sends a turn whose stream broke off, tells the caller, and counts both attempts", async () => {
+    const broken =
+      sse([start("claude-haiku-5-5"), ...text(0, "Adding it.")]) + "event: content_block_delta\ndata: {not json\n\n";
+    scriptApi([broken, reply(text(0, "Adding it."), { usage: { output_tokens: 1000 } })]);
+    const streamed: string[] = [];
+    let retries = 0;
+    const turn = await newChat().send(
+      { text: ["add"] },
+      {
+        onText: (d) => streamed.push(d),
+        onRetry: () => {
+          retries++;
+          streamed.length = 0;
+        },
+      }
+    );
+    expect(retries).toBe(1);
+    expect(streamed.join("")).toBe("Adding it.");
+    expect(turn.text).toBe("Adding it.");
+    // 10 input tokens per attempt; 1 output token so far in the first, 1000 in the second.
+    expect(turn.usage.input).toBe(20);
+    expect(turn.usage.output).toBe(1001);
+  });
+
   it("does not send a failed request again with the next one", async () => {
     const { bodies } = scriptApi([400, reply(text(0, "ok"))]);
     const chat = newChat();

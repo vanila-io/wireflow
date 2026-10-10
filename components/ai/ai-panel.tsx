@@ -156,6 +156,11 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
     chat.current ??= provider.createChat({ apiKey, model, system: systemPrompt(), tools: TOOLS });
     const controller = new AbortController();
     abort.current = controller;
+    // The reply as streamed so far, and where the current step's part starts,
+    // so a re-sent step (see the provider's onRetry) replaces its own part.
+    let reply = "";
+    let thinking = "";
+    let step = { text: 0, thinking: 0, gap: false };
     let gap = false; // separate the text of consecutive steps
     let lastStep: number | null = null;
     // The editor as the agent sees it: the live diagram, and each plan applied as one undo step.
@@ -173,13 +178,25 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
         editor,
         signal: controller.signal,
         onEvent: (e) => {
-          if (e.type === "step" && e.step > 0) gap = true;
-          if (e.type === "text") {
-            const sep = gap ? "\n\n" : "";
-            gap = false;
-            update(id, (m) => ({ ...m, text: m.text ? m.text + sep + e.delta : e.delta }));
+          if (e.type === "step") {
+            gap = e.step > 0;
+            step = { text: reply.length, thinking: thinking.length, gap };
           }
-          if (e.type === "thinking") update(id, (m) => ({ ...m, thinking: m.thinking + e.delta }));
+          if (e.type === "retry") {
+            reply = reply.slice(0, step.text);
+            thinking = thinking.slice(0, step.thinking);
+            gap = step.gap;
+            update(id, (m) => ({ ...m, text: reply, thinking }));
+          }
+          if (e.type === "text") {
+            reply = reply ? reply + (gap ? "\n\n" : "") + e.delta : e.delta;
+            gap = false;
+            update(id, (m) => ({ ...m, text: reply }));
+          }
+          if (e.type === "thinking") {
+            thinking += e.delta;
+            update(id, (m) => ({ ...m, thinking }));
+          }
           if (e.type === "usage") {
             update(id, (m) => ({ ...m, cost: (m.cost ?? 0) + e.usage.usd }));
             setSessionCost((c) => c + e.usage.usd);

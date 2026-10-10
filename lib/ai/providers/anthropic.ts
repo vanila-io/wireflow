@@ -151,7 +151,7 @@ function createChat({ apiKey, model, system, tools }: Parameters<Provider["creat
   }));
 
   return {
-    async send({ text = [], toolResults = [] }, { onText, onThinking, signal } = {}): Promise<Turn> {
+    async send({ text = [], toolResults = [] }, { onText, onThinking, onRetry, signal } = {}): Promise<Turn> {
       for (const r of toolResults) {
         if (owed.has(r.id))
           owed.set(r.id, { type: "tool_result", tool_use_id: r.id, is_error: !!r.isError, content: r.content });
@@ -178,6 +178,8 @@ function createChat({ apiKey, model, system, tools }: Parameters<Provider["creat
       };
 
       let message;
+      // Usage of attempts that were re-sent: they are billed too.
+      const retried: UsageLike[] = [];
       for (let attempt = 0; ; attempt++) {
         const stream = client.beta.messages.stream(params, { signal });
         if (onText) stream.on("text", onText);
@@ -186,12 +188,24 @@ function createChat({ apiKey, model, system, tools }: Parameters<Provider["creat
           message = await stream.finalMessage();
           break;
         } catch (err) {
-          // Eager tool-input streaming: unparseable tool JSON rejects without an API
-          // error. Re-issue the same turn a couple of times; rethrow the rest.
+          // A stream that breaks off with something other than an API error (an event
+          // that does not parse) is re-sent a couple of times; rethrow the rest. Tool input
+          // that does not parse arrives as {} (SDK 0.128) and the validator reports it.
           if (err instanceof Anthropic.APIError || signal?.aborted || attempt >= JSON_RETRIES) throw toAiError(err);
+          const partial = stream.currentMessage?.usage;
+          if (partial) retried.push(partial as UsageLike);
+          onRetry?.();
         }
       }
-      const usage = costOf(message.usage as UsageLike, info.id);
+      const usage = [...retried, message.usage as UsageLike]
+        .map((u) => costOf(u, info.id))
+        .reduce((a, b) => ({
+          input: a.input + b.input,
+          output: a.output + b.output,
+          cacheWrite: a.cacheWrite + b.cacheWrite,
+          cacheRead: a.cacheRead + b.cacheRead,
+          usd: a.usd + b.usd,
+        }));
 
       // A declined turn is dropped, partial output included, so the next message
       // continues from the last answered turn instead of repeating this request.

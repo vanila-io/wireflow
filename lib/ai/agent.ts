@@ -15,6 +15,8 @@ export type AgentEvent =
   | { type: "step"; step: number }
   | { type: "text"; delta: string }
   | { type: "thinking"; delta: string }
+  // The current step is being re-sent: drop the text and thinking it streamed so far.
+  | { type: "retry" }
   | { type: "usage"; usage: Usage }
   | { type: "applied"; count: number; summary: string }
   | { type: "tool_error"; errors: unknown[] };
@@ -50,6 +52,7 @@ export async function runRequest({
       signal,
       onText: (delta) => onEvent({ type: "text", delta }),
       onThinking: (delta) => onEvent({ type: "thinking", delta }),
+      onRetry: () => onEvent({ type: "retry" }),
     });
     for (const k of Object.keys(total) as (keyof Usage)[]) total[k] += turn.usage[k] ?? 0;
     onEvent({ type: "usage", usage: turn.usage });
