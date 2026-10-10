@@ -7,10 +7,14 @@ const API = "https://api.anthropic.com";
 const panel = (page: Page) => page.getByRole("complementary", { name: "AI assistant" });
 const aiButton = (page: Page) => page.getByRole("banner").getByRole("button", { name: /AI assistant|Couldn't load/ });
 
-async function openPanel(page: Page, key = "sk-ant-test-key") {
+// Most specs aren't about key storage, so the key is not remembered unless asked
+// (remembering is the default; its own spec covers it).
+async function openPanel(page: Page, key = "sk-ant-test-key", { remember = false } = {}) {
   await openEditor(page);
   await aiButton(page).click();
   await panel(page).getByLabel("API key").fill(key);
+  const box = panel(page).getByRole("checkbox", { name: "Remember on this device" });
+  if (await box.isEnabled()) await box.setChecked(remember);
   await panel(page).getByRole("button", { name: "Check & use key" }).click();
   await expect(panel(page).getByLabel("Message")).toBeVisible();
 }
@@ -134,7 +138,7 @@ test("the AI panel and its SDK load only when opened", async ({ page }) => {
   expect(await sdkLoaded()).toBe(false);
   await aiButton(page).click();
   await expect(panel(page).getByLabel("API key")).toBeVisible();
-  await expect(panel(page)).toContainText("stored unencrypted");
+  await expect(panel(page)).toContainText("Saved encrypted in this browser");
   expect(await sdkLoaded()).toBe(true);
   // Closing keeps the panel (and a chat) around; the button reopens it.
   await panel(page).getByRole("button", { name: "Close the AI assistant" }).click();
@@ -352,7 +356,7 @@ test.describe("when requests fail", () => {
     expect((await saved(page))!.nodes.map((n) => n.id)).toEqual(["a"]);
   });
 
-  test("a rejected key and a rate limit show a clear message; the key is kept only if asked", async ({ page }) => {
+  test("a rejected key is never kept; a rate limit shows a clear message; an unticked key is not kept", async ({ page }) => {
     await page.route(`${API}/v1/models/**`, (route) =>
       route.fulfill({
         status: 401,
@@ -369,15 +373,304 @@ test.describe("when requests fail", () => {
     );
     await page.unroute(`${API}/v1/models/**`);
 
+    expect((await page.evaluate(() => localStorage.getItem("wireflow-ai"))) ?? "").not.toContain("sk-ant");
+
     await mockAnthropic(page, [429, 429, 429]);
     await panel(page).getByLabel("API key").fill("sk-ant-ok");
+    await panel(page).getByRole("checkbox", { name: "Remember on this device" }).uncheck();
     await panel(page).getByRole("button", { name: "Check & use key" }).click();
     await ask(page, "hi");
     await expect(panel(page).getByRole("alert")).toHaveText("Rate limited by Anthropic. Try again shortly.");
-    // Not remembered: nothing in storage, and a reload asks again.
-    expect(await page.evaluate(() => localStorage.getItem("wireflow-ai"))).not.toContain("sk-ant");
+    // Unticked: nothing in storage, and a reload asks again.
+    expect((await page.evaluate(() => localStorage.getItem("wireflow-ai"))) ?? "").not.toContain("sk-ant");
     await page.reload();
     await aiButton(page).click();
     await expect(panel(page).getByLabel("API key")).toBeVisible();
+  });
+});
+
+// What the panel keeps in this browser (#104): the remembered key, encrypted in
+// IndexedDB, and the chat while "Keep chat after reload" is on.
+test.describe("what the AI panel keeps in this browser", () => {
+  // An obviously fake key; the random part shows up nowhere else.
+  const secret = () => Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12);
+
+  // Everything the page can read from its storage: localStorage, sessionStorage and
+  // every record of every IndexedDB database, with bytes shown as Latin-1, UTF-8,
+  // UTF-16 and base64, and CryptoKeys as what they expose.
+  type Dump = {
+    localStorage: Record<string, string>;
+    sessionStorage: Record<string, string>;
+    indexedDB: Record<string, [IDBValidKey, unknown][]>;
+  };
+  const dumpStorage = (page: Page): Promise<Dump> =>
+    page.evaluate(async () => {
+      const req = <T>(r: IDBRequest<T>) =>
+        new Promise<T>((resolve, reject) => {
+          r.onsuccess = () => resolve(r.result);
+          r.onerror = () => reject(r.error);
+        });
+      const show = (v: unknown): unknown => {
+        if (v instanceof ArrayBuffer || ArrayBuffer.isView(v)) {
+          const bytes =
+            v instanceof ArrayBuffer ? new Uint8Array(v) : new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+          const latin1 = String.fromCharCode(...bytes);
+          return {
+            bytes: bytes.length,
+            latin1,
+            utf8: new TextDecoder().decode(bytes),
+            utf16: new TextDecoder("utf-16le").decode(bytes),
+            base64: btoa(latin1),
+          };
+        }
+        if (v instanceof CryptoKey)
+          return { cryptoKey: { type: v.type, extractable: v.extractable, algorithm: v.algorithm, usages: v.usages } };
+        if (Array.isArray(v)) return v.map(show);
+        if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, show(x)]));
+        return v;
+      };
+      const indexedDBDump: Record<string, [IDBValidKey, unknown][]> = {};
+      for (const { name } of await indexedDB.databases()) {
+        const db = await req(indexedDB.open(name!));
+        for (const store of Array.from(db.objectStoreNames)) {
+          const s = db.transaction(store).objectStore(store);
+          const [keys, values] = await Promise.all([req(s.getAllKeys()), req(s.getAll())]);
+          indexedDBDump[`${name}/${store}`] = keys.map((k, i) => [k, show(values[i])]);
+        }
+        db.close();
+      }
+      return { localStorage: { ...localStorage }, sessionStorage: { ...sessionStorage }, indexedDB: indexedDBDump };
+    });
+  const kv = async (page: Page) => Object.fromEntries((await dumpStorage(page)).indexedDB["wireflow-ai/kv"] ?? []);
+  const expectNowhere = async (page: Page, key: string, part: string) => {
+    const dump = JSON.stringify(await dumpStorage(page));
+    for (const text of [key, part, Buffer.from(key).toString("base64"), Buffer.from(part).toString("base64")])
+      expect(dump).not.toContain(text);
+  };
+
+  async function useKey(page: Page, key = "sk-ant-test-key", { remember = false } = {}) {
+    await panel(page).getByLabel("API key").fill(key);
+    // "Remember on this device" starts ticked; set it as the test asks (it is disabled
+    // where the browser keeps nothing).
+    const box = panel(page).getByRole("checkbox", { name: "Remember on this device" });
+    if (await box.isEnabled()) await box.setChecked(remember);
+    await panel(page).getByRole("button", { name: "Check & use key" }).click();
+    await expect(panel(page).getByLabel("Message")).toBeVisible();
+  }
+  // The replies on screen (not the screen reader's copy of the last one).
+  const replies = (page: Page) => panel(page).locator(".ai-msg");
+  async function reopen(page: Page) {
+    await page.reload();
+    await expect(page.locator(".react-flow__pane")).toBeVisible();
+    await aiButton(page).click();
+  }
+
+  test("a remembered key is stored encrypted, never in plain text; it survives a reload, and Forget key deletes it", async ({
+    page,
+  }) => {
+    const part = secret();
+    const key = `sk-ant-test-${part}`;
+    const requests = await mockAnthropic(page, [textTurn("Hi.")]);
+    await openEditor(page);
+    await aiButton(page).click();
+    await useKey(page, key, { remember: true });
+
+    await expectNowhere(page, key, part);
+    // What is stored instead: a non-extractable AES-GCM key and a ciphertext with its IV.
+    const records = await kv(page);
+    expect(Object.keys(records).sort()).toEqual(["apiKey", "deviceKey"]);
+    expect(records.deviceKey).toMatchObject({
+      cryptoKey: { type: "secret", extractable: false, algorithm: { name: "AES-GCM", length: 256 } },
+    });
+    expect(records.apiKey).toMatchObject({ v: 1, iv: { bytes: 12 } });
+    expect((await page.evaluate(() => localStorage.getItem("wireflow-ai"))) ?? "").not.toContain("sk-ant");
+
+    await reopen(page);
+    await expect(panel(page).getByLabel("Message")).toBeVisible();
+    await expect(panel(page).locator(".ai-masked-key")).toHaveText(`sk-ant-…${key.slice(-4)}`);
+    await expect(panel(page).getByText("Remembered on this device, encrypted.")).toBeAttached();
+    await ask(page, "hi");
+    await expect(replies(page).getByText("Hi.", { exact: true })).toBeVisible();
+    expect(requests[0].headers["x-api-key"]).toBe(key);
+    await expectNowhere(page, key, part);
+
+    await panel(page).getByRole("button", { name: "Forget key" }).click();
+    await expect(panel(page).getByLabel("API key")).toBeVisible();
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual([]);
+    await reopen(page);
+    await expect(panel(page).getByLabel("API key")).toBeVisible();
+  });
+
+  test("a pasted key is remembered by default, without touching the checkbox; after Forget key it is ticked again", async ({
+    page,
+  }) => {
+    await mockAnthropic(page, []);
+    await openEditor(page);
+    await aiButton(page).click();
+    const remember = panel(page).getByRole("checkbox", { name: "Remember on this device" });
+    await expect(remember).toBeChecked();
+    await panel(page).getByLabel("API key").fill("sk-ant-test-default-remember");
+    await panel(page).getByRole("button", { name: "Check & use key" }).click();
+    await expect(panel(page).getByLabel("Message")).toBeVisible();
+
+    await reopen(page);
+    await expect(panel(page).getByLabel("Message")).toBeVisible();
+    await expect(panel(page).locator(".ai-masked-key")).toHaveText("sk-ant-…mber");
+
+    await panel(page).getByRole("button", { name: "Forget key" }).click();
+    await expect(panel(page).getByLabel("API key")).toBeVisible();
+    await expect(remember).toBeChecked();
+  });
+
+  test("a key an earlier version kept in plain text is encrypted once and the plain text deleted", async ({ page }) => {
+    const part = secret();
+    const key = `sk-ant-test-${part}`;
+    await mockAnthropic(page, []);
+    await page.goto("/manifest.webmanifest");
+    await page.evaluate(
+      (k) =>
+        localStorage.setItem(
+          "wireflow-ai",
+          JSON.stringify({ provider: "anthropic", model: "claude-sonnet-5-5", apiKey: k })
+        ),
+      key
+    );
+    await openEditor(page);
+    await aiButton(page).click();
+    await expect(panel(page).getByLabel("Message")).toBeVisible();
+    await expect(panel(page).locator(".ai-masked-key")).toHaveText(`sk-ant-…${key.slice(-4)}`);
+    // The other settings stay.
+    await expect(panel(page).getByLabel("Model")).toHaveValue("claude-sonnet-5-5");
+    expect(JSON.parse((await page.evaluate(() => localStorage.getItem("wireflow-ai")))!)).toEqual({
+      provider: "anthropic",
+      model: "claude-sonnet-5-5",
+    });
+    await expectNowhere(page, key, part);
+    expect(Object.keys(await kv(page)).sort()).toEqual(["apiKey", "deviceKey"]);
+
+    await reopen(page);
+    await expect(panel(page).locator(".ai-masked-key")).toHaveText(`sk-ant-…${key.slice(-4)}`);
+  });
+
+  test("where the browser keeps nothing, Remember is off and says why, and the key stays in memory only", async ({
+    page,
+  }) => {
+    // As in a browser that blocks site data.
+    await page.addInitScript(() => {
+      Object.defineProperty(window, "indexedDB", {
+        configurable: true,
+        get() {
+          return {
+            open() {
+              throw new DOMException("The operation is insecure.", "SecurityError");
+            },
+          };
+        },
+      });
+    });
+    await mockAnthropic(page, []);
+    await openEditor(page);
+    await aiButton(page).click();
+    const remember = panel(page).getByRole("checkbox", { name: "Remember on this device" });
+    await expect(remember).toBeDisabled();
+    await expect(remember).not.toBeChecked();
+    await expect(panel(page)).toContainText("This browser won't keep it");
+    await useKey(page);
+    await expect(panel(page).getByRole("checkbox", { name: "Keep chat after reload" })).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("wireflow-ai"))).toBeNull();
+    await reopen(page);
+    await expect(panel(page).getByLabel("API key")).toBeVisible();
+  });
+
+  test("Keep chat after reload is on by default and unticking it sticks; the chat comes back and the next request continues it; New chat and unticking delete it", async ({
+    page,
+  }) => {
+    const requests = await mockAnthropic(page, [
+      textTurn("First reply."),
+      textTurn("Second reply."),
+      textTurn("Third reply."),
+      textTurn("Fourth reply."),
+    ]);
+    const keep = panel(page).getByRole("checkbox", { name: "Keep chat after reload" });
+    await openPanel(page);
+    await expect(keep).toBeChecked();
+    await ask(page, "first");
+    await expect(replies(page).getByText("First reply.", { exact: true })).toBeVisible();
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual(["chat"]);
+    // Unticking deletes the kept chat, and the choice survives a reload.
+    await keep.uncheck();
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual([]);
+    await reopen(page);
+    await useKey(page);
+    await expect(keep).not.toBeChecked();
+    await expect(replies(page).getByText("First reply.", { exact: true })).toHaveCount(0);
+
+    await keep.check();
+    await ask(page, "second");
+    await expect(replies(page).getByText("Second reply.", { exact: true })).toBeVisible();
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual(["chat"]);
+    await reopen(page);
+    // The chat shows before a key is entered again (here it wasn't remembered).
+    await useKey(page);
+    await expect(keep).toBeChecked();
+    await expect(panel(page).getByText("second", { exact: true })).toBeVisible();
+    await expect(replies(page).getByText("Second reply.", { exact: true })).toBeVisible();
+    await expect(panel(page).getByRole("button", { name: "New chat" })).toBeEnabled();
+
+    // The next request continues the same conversation, unchanged.
+    await ask(page, "third");
+    await expect(replies(page).getByText("Third reply.", { exact: true })).toBeVisible();
+    expect(requests[2].body.messages.slice(0, 2)).toEqual([
+      requests[1].body.messages[0],
+      { role: "assistant", content: [{ type: "text", text: "Second reply." }] },
+    ]);
+    expect(userTexts(requests[2]).filter((t) => !t.startsWith("<diagram>"))).toEqual(["second", "third"]);
+
+    await panel(page).getByRole("button", { name: "New chat" }).click();
+    await expect(replies(page).getByText("Third reply.", { exact: true })).toHaveCount(0);
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual([]);
+    await reopen(page);
+    await useKey(page);
+    await expect(panel(page).getByText("second", { exact: true })).toHaveCount(0);
+
+    await ask(page, "fourth");
+    await expect(replies(page).getByText("Fourth reply.", { exact: true })).toBeVisible();
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual(["chat"]);
+    await keep.uncheck();
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual([]);
+    await reopen(page);
+    await useKey(page);
+    await expect(keep).not.toBeChecked();
+    await expect(replies(page).getByText("Fourth reply.", { exact: true })).toHaveCount(0);
+  });
+
+  test("a kept chat's changes can still be undone from it after a reload, but never stand in for another tab's edits", async ({
+    page,
+    context,
+  }) => {
+    await mockAnthropic(page, [toolTurn(flow), textTurn("Added a login flow.")]);
+    await openPanel(page);
+    await panel(page).getByRole("checkbox", { name: "Keep chat after reload" }).check();
+    await ask(page, "Add a login flow");
+    await expect(panel(page).locator('[data-state="latest"]')).toContainText("Applied: Added a login flow.");
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual(["chat"]);
+
+    // Same tab: its undo history survives the reload, so the change is still the latest one.
+    await reopen(page);
+    await useKey(page);
+    await panel(page).getByRole("button", { name: "Undo: Added a login flow." }).click();
+    await expect(page.locator(".react-flow__node")).toHaveCount(0);
+    await expect(panel(page).locator('[data-state="undone"]')).toContainText("Undone: Added a login flow.");
+
+    // Another tab starts a new undo history: its own first edit must not pass for the AI's change.
+    const other = await context.newPage();
+    await mockAnthropic(other, []);
+    await openEditor(other);
+    await tiles(other).first().click();
+    await expect(other.locator(".react-flow__node")).toHaveCount(1);
+    await aiButton(other).click();
+    await useKey(other);
+    await expect(panel(other).locator('[data-state="applied"]')).toContainText("Applied: Added a login flow.");
+    await expect(panel(other).getByRole("button", { name: /^Undo/ })).toHaveCount(0);
   });
 });
