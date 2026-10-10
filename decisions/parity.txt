@@ -1,0 +1,33 @@
+Production parity after the four decisions (production-ports at af43f99, next start, no env vars)
+Chromium (Playwright 1.63), deviceScaleFactor 1, service workers blocked, every third-party request
+blocked on both sides. Differing pixels: exact RGB, and pixelmatch threshold 0.1. Measured 2026-10-10.
+
+1. wireflow.co (live) vs af43f99
+landing desktop   1440x900   exact 0.00%  pixelmatch 0.00%   (0 px)
+landing phone      390x844   exact 0.00%  pixelmatch 0.00%   (0 px)
+app desktop       1440x900   exact 5.02%  pixelmatch 0.77%   (65,116 / 10,037 of 1,296,000 px)
+app phone          390x844   exact 7.18%  pixelmatch 1.33%   (23,640 / 4,369 of 329,160 px)
+
+  Outside the areas #118 changes on purpose (same areas as before: the header buttons x>=940 y<56,
+  the right-hand panel and the minimap x>=1160, the toolbar y>=800 300<=x<1160; on the phone the
+  header y<56 and the toolbar y>=760):
+  app desktop  133 of 945,680 px differ (0.01%), max channel delta 2
+  app phone    901 of 274,560 px differ (0.33%), max channel delta 2
+  (2b0de57 measured 87 and 944 px, also delta <= 2.) /app desktop differs less than before (5.56% ->
+  5.02%) because the taller panel now starts collapsed at 900 px, so less of it differs from
+  production's shorter open panel.
+
+2. 2b0de57 (#118 before this round) vs af43f99, both local
+landing desktop   1440x900   exact 0.00%  pixelmatch 0.00%   (0 px)
+landing phone      390x844   exact 0.00%  pixelmatch 0.00%   (0 px)
+app phone          390x844   exact 0.00%  pixelmatch 0.00%   (0 px; the panel is desktop-only)
+app desktop       1920x1080  exact 0.01%  pixelmatch 0.00%   (159 px: 28 px are the panel's new
+                             chevron at x 1875-1884, y 95-100; the other 131 have channel delta <= 2,
+                             in the sidebar thumbnails)
+app desktop       1440x900   exact 3.58%  pixelmatch 0.84%   (46,437 / 10,917 px): 46,254 of them
+                             are the shortcuts panel, which starts collapsed below a 941 px tall
+                             window (open, it would cover the minimap); the other 183 px have
+                             channel delta <= 2.
+
+The empty editor has no connections, so the new edge colour doesn't show in these views; see
+edges-before-after.png (same diagram, 2b0de57 left, af43f99 right).
