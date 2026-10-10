@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The teammate's agent tooling (vendored skills and scripts), not app code.
+    ".agents/**",
+    ".box-internal/**",
+    // Test output.
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 

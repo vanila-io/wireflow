@@ -1,0 +1,71 @@
+// The diagram, as React Flow draws it and as Wireflow stores it.
+//
+// The editor has always saved React Flow's own shape in
+// localStorage["wireflow-flow-v1"]: {nodes, edges}. That is version 1 (no
+// "version" field). Version 2 adds the field and lets edges carry a label and a
+// colour; everything a version 1 diagram holds keeps its meaning, so version 1
+// data is read as it is (see migrate in storage.ts), and the editor before this
+// change can still read what version 2 writes.
+import type { Edge, Node } from "@xyflow/react";
+import graphicSizes from "@/lib/graphic-sizes.json";
+import { graphicById, type Graphic } from "@/lib/graphics";
+
+export const STORAGE_KEY = "wireflow-flow-v1";
+export const DIAGRAM_VERSION = 2;
+
+// The same fields flow-node.tsx has always used.
+export type CardData = {
+  graphicId: string;
+  src: string;
+  label: string;
+  headerText?: string;
+  showHeader?: boolean;
+};
+
+export type CardNode = Node<CardData, "flow">;
+export type DiagramNode = CardNode;
+export type DiagramEdge = Edge;
+
+export type Diagram = { nodes: DiagramNode[]; edges: DiagramEdge[] };
+
+// Card geometry, from components/editor/editor.css: a 220px wide box with a 1px
+// border, a 24px header and the graphic drawn at the inner width.
+export const CARD_WIDTH = 220;
+const BORDER = 1;
+const HEADER = 24;
+const ratios = graphicSizes as Record<string, number>;
+// Graphics share one aspect ratio within a few percent; this is the median.
+const DEFAULT_RATIO = 0.7872;
+
+export function cardSize(data: Pick<CardData, "graphicId" | "showHeader">): {
+  width: number;
+  height: number;
+} {
+  const ratio = ratios[data.graphicId] ?? DEFAULT_RATIO;
+  const header = data.showHeader === false ? 0 : HEADER;
+  return { width: CARD_WIDTH, height: 2 * BORDER + header + (CARD_WIDTH - 2 * BORDER) * ratio };
+}
+
+// New card ids, as the editor has always made them: <graphic id>-<time>-<random>.
+export const newCardId = (graphicId: string) => `${graphicId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+// Ids for edges made by Wireflow itself (not React Flow's addEdge).
+export const newId = (prefix: string) =>
+  `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+export function makeCard(g: Graphic, position: { x: number; y: number }, id = newCardId(g.id)): CardNode {
+  return {
+    id,
+    type: "flow",
+    position,
+    data: { graphicId: g.id, src: g.src, label: g.label, headerText: g.label, showHeader: true },
+  };
+}
+
+// The template a card shows. Its image URL is always the catalog's, whatever was
+// saved, so stored or opened data can't point an image at another host.
+export const cardGraphic = (data: Pick<CardData, "graphicId">) => graphicById(data.graphicId);
+
+// The edge colour from globals.css (.react-flow__edge-path).
+export const DEFAULT_EDGE_COLOR = "#a3a8c3";
+export const ARROW = "arrowclosed" as const;
