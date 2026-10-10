@@ -35,6 +35,32 @@ jobs:
       # next build + the offline worker, then the Cloudflare Worker bundle.
       - run: npx opennextjs-cloudflare build
 
+  docker:
+    name: Docker image (build and smoke test)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: docker build -t wireflow-ci .
+      - run: docker run -d --name wireflow-ci -p 8083:3000 wireflow-ci
+      # The landing page, the editor and the offline worker, served by the container.
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null http://localhost:8083/ && break
+            sleep 1
+          done
+          # Saved to files first: with pipefail, `curl | grep -q` can fail when grep stops reading early.
+          curl -fsS -o home.html http://localhost:8083/
+          curl -fsS -D app.headers -o app.html http://localhost:8083/app
+          curl -fsS -o sw.js http://localhost:8083/sw.js
+          grep -q "<title>Wireflow - Free Wire / User Flow Tool</title>" home.html
+          grep -q "<title>Wireflow - Flow Editor</title>" app.html
+          grep -qi "^content-security-policy:" app.headers
+          grep -q '"/app"' sw.js
+      - if: always()
+        run: docker logs wireflow-ci; docker rm -f wireflow-ci
+
   e2e:
     name: Playwright on Chromium (${{ matrix.server }})
     runs-on: ubuntu-24.04
