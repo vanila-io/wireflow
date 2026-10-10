@@ -12,7 +12,7 @@ import { layoutIssues, type Screen } from "@/lib/ai/layout";
 import { systemPrompt } from "@/lib/ai/prompt";
 import { getProvider } from "@/lib/ai/providers";
 import { absoluteBoxes } from "@/lib/diagram/groups";
-import { isCard, isGroup } from "@/lib/diagram/model";
+import { isCard, isGroup, isNote } from "@/lib/diagram/model";
 import { enforceRules } from "@/lib/diagram/rules";
 import { createDiagramStore } from "@/lib/diagram/store";
 
@@ -100,5 +100,49 @@ describe.skipIf(!live)("live: anthropic", () => {
     const report = { model, turn1: r1.usage, turn2: r2.usage, turn3: r3.usage, usd: r1.usage.usd + r2.usage.usd + r3.usage.usd };
     console.log(`total cost $${report.usd.toFixed(4)}`);
     if (process.env.AI_LIVE_REPORT) appendFileSync(process.env.AI_LIVE_REPORT, `${JSON.stringify(report)}\n`);
+  });
+
+  it("adds a note beside a screen when asked (#83)", { timeout: 120_000 }, async () => {
+    const card = (id: string, graphicId: string, label: string, x: number) => ({
+      id,
+      type: "flow",
+      position: { x, y: 100 },
+      data: { graphicId, label, headerText: label, showHeader: true },
+    });
+    const initial = enforceRules({
+      nodes: [card("cart", "e-commerce-cart", "Cart", 100), card("checkout", "e-commerce-checkout", "Checkout", 500)],
+      edges: [{ id: "to_checkout", source: "cart", target: "checkout" }],
+    }).diagram;
+    const store = createDiagramStore({ initial, save: () => true });
+    const chat = provider.createChat({ apiKey, model, system: systemPrompt(), tools: TOOLS });
+    const editor = {
+      read: () => ({ data: store.diagram(), selected: [], view: VIEW }),
+      apply: (actions: Parameters<typeof applyActions>[1]) =>
+        void store.apply((d) => applyActions(d, actions), { kind: "ai" }),
+    };
+    const r = await runRequest({
+      chat,
+      editor,
+      text: "Add a note next to the cart screen saying that the coupon field is optional, and connect the cart to it.",
+    });
+    const d = store.diagram();
+    console.log("note turn", JSON.stringify(r), JSON.stringify(snapshot({ data: d })));
+    expect(r.status).toBe("done");
+    const note = d.nodes.find(isNote);
+    expect(note?.data.text).toMatch(/coupon/i);
+    expect(d.edges.some((e) => e.source === "cart" && e.target === note!.id)).toBe(true);
+    // The note covers no screen.
+    const boxes = absoluteBoxes(d.nodes);
+    const items = new Map<string, Screen>(
+      d.nodes
+        .filter((n) => isCard(n) || isNote(n))
+        .map((n) => {
+          const b = boxes.get(n.id)!;
+          return [n.id, { x: b.x + b.width / 2, y: b.y + b.height / 2, size: [b.width, b.height], parent: n.parentId ?? null }];
+        })
+    );
+    expect([...layoutIssues(items, new Map()).values()]).toEqual([]);
+    console.log(`note cost $${r.usage.usd.toFixed(4)}`);
+    if (process.env.AI_LIVE_REPORT) appendFileSync(process.env.AI_LIVE_REPORT, `${JSON.stringify({ model, note: r.usage })}\n`);
   });
 });

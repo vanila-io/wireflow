@@ -4,7 +4,7 @@
 // it. Like the old editor, a frame always wraps its members, so after any change
 // frames are re-fitted with `fitGroups`, which keeps every item where it is on
 // the canvas.
-import { cardSize, isCard, isGroup, type DiagramNode } from "./model";
+import { cardSize, isCard, isGroup, isNote, NOTE_SIZE, type DiagramNode } from "./model";
 
 export type Box = { x: number; y: number; width: number; height: number };
 
@@ -14,6 +14,7 @@ export const EMPTY_GROUP = { width: 252, height: 120 };
 
 export function sizeOf(node: DiagramNode): { width: number; height: number } {
   if (isCard(node)) return cardSize(node.data);
+  if (isNote(node)) return { width: node.width ?? NOTE_SIZE.width, height: node.height ?? NOTE_SIZE.height };
   return { width: node.width ?? EMPTY_GROUP.width, height: node.height ?? EMPTY_GROUP.height };
 }
 

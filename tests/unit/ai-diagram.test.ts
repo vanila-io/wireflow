@@ -111,7 +111,7 @@ describe("planOps", () => {
         { op: "add_screen", id: "ok1", template: "e-commerce-cart", label: "x", x: 0, y: 0 },
         { op: "connect", id: "e2", from: "ok1", to: "nope" },
       ])
-    ).toEqual([{ index: 1, op: "connect", message: 'no screen "nope"' }]);
+    ).toEqual([{ index: 1, op: "connect", message: 'no screen or note "nope"' }]);
   });
 
   it("rejects bad ids, templates, urls, fields and values", () => {
@@ -178,7 +178,7 @@ describe("planOps", () => {
 
   it("after a clear, an id from before the clear is unknown", () => {
     expect(bad([{ op: "clear" }, { op: "remove", ids: ["a"] }])).toEqual([
-      { index: 1, op: "remove", message: 'no screen, connection or group "a"' },
+      { index: 1, op: "remove", message: 'no screen, note, connection or group "a"' },
     ]);
   });
 

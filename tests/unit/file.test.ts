@@ -42,7 +42,7 @@ const reject = (text: string, message: RegExp) => {
 describe("wireflow.json", () => {
   it("writes a versioned file that names templates by id, without image URLs", () => {
     const file = JSON.parse(serializeFile(sample()));
-    expect(file).toMatchObject({ format: "wireflow", version: 2 });
+    expect(file).toMatchObject({ format: "wireflow", version: 3 });
     expect(file.diagram.nodes.map((n: { data: { graphicId: string } }) => n.data.graphicId)).toEqual([
       "article-article-1",
       "e-commerce-cart",
@@ -86,7 +86,7 @@ describe("wireflow.json", () => {
     reject("not json", /isn't a JSON file/);
     reject('{"name":"wireflow","version":"1.0.0"}', /doesn't contain a Wireflow diagram/);
     reject('{"format":"excalidraw","version":2,"elements":[]}', /isn't a Wireflow file/);
-    reject('{"format":"wireflow","version":3,"diagram":{"nodes":[],"edges":[]}}', /newer version/);
+    reject('{"format":"wireflow","version":4,"diagram":{"nodes":[],"edges":[]}}', /newer version/);
     reject('{"format":"wireflow","version":"2","diagram":{"nodes":[],"edges":[]}}', /unknown file version/);
     reject('{"format":"wireflow","version":2}', /doesn't contain a Wireflow diagram/);
   });
@@ -100,7 +100,7 @@ describe("wireflow.json", () => {
     reject(file([{ ...card("a"), position: { x: "left" } }]), /has no position/);
     reject(file([{ ...card("a"), data: { graphicId: "no-such-template" } }]), /doesn't have: "no-such-template"/);
     reject(file([{ ...card("a"), data: { graphicId: "article-article-1", label: 5 } }]), /label that isn't text/);
-    reject(file([{ ...card("a"), type: "input" }]), /isn't a card or a group/);
+    reject(file([{ ...card("a"), type: "input" }]), /isn't a card, a note or a group/);
     reject(file([{ ...card("a"), parentId: "nope" }]), /in a group that doesn't exist/);
     reject(file([card("b"), { ...card("a"), parentId: "b" }]), /in a group that doesn't exist/);
     const g = (id: string, parentId?: string) => ({ id, type: "group", position: { x: 0, y: 0 }, parentId, data: {} });

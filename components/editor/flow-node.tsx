@@ -12,7 +12,8 @@ export type FlowNodeData = CardData;
 // loads (width/height set its aspect ratio), so the card and its handles never
 // move when it arrives.
 const IMG_WIDTH = CARD_WIDTH - 2;
-const imgHeight = (graphicId: string) => Math.round(cardSize({ graphicId, showHeader: false }).height - 2);
+const imgHeight = (data: CardData) =>
+  Math.round(cardSize({ graphicId: data.graphicId, ratio: data.ratio, showHeader: false }).height - 2);
 
 function truncateLabel(label: string): string {
   return label.length > 23 ? `${label.slice(0, 20)}...` : label;
@@ -96,7 +97,7 @@ export default function FlowNode({ id, data, selected }: NodeProps) {
         draggable={false}
         className="flow-node-img"
         width={IMG_WIDTH}
-        height={imgHeight(d.graphicId)}
+        height={imgHeight(d)}
       />
     </div>
   );

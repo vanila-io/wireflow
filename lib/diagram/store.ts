@@ -1,7 +1,7 @@
 // The one diagram store. React Flow and every editor feature read it with
 // useSyncExternalStore and change it only through these methods, and every
-// change ends in `commit`, the single save boundary: unless a drag is still in
-// progress, the diagram goes through the rules (rules.ts), is saved, and is
+// change ends in `commit`, the single save boundary: unless a drag or a resize
+// is still in progress, the diagram goes through the rules (rules.ts), is saved, and is
 // recorded as one undo step. A change that leaves the stored JSON as it was
 // (selection, React Flow's measurements) is neither saved nor recorded.
 import {
@@ -15,7 +15,20 @@ import {
 import type { Graphic } from "@/lib/graphics";
 import { canRedo, canUndo, createHistory, record, redo, undo, type History } from "./history";
 import { fitGroups } from "./groups";
-import { ARROW, DEFAULT_EDGE_COLOR, isGroup, makeCard, newId, type Diagram, type DiagramEdge, type DiagramNode } from "./model";
+import {
+  ARROW,
+  DEFAULT_EDGE_COLOR,
+  isConnectable,
+  isGroup,
+  makeCard,
+  makeImageCard,
+  makeNote,
+  newId,
+  type Diagram,
+  type DiagramEdge,
+  type DiagramNode,
+  type DiagramSettings,
+} from "./model";
 import {
   canGroup,
   copyItems,
@@ -27,6 +40,8 @@ import {
   setGroupLabel,
   setHeaders,
   setHeaderText,
+  setEstimate,
+  setNoteText,
   setParents,
   toggleHeaders,
   ungroupItem,
@@ -39,6 +54,8 @@ import { enforceRules, serialize } from "./rules";
 export type StoreState = {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
+  /** Project settings stored with the diagram (the hourly rate, #84). */
+  settings?: DiagramSettings;
   canUndo: boolean;
   canRedo: boolean;
   /** The last save failed (storage full or blocked); the diagram is only in memory. */
@@ -75,16 +92,16 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
   let pastes = 0;
   const emit = () => listeners.forEach((l) => l());
 
-  const live = (): Diagram => ({ nodes: state.nodes, edges: state.edges });
+  const live = (): Diagram => ({ nodes: state.nodes, edges: state.edges, ...(state.settings && { settings: state.settings }) });
   /** The current diagram as stored (through the rules). */
   const current = () => enforceRules(live()).diagram;
 
   // The save boundary. `kind` labels the undo step this change makes. Returns
   // the id of the step it recorded, or null if the stored diagram didn't change.
-  function commit(next: Partial<Pick<StoreState, "nodes" | "edges" | "dropTarget">>, kind?: string): number | null {
+  function commit(next: Partial<Pick<StoreState, "nodes" | "edges" | "dropTarget" | "settings">>, kind?: string): number | null {
     state = { ...state, ...next };
     let recorded: number | null = null;
-    if (!state.nodes.some((n) => n.dragging)) {
+    if (!state.nodes.some((n) => n.dragging || n.resizing)) {
       const json = serialize(live());
       if (json !== history.present.json) {
         state.saveFailed = !save(json);
@@ -115,9 +132,11 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     if (next === history) return;
     history = next;
     state.saveFailed = !save(history.present.json);
+    const d = JSON.parse(history.present.json) as Diagram;
     state = {
       ...state,
-      ...show(JSON.parse(history.present.json)),
+      ...show(d),
+      settings: d.settings,
       canUndo: canUndo(history),
       canRedo: canRedo(history),
     };
@@ -126,11 +145,11 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
 
   const selectedIds = () => [...state.nodes, ...state.edges].filter((i) => i.selected).map((i) => i.id);
 
-  // Only a handle-to-handle connection between two existing cards becomes an
-  // edge. React Flow asks while dragging, so an invalid target never
+  // Only a handle-to-handle connection between two existing cards or notes
+  // becomes an edge. React Flow asks while dragging, so an invalid target never
   // highlights, and a release anywhere else creates nothing.
   const isValidConnection = (c: Connection | DiagramEdge) => {
-    const ids = new Set(state.nodes.filter((n) => n.type === "flow").map((n) => n.id));
+    const ids = new Set(state.nodes.filter(isConnectable).map((n) => n.id));
     return !!c.source && !!c.target && ids.has(c.source) && ids.has(c.target);
   };
 
@@ -145,9 +164,17 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     return selected.length === 1 && isGroup(selected[0]) ? selected[0].id : null;
   };
 
-  /** Apply a batch of changes as one undo step. Returns the step's id (null: nothing changed). */
-  const apply = (change: (d: Diagram) => Diagram, { kind, select }: { kind?: string; select?: string[] } = {}) =>
-    commit(show(enforceRules(change(current())).diagram, select), kind);
+  /**
+   * Apply a batch of changes as one undo step. Returns the step's id (null:
+   * nothing changed). Operations that only change nodes and edges return
+   * {nodes, edges}: the settings stay as they were.
+   */
+  const apply = (change: (d: Diagram) => Diagram, { kind, select }: { kind?: string; select?: string[] } = {}) => {
+    const before = current();
+    const changed = change(before);
+    const d = enforceRules("settings" in changed ? changed : { ...changed, settings: before.settings }).diagram;
+    return commit({ ...show(d, select), settings: d.settings }, kind);
+  };
 
   return {
     subscribe(listener: () => void) {
@@ -165,6 +192,8 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       let nodes = applyNodeChanges(changes, state.nodes);
       const moving = changes.filter((c) => c.type === "position");
       const ended = moving.filter((c) => c.dragging === false).map((c) => c.id);
+      // A note resized: the frame of its group wraps it again.
+      const resized = changes.some((c) => c.type === "dimensions" && c.resizing === false);
       let dropTarget: string | null = null;
       if (ended.length) {
         // A drag ended: a card dropped into a frame joins that group (#81), one
@@ -173,6 +202,8 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
         nodes = Object.keys(parents).length
           ? setParents({ nodes, edges: state.edges }, parents).nodes
           : fitGroups(nodes);
+      } else if (resized) {
+        nodes = fitGroups(nodes);
       } else if (moving.some((c) => c.dragging)) {
         // While dragging, highlight the group the card would join.
         const targets = dropTargets(
@@ -198,6 +229,34 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
         const into = dropTargets(added.nodes, [card.id])[card.id];
         return into ? setParents(added, { [card.id]: into }) : added;
       });
+    },
+    /** Add a card with the user's own image (a data URL), selected; dropped inside a group's frame, it joins that group. */
+    addImage(src: string, ratio: number, label: string, position: { x: number; y: number }) {
+      const card = makeImageCard(src, ratio, label, position);
+      return apply(
+        (d) => {
+          const added = { nodes: [...d.nodes, card], edges: d.edges };
+          const into = dropTargets(added.nodes, [card.id])[card.id];
+          return into ? setParents(added, { [card.id]: into }) : added;
+        },
+        { select: [card.id] }
+      );
+    },
+    /** Add an empty note at a canvas position, selected (so it opens for typing); dropped inside a group's frame, it joins that group. */
+    addNote(position: { x: number; y: number }) {
+      const note = makeNote(position);
+      apply(
+        (d) => {
+          const added = { nodes: [...d.nodes, note], edges: d.edges };
+          const into = dropTargets(added.nodes, [note.id])[note.id];
+          return into ? setParents(added, { [note.id]: into }) : added;
+        },
+        { select: [note.id] }
+      );
+      return note.id;
+    },
+    setNoteText(id: string, value: string) {
+      apply((d) => setNoteText(d, id, value));
     },
     /** Nodes with their edges, and selected edges: one undo step. */
     removeSelected() {
@@ -254,6 +313,14 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     setHeaderText(id: string, value: string) {
       apply((d) => setHeaderText(d, id, value));
     },
+    /** A card's estimate in hours (null: none). */
+    setEstimate(id: string, hours: number | null) {
+      apply((d) => setEstimate(d, id, hours));
+    },
+    /** Change project settings (undefined values remove them): one undo step. */
+    setSettings(patch: DiagramSettings) {
+      apply((d) => ({ ...d, settings: { ...d.settings, ...patch } }));
+    },
     /** An edge's colour (null or the default colour: none of its own), label, shape and width. Unchanged values add no step. */
     updateEdge(id: string, patch: EdgePatch) {
       const color = patch.color === DEFAULT_EDGE_COLOR ? null : patch.color;
@@ -293,7 +360,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
         if (!save(json)) return false;
         history = record(history, json, kind);
       }
-      state = { ...state, ...show(d, []), saveFailed: false, canUndo: canUndo(history), canRedo: canRedo(history) };
+      state = { ...state, ...show(d, []), settings: d.settings, saveFailed: false, canUndo: canUndo(history), canRedo: canRedo(history) };
       emit();
       return true;
     },
@@ -306,7 +373,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       const json = serialize(d);
       if (json === history.present.json) return;
       history = record(history, json, "sync");
-      state = { ...state, ...show(d), dropTarget: null, canUndo: canUndo(history), canRedo: canRedo(history) };
+      state = { ...state, ...show(d), settings: d.settings, dropTarget: null, canUndo: canUndo(history), canRedo: canRedo(history) };
       emit();
     },
     undo: () => travel(undo),

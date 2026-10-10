@@ -23,7 +23,8 @@ export type Loaded =
  * Bring stored data of any version to the current one.
  * Version 1 (no "version" field): React Flow's {nodes, edges}, as the editor
  * has always saved it. Version 2 adds the field plus edge labels and colours,
- * so version 1 needs no change beyond the rules every load applies. A newer
+ * and version 3 notes, so earlier versions need no change beyond the rules
+ * every load applies. A newer
  * version is recognised before its shape is looked at: its shape may have changed.
  */
 export function migrate(raw: unknown): { version: number; data: unknown } | null {

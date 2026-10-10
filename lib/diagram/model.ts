@@ -9,32 +9,68 @@
 // can still read what version 2 writes (a group is React Flow's built-in
 // "group" node type there). Edges may also carry a line shape (React Flow's
 // edge `type`) and a width (style.strokeWidth), as in the earlier editor.
+//
+// Version 3 adds note nodes (#83): free text in a resizable box that connects
+// like a card; and cards that show the user's own image (#86, #69), stored in
+// the card as a data URL; an estimate in hours on cards (#84), and project
+// settings (the hourly rate that turns hours into cost). An editor that knows
+// only version 2 would drop them, so it sees version 3 data as newer and
+// doesn't save over it (see readDiagram).
 import type { Edge, Node } from "@xyflow/react";
 import graphicSizes from "@/lib/graphic-sizes.json";
 import { graphicById, type Graphic } from "@/lib/graphics";
 
 export const STORAGE_KEY = "wireflow-flow-v1";
-export const DIAGRAM_VERSION = 2;
+export const DIAGRAM_VERSION = 3;
 
-// The same fields flow-node.tsx has always used.
+// The same fields flow-node.tsx has always used. A card that shows the user's
+// own image (graphicId OWN_IMAGE) has it in `src` as a data URL, and its
+// height-to-width `ratio`.
 export type CardData = {
   graphicId: string;
   src: string;
   label: string;
   headerText?: string;
   showHeader?: boolean;
+  ratio?: number;
+  /** Hours to make this screen (#84); none if not estimated. */
+  estimate?: number;
 };
 export type GroupData = { label: string };
+export type NoteData = { text: string };
 
 export type CardNode = Node<CardData, "flow">;
 export type GroupNode = Node<GroupData, "group">;
-export type DiagramNode = CardNode | GroupNode;
+export type NoteNode = Node<NoteData, "note">;
+export type DiagramNode = CardNode | GroupNode | NoteNode;
 export type DiagramEdge = Edge;
 
-export type Diagram = { nodes: DiagramNode[]; edges: DiagramEdge[] };
+// Project settings, stored with the diagram: the hourly rate (#84) in a currency.
+export type DiagramSettings = { hourlyRate?: number; currency?: string };
+export type Diagram = { nodes: DiagramNode[]; edges: DiagramEdge[]; settings?: DiagramSettings };
+
+// Estimates (#84): hours per card, 0 to MAX_ESTIMATE, to two decimals; an hourly
+// rate up to MAX_RATE in one of CURRENCIES (USD when none is set).
+export const MAX_ESTIMATE = 10_000;
+export const MAX_RATE = 1_000_000;
+export const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "INR", "JPY", "CHF", "BRL", "PLN"] as const;
+export const DEFAULT_CURRENCY = "USD";
 
 export const isCard = (node: Node): node is CardNode => node.type === "flow";
 export const isGroup = (node: Node): node is GroupNode => node.type === "group";
+export const isNote = (node: Node): node is NoteNode => node.type === "note";
+/** What a connection can join: cards and notes (groups have no handles). */
+export const isConnectable = (node: Node): node is CardNode | NoteNode => isCard(node) || isNote(node);
+
+// Notes (#83): a box of free text, stored with its size (React Flow's node
+// width and height), resizable within these bounds.
+export const NOTE_SIZE = { width: 220, height: 120 };
+export const NOTE_BOUNDS = { minWidth: 120, minHeight: 48, maxWidth: 800, maxHeight: 800 };
+export const MAX_NOTE_TEXT = 2000;
+
+export function makeNote(position: { x: number; y: number }, text = "", id = newId("note")): NoteNode {
+  return { id, type: "note", position, ...NOTE_SIZE, data: { text } };
+}
 
 // Card geometry, from components/editor/editor.css: a 220px wide box with a 1px
 // border, a 24px header and the graphic drawn at the inner width.
@@ -45,11 +81,11 @@ const ratios = graphicSizes as Record<string, number>;
 // Graphics share one aspect ratio within a few percent; this is the median.
 const DEFAULT_RATIO = 0.7872;
 
-export function cardSize(data: Pick<CardData, "graphicId" | "showHeader">): {
+export function cardSize(data: Pick<CardData, "graphicId" | "showHeader" | "ratio">): {
   width: number;
   height: number;
 } {
-  const ratio = ratios[data.graphicId] ?? DEFAULT_RATIO;
+  const ratio = data.graphicId === OWN_IMAGE ? imageRatio(data.ratio) : (ratios[data.graphicId] ?? DEFAULT_RATIO);
   const header = data.showHeader === false ? 0 : HEADER;
   return { width: CARD_WIDTH, height: 2 * BORDER + header + (CARD_WIDTH - 2 * BORDER) * ratio };
 }
@@ -67,6 +103,31 @@ export function makeCard(g: Graphic, position: { x: number; y: number }, id = ne
     type: "flow",
     position,
     data: { graphicId: g.id, src: g.src, label: g.label, headerText: g.label, showHeader: true },
+  };
+}
+
+// The user's own images (#86, #69): any screen, a phone screenshot or a sketch,
+// as a card. The picture is scaled down in the browser to at most
+// MAX_IMAGE_SIDE pixels a side and stored as a JPEG data URL of at most
+// MAX_IMAGE_CHARS characters, so it never points at another host. Very tall or
+// wide images are drawn within these ratios.
+export const OWN_IMAGE = "own-image";
+export const MAX_IMAGE_SIDE = 1280;
+export const MAX_IMAGE_CHARS = 700_000;
+export const IMAGE_RATIO = { min: 0.2, max: 5 };
+export const IMAGE_SRC_RE = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+export const imageRatio = (ratio: number | undefined) =>
+  typeof ratio === "number" && Number.isFinite(ratio)
+    ? Math.min(IMAGE_RATIO.max, Math.max(IMAGE_RATIO.min, ratio))
+    : DEFAULT_RATIO;
+export const isOwnImage = (data: Pick<CardData, "graphicId">) => data.graphicId === OWN_IMAGE;
+
+export function makeImageCard(src: string, ratio: number, label: string, position: { x: number; y: number }): CardNode {
+  return {
+    id: newCardId(OWN_IMAGE),
+    type: "flow",
+    position,
+    data: { graphicId: OWN_IMAGE, src, label, headerText: label, showHeader: true, ratio: imageRatio(ratio) },
   };
 }
 

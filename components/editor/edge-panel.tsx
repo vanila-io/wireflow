@@ -16,6 +16,7 @@ import {
   type DiagramEdge,
   type EdgeShape,
 } from "@/lib/diagram/model";
+import { PANEL_CLASS } from "./panel";
 import { useStore } from "./store-context";
 
 const colorOf = (e: DiagramEdge) => (typeof e.style?.stroke === "string" ? e.style.stroke : DEFAULT_EDGE_COLOR);
@@ -122,7 +123,7 @@ export default function EdgePanel({ edge, edges }: { edge: DiagramEdge; edges: D
   return (
     <aside
       aria-label="Connection"
-      className="absolute right-4 top-4 z-10 w-60 max-w-[calc(100%-2rem)] rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border"
+      className={PANEL_CLASS}
     >
       <h3 className="text-sm font-bold text-ink">Connection</h3>
       <label className="mt-3 block text-[11px] font-semibold text-ink-soft">

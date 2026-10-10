@@ -15,15 +15,17 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, serializeFile, type Opened } from "@/lib/diagram/file";
-import { isCard, isGroup, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
+import { cardSize, CARD_WIDTH, isCard, isGroup, isNote, NOTE_SIZE, OWN_IMAGE, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
+import { formatCost, formatHours, projectTotal } from "@/lib/diagram/estimate";
 import {
   BringToFront,
   ClipboardPaste,
   Copy,
   Delete,
+  Calculator,
   Ellipsis,
   FolderOpen,
   Group,
@@ -37,13 +39,17 @@ import { LOAD_FAILED, PanelBoundary, useAiPanel } from "@/components/ai/use-ai-p
 import CardPanel from "./card-panel";
 import ConfirmDialog from "./confirm-dialog";
 import EdgePanel from "./edge-panel";
+import EstimatePanel from "./estimate-panel";
 import FlowNodeComp from "./flow-node";
-import GraphicsPanel from "./graphics-panel";
+import GraphicsPanel, { DRAG_ADD, DRAG_CARD, type Addable } from "./graphics-panel";
 import GroupNodeComp from "./group-node";
 import GroupPanel from "./group-panel";
 import { download, renderImage, type ImageFormat } from "./export-image";
 import Menu from "./menu";
+import NoteNodeComp from "./note-node";
+import NotePanel from "./note-panel";
 import Notices, { notice, type Notice } from "./notices";
+import { IMAGE_ACCEPT, IMAGE_TYPES, ImageError, megabytes, prepareImage, STORAGE_CHARS, storageUse } from "./own-image";
 import SelectionChip from "./selection-chip";
 import ShortcutsPanel from "./shortcuts-panel";
 import { StoreContext, useStoreState } from "./store-context";
@@ -205,12 +211,20 @@ function ToolbarButton({ label, onClick, icon, disabled, title, pressed }: Toolb
   );
 }
 
-const nodeTypes = { flow: FlowNodeComp, group: GroupNodeComp };
+const nodeTypes = { flow: FlowNodeComp, group: GroupNodeComp, note: NoteNodeComp };
 
 function EditorInner({ loaded }: { loaded: Start }) {
   const { store, notices: initialNotices, hadDiagram, lock } = loaded;
   const [notices, setNotices] = useState(initialNotices);
-  const { nodes, edges, saveFailed } = useStoreState(store);
+  const { nodes, edges, settings, saveFailed } = useStoreState(store);
+  // The project's estimate (#84): shown only once a card has hours.
+  const estimate = projectTotal({ nodes });
+  const rate = settings?.hourlyRate;
+  const estimateText =
+    estimate.estimated > 0
+      ? `${formatHours(estimate.hours)}${rate !== undefined ? ` · ${formatCost(estimate.hours * rate, settings?.currency)}` : ""}`
+      : null;
+  const [estimateOpen, setEstimateOpen] = useState(false);
   // The connection panel shows for exactly one selected edge and nothing else selected.
   const selectedEdges = edges.filter((e) => e.selected);
   const selectedEdge = selectedEdges.length === 1 && !nodes.some((n) => n.selected) ? selectedEdges[0] : null;
@@ -220,6 +234,11 @@ function EditorInner({ loaded }: { loaded: Start }) {
     selectedNodes.length === 1 && isGroup(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
   const selectedCard =
     selectedNodes.length === 1 && isCard(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
+  const selectedNote =
+    selectedNodes.length === 1 && isNote(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
+  // The estimate panel, opened from the header, gives way to a selection's panel.
+  const showEstimate =
+    estimateOpen && !!estimateText && !(selectedEdge || selectedGroup || selectedCard || selectedNote);
   const canGroup = !!store.groupable();
   const canUngroup = !!store.selectedGroup();
   const { hasClipboard } = useStoreState(store);
@@ -261,6 +280,85 @@ function EditorInner({ loaded }: { loaded: Start }) {
       store.addCard(g, { x: pos.x + offset.x, y: pos.y + offset.y });
     },
     [store, screenToFlowPosition]
+  );
+
+  // The user's own image as a card (#86, #69): scaled down and kept in this
+  // browser's storage, so it is refused when that would be (nearly) full, and
+  // the user is warned when it is getting full. `point` is where it was dropped.
+  const imageInput = useRef<HTMLInputElement>(null);
+  const canvas = useRef<HTMLDivElement>(null);
+  // The middle of the canvas on screen: beside the templates panel, which on a
+  // phone takes most of the window's width.
+  const canvasMiddle = useCallback(() => {
+    const r = canvas.current?.getBoundingClientRect();
+    return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  }, []);
+  // A clicked note or image is staggered the way addGraphic staggers clicked
+  // templates, so repeated adds don't land on each other or on the last card.
+  const staggered = useCallback(
+    (pos: { x: number; y: number }) => {
+      const step = store.getState().nodes.length % 5;
+      return { x: pos.x + step * 260, y: pos.y + (step % 2) * 60 };
+    },
+    [store]
+  );
+  const addImageFile = useCallback(
+    async (file: File, point?: { x: number; y: number }) => {
+      if (lock.readOnly) {
+        say(notice(`Couldn't add ${file.name}: this tab doesn't save (see the message above).`, "error"));
+        return;
+      }
+      let image;
+      try {
+        image = await prepareImage(file);
+      } catch (err) {
+        const reason = err instanceof ImageError ? err.message : "It couldn't be read as an image.";
+        say(notice(`Couldn't add ${file.name}. ${reason}`, "error"));
+        return;
+      }
+      const local = browserStorage("localStorage");
+      const used = local ? storageUse(local) : 0;
+      if (used + image.src.length > STORAGE_CHARS * 0.95) {
+        say(
+          notice(
+            `Couldn't add ${file.name}: this browser's storage for Wireflow is nearly full (${megabytes(used)} of about ${megabytes(STORAGE_CHARS)} MB). Remove an image you don't need, or use Export JSON to keep a copy and start a new diagram.`,
+            "error"
+          )
+        );
+        return;
+      }
+      const { height } = cardSize({ graphicId: OWN_IMAGE, ratio: image.ratio });
+      const centre = screenToFlowPosition(point ?? canvasMiddle());
+      const at = { x: centre.x - CARD_WIDTH / 2, y: centre.y - height / 2 };
+      store.addImage(image.src, image.ratio, image.label, point ? at : staggered(at));
+      if (store.getState().saveFailed) {
+        store.undo();
+        say(notice(`Couldn't add ${file.name}: this browser's storage is full, so the diagram is unchanged.`, "error"));
+        return;
+      }
+      const now = local ? storageUse(local) : 0;
+      if (now > STORAGE_CHARS * 0.8) {
+        say(
+          notice(
+            `Wireflow now uses ${megabytes(now)} of the about ${megabytes(STORAGE_CHARS)} MB this browser keeps for it, mostly for images. Use Export JSON to keep a copy: once it is full, changes are no longer saved here.`
+          )
+        );
+      }
+    },
+    [store, lock, say, screenToFlowPosition, canvasMiddle, staggered]
+  );
+
+  // What a sidebar tile adds: a template card, a note (#83), or the user's own
+  // image (#86, which asks for the file first). `at` is the top-left corner
+  // where it was dropped; a click adds it near the middle of the canvas.
+  const addItem = useCallback(
+    (item: Addable, at?: { x: number; y: number }) => {
+      if (item === "image") return imageInput.current?.click();
+      if (item !== "note") return addGraphic(item, at);
+      const middle = screenToFlowPosition(canvasMiddle());
+      store.addNote(at ?? staggered({ x: middle.x - NOTE_SIZE.width / 2, y: middle.y - NOTE_SIZE.height / 2 }));
+    },
+    [store, addGraphic, screenToFlowPosition, canvasMiddle, staggered]
   );
 
   useEffect(() => {
@@ -386,27 +484,36 @@ function EditorInner({ loaded }: { loaded: Start }) {
   }, [store, zoomIn, zoomOut, zoomTo]);
 
   // A template dragged with a finger from the sidebar, dropped on the canvas.
-  const canvas = useRef<HTMLDivElement>(null);
+  // Dropped items are centred where they land (a card at about its centre).
+  const dropAt = useCallback(
+    (item: Addable, point: { x: number; y: number }) => {
+      const pos = screenToFlowPosition(point);
+      const half = item === "note" ? { x: NOTE_SIZE.width / 2, y: NOTE_SIZE.height / 2 } : { x: 120, y: 100 };
+      addItem(item, { x: pos.x - half.x, y: pos.y - half.y });
+    },
+    [addItem, screenToFlowPosition]
+  );
   const touchDrop = useCallback(
-    (g: Graphic, point: { x: number; y: number }) => {
+    (item: Addable, point: { x: number; y: number }) => {
       const r = canvas.current?.getBoundingClientRect();
       if (!r || point.x < r.left || point.x > r.right || point.y < r.top || point.y > r.bottom) return;
-      const pos = screenToFlowPosition(point);
-      addGraphic(g, { x: pos.x - 120, y: pos.y - 100 });
+      dropAt(item, point);
     },
-    [addGraphic, screenToFlowPosition]
+    [dropAt]
   );
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      const id = event.dataTransfer.getData("application/wireflow-card");
-      const g = id ? graphicById(id) : undefined;
-      if (!g) return;
-      const pos = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-      addGraphic(g, { x: pos.x - 120, y: pos.y - 100 });
+      // An image file dragged in from the computer becomes a card where it lands.
+      const file = [...event.dataTransfer.files].find((f) => IMAGE_TYPES.includes(f.type));
+      if (file) return void addImageFile(file, { x: event.clientX, y: event.clientY });
+      const id = event.dataTransfer.getData(DRAG_CARD);
+      const extra = event.dataTransfer.getData(DRAG_ADD);
+      const item: Addable | undefined = extra === "note" ? extra : id ? graphicById(id) : undefined;
+      if (item) dropAt(item, { x: event.clientX, y: event.clientY });
     },
-    [addGraphic, screenToFlowPosition]
+    [dropAt, addImageFile]
   );
 
   // The earlier editor's toolbar commands (gg-editor's 14): undo and redo and
@@ -541,6 +648,18 @@ function EditorInner({ loaded }: { loaded: Start }) {
           <span className="text-xs text-ink-soft">
             {nodes.length} cards &middot; {edges.length} connections
           </span>
+          {estimateText && (
+            <button
+              onClick={() => setEstimateOpen((open) => !open)}
+              aria-expanded={estimateOpen}
+              title="The project's estimate, per group"
+              className="-ml-2 hidden items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-wire-blue transition hover:bg-wire-lavender sm:flex"
+            >
+              <Calculator size={13} aria-hidden />
+              <span className="sr-only">Estimate: </span>
+              {estimateText}
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-3 max-sm:gap-2">
           <span
@@ -569,6 +688,18 @@ function EditorInner({ loaded }: { loaded: Start }) {
           >
             Open file
           </button>
+          <input
+            ref={imageInput}
+            type="file"
+            accept={IMAGE_ACCEPT}
+            hidden
+            aria-label="Image to add as a card"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void addImageFile(file);
+            }}
+          />
           <input
             ref={fileInput}
             type="file"
@@ -603,6 +734,15 @@ function EditorInner({ loaded }: { loaded: Start }) {
                   onSelect: () => void ai.toggle(),
                 },
                 { label: "Open file", icon: <FolderOpen size={14} aria-hidden />, onSelect: chooseFile },
+                ...(estimateText
+                  ? [
+                      {
+                        label: `Estimate: ${estimateText}`,
+                        icon: <Calculator size={14} aria-hidden />,
+                        onSelect: () => setEstimateOpen(true),
+                      },
+                    ]
+                  : []),
               ]}
             />
           </span>
@@ -617,7 +757,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <GraphicsPanel onAddCard={(g) => addGraphic(g)} onTouchDrop={touchDrop} />
+        <GraphicsPanel onAddCard={(item) => addItem(item)} onTouchDrop={touchDrop} />
         <div
           ref={canvas}
           // Focusable from script only, so focus has somewhere to go when a
@@ -627,7 +767,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
           onDrop={onDrop}
           onDragOver={(e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = "move";
+            e.dataTransfer.dropEffect = e.dataTransfer.types.includes("Files") ? "copy" : "move";
           }}
         >
           <ReactFlow
@@ -769,7 +909,9 @@ function EditorInner({ loaded }: { loaded: Start }) {
           {selectedEdge && <EdgePanel edge={selectedEdge} edges={edges} />}
           {selectedGroup && isGroup(selectedGroup) && <GroupPanel group={selectedGroup} />}
           {selectedCard && isCard(selectedCard) && <CardPanel card={selectedCard} />}
-          <ShortcutsPanel hidden={!!(selectedEdge || selectedGroup || selectedCard)} />
+          {selectedNote && isNote(selectedNote) && <NotePanel note={selectedNote} />}
+          {showEstimate && <EstimatePanel diagram={store.diagram()} onClose={() => setEstimateOpen(false)} />}
+          <ShortcutsPanel hidden={!!(selectedEdge || selectedGroup || selectedCard || selectedNote || showEstimate)} />
         </div>
       </div>
     </div>

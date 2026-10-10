@@ -4,10 +4,14 @@
 // breaks them:
 //
 // - every node and edge has a non-empty string id, unique across the diagram;
-// - a card shows a catalog graphic, and its image URL is the catalog's;
+// - a card shows a catalog graphic, and its image URL is the catalog's, or the
+//   user's own image as a JPEG, PNG or WebP data URL of at most MAX_IMAGE_CHARS;
+// - a note has text (at most MAX_NOTE_TEXT characters) and a size within NOTE_BOUNDS;
+// - a card's estimate is 0 to MAX_ESTIMATE hours; the settings hold an hourly
+//   rate (0 to MAX_RATE) and one of CURRENCIES;
 // - a parentId names an existing group, parent chains have no loops, and
 //   parents come before their children (React Flow requires it);
-// - every edge connects two existing cards (no loose or dangling edges), and
+// - every edge connects two existing cards or notes (no loose or dangling edges), and
 //   its shape, width and colour are ones the editor offers;
 // - only known fields are kept, so nothing like "__proto__" gets through, and
 //   React Flow's selection, drag state and measurements never reach storage.
@@ -22,8 +26,19 @@ import {
   EDGE_SHAPES,
   MAX_EDGE_WIDTH,
   MIN_EDGE_WIDTH,
+  CURRENCIES,
+  IMAGE_SRC_RE,
+  imageRatio,
+  MAX_ESTIMATE,
+  MAX_RATE,
+  MAX_IMAGE_CHARS,
+  MAX_NOTE_TEXT,
+  NOTE_BOUNDS,
+  OWN_IMAGE,
+  NOTE_SIZE,
+  isConnectable,
   isGroup,
-  type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode } from "./model";
+  type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type DiagramSettings, type GroupNode, type NoteNode } from "./model";
 
 // `parents` (only when there were any): items taken out of a group that doesn't
 // exist or contains itself.
@@ -41,6 +56,17 @@ export const COLOR_RE = /^#[0-9a-f]{6}$/;
 // JSON.parse reviver for anything that came from outside the app.
 export const dropProto = (key: string, value: unknown) => (key === "__proto__" ? undefined : value);
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const estimate = (v: unknown) => (isNum(v) && v >= 0 && v <= MAX_ESTIMATE ? { estimate: round2(v) } : {});
+
+function settings(v: unknown): DiagramSettings | undefined {
+  if (!isObject(v)) return undefined;
+  const rate = isNum(v.hourlyRate) && v.hourlyRate >= 0 && v.hourlyRate <= MAX_RATE ? round2(v.hourlyRate) : undefined;
+  const currency = (CURRENCIES as readonly unknown[]).includes(v.currency) ? (v.currency as string) : undefined;
+  const s = { ...(rate !== undefined && { hourlyRate: rate }), ...(currency && { currency }) };
+  return Object.keys(s).length ? s : undefined;
+}
+
 function position(v: unknown) {
   return isObject(v) && isNum(v.x) && isNum(v.y) ? { x: v.x, y: v.y } : undefined;
 }
@@ -49,6 +75,7 @@ function card(raw: Obj, id: string): CardNode | undefined {
   const pos = position(raw.position);
   const data = raw.data;
   if (raw.type !== "flow" || !pos || !isObject(data) || !isId(data.graphicId)) return undefined;
+  if (data.graphicId === OWN_IMAGE) return imageCard(raw, id, pos, data);
   const graphic = graphicById(data.graphicId);
   if (!graphic) return undefined;
   const headerText = text(data.headerText, MAX_LABEL);
@@ -63,6 +90,30 @@ function card(raw: Obj, id: string): CardNode | undefined {
       label: text(data.label, MAX_LABEL) ?? graphic.label,
       ...(headerText !== undefined && { headerText }),
       ...(typeof data.showHeader === "boolean" && { showHeader: data.showHeader }),
+      ...estimate(data.estimate),
+    },
+  };
+}
+
+// A card with the user's own image: only an image data URL, never a link.
+function imageCard(raw: Obj, id: string, pos: { x: number; y: number }, data: Obj): CardNode | undefined {
+  const src = data.src;
+  if (typeof src !== "string" || src.length > MAX_IMAGE_CHARS || !IMAGE_SRC_RE.test(src)) return undefined;
+  const label = text(data.label, MAX_LABEL) || "Image";
+  const headerText = text(data.headerText, MAX_LABEL);
+  return {
+    id,
+    type: "flow",
+    position: pos,
+    ...(isId(raw.parentId) && { parentId: raw.parentId }),
+    data: {
+      graphicId: OWN_IMAGE,
+      src,
+      label,
+      ...(headerText !== undefined && { headerText }),
+      ...(typeof data.showHeader === "boolean" && { showHeader: data.showHeader }),
+      ratio: imageRatio(isNum(data.ratio) ? data.ratio : undefined),
+      ...estimate(data.estimate),
     },
   };
 }
@@ -83,6 +134,23 @@ function group(raw: Obj, id: string): GroupNode | undefined {
     ...(isId(raw.parentId) && { parentId: raw.parentId }),
     ...size,
     data: { label: text(data.label, MAX_LABEL) ?? "Group" },
+  };
+}
+
+function note(raw: Obj, id: string): NoteNode | undefined {
+  const pos = position(raw.position);
+  if (raw.type !== "note" || !pos) return undefined;
+  const data = isObject(raw.data) ? raw.data : {};
+  const size = (v: unknown, min: number, max: number, fallback: number) =>
+    isNum(v) && v > 0 ? Math.round(Math.min(max, Math.max(min, v))) : fallback;
+  return {
+    id,
+    type: "note",
+    position: pos,
+    ...(isId(raw.parentId) && { parentId: raw.parentId }),
+    width: size(raw.width, NOTE_BOUNDS.minWidth, NOTE_BOUNDS.maxWidth, NOTE_SIZE.width),
+    height: size(raw.height, NOTE_BOUNDS.minHeight, NOTE_BOUNDS.maxHeight, NOTE_SIZE.height),
+    data: { text: text(data.text, MAX_NOTE_TEXT) ?? "" },
   };
 }
 
@@ -119,7 +187,7 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
   const nodes: DiagramNode[] = [];
   for (const raw of rawNodes) {
     const id = isObject(raw) && isId(raw.id) && !ids.has(raw.id) ? raw.id : undefined;
-    const node = id === undefined ? undefined : (card(raw as Obj, id) ?? group(raw as Obj, id));
+    const node = id === undefined ? undefined : (card(raw as Obj, id) ?? group(raw as Obj, id) ?? note(raw as Obj, id));
     if (!node) {
       dropped.nodes++;
       continue;
@@ -160,8 +228,8 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
     .sort((a, b) => a.depth - b.depth || a.index - b.index)
     .map((o) => o.node);
 
-  // Groups have no handles, so a connection joins two cards.
-  const nodeIds = new Set(nodes.filter((n) => n.type === "flow").map((n) => n.id));
+  // Groups have no handles, so a connection joins two cards or notes.
+  const nodeIds = new Set(nodes.filter(isConnectable).map((n) => n.id));
   const edges: DiagramEdge[] = [];
   for (const raw of rawEdges) {
     const id = isObject(raw) && isId(raw.id) && !ids.has(raw.id) ? raw.id : undefined;
@@ -174,7 +242,8 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
     edges.push(e);
   }
 
-  return { diagram: { nodes: ordered, edges }, dropped };
+  const s = isObject(input) ? settings(input.settings) : undefined;
+  return { diagram: { nodes: ordered, edges, ...(s && { settings: s }) }, dropped };
 }
 
 // A diagram as stored: only what the rules keep.
@@ -184,5 +253,5 @@ export const serialize = (diagram: Diagram) => JSON.stringify(enforceRules(diagr
 // every group framed around its members (a hand-made file may give groups no size).
 export function enforceRulesOnLoad(input: unknown): { diagram: Diagram; dropped: Dropped } {
   const { diagram, dropped } = enforceRules(input);
-  return { diagram: { nodes: fitGroups(diagram.nodes), edges: diagram.edges }, dropped };
+  return { diagram: { ...diagram, nodes: fitGroups(diagram.nodes) }, dropped };
 }
