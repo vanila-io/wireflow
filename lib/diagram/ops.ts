@@ -1,6 +1,18 @@
 // Pure operations on a diagram. The store applies each one as a single undo step.
 import { absoluteBoxes, absolutePositions, fitGroups, GROUP_PADDING } from "./groups";
-import { ARROW, isCard, isGroup, newCardId, newId, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode } from "./model";
+import {
+  ARROW,
+  edgeType,
+  isCard,
+  isGroup,
+  newCardId,
+  newId,
+  type Diagram,
+  type DiagramEdge,
+  type DiagramNode,
+  type EdgeShape,
+  type GroupNode,
+} from "./model";
 
 // Ids of the given nodes and everything nested in them.
 export function withDescendants(nodes: DiagramNode[], ids: Iterable<string>): Set<string> {
@@ -193,21 +205,33 @@ export function setGroupLabel(d: Diagram, id: string, value: string): Diagram {
   };
 }
 
-// An edge's colour (null: the default colour) and label (empty: none).
-export function updateEdge(d: Diagram, id: string, patch: { color?: string | null; label?: string }): Diagram {
+export type EdgePatch = { color?: string | null; label?: string; shape?: EdgeShape; width?: number };
+
+// An edge's colour (null: the default colour), label (empty: none), line shape
+// and width (the defaults are not stored; the rules check the values).
+export function updateEdge(d: Diagram, id: string, patch: EdgePatch): Diagram {
   return {
     nodes: d.nodes,
     edges: d.edges.map((e): DiagramEdge => {
       if (e.id !== id) return e;
       const next: DiagramEdge = { ...e };
       if (patch.color !== undefined) {
+        const style = { ...next.style };
         if (patch.color === null) {
-          delete next.style;
+          delete style.stroke;
           next.markerEnd = { type: ARROW };
         } else {
-          next.style = { stroke: patch.color };
+          style.stroke = patch.color;
           next.markerEnd = { type: ARROW, color: patch.color };
         }
+        next.style = style;
+      }
+      if (patch.width !== undefined) next.style = { ...next.style, strokeWidth: patch.width };
+      if (next.style && Object.keys(next.style).length === 0) delete next.style;
+      if (patch.shape !== undefined) {
+        const type = edgeType(patch.shape);
+        if (type) next.type = type;
+        else delete next.type;
       }
       if (patch.label !== undefined) {
         const label = patch.label.trim();

@@ -9,13 +9,16 @@
 //                                                  headerText, showHeader}}
 // group {id, label, parent, x?, y?}             group {id, type: "group", parentId,
 //                                                  data: {label}}, framed around its members
-// edge {id, source, target, label, color, ...}  edge {id, source, target, label, style.stroke}
+// edge {id, source, target, label, color,       edge {id, source, target, label, type,
+//   shape, style.lineWidth, anchors}               style.stroke, style.strokeWidth}
 //
 // Cards are 220px wide instead of 96px, so positions are scaled by 220/96 around
 // the origin: the layout keeps its shape. G6 node positions are absolute, also
 // inside a group, so every card stays where it was and each group is framed
-// around its members, as G6 drew it. Anchors have no counterpart (cards connect
-// bottom to top) and are not kept.
+// around its members, as G6 drew it. Edge shapes map to React Flow edge types
+// (flow-smooth: the default bezier, flow-polyline: step, flow-polyline-round:
+// smoothstep) and lineWidth to strokeWidth. Anchors have no counterpart (cards
+// connect bottom to top) and are not kept.
 import legacyTemplates from "@/lib/legacy-templates.json";
 import { graphicById, graphicBySrc, type Graphic } from "@/lib/graphics";
 import { fitGroups } from "./groups";
@@ -35,6 +38,9 @@ export const G6_NODE_WIDTH = 96;
 export const SCALE = CARD_WIDTH / G6_NODE_WIDTH;
 const PLAIN_SHAPE = "node-image-without-header";
 const G6_DEFAULT_COLOR = "#a4b2c0";
+// G6 edge shapes -> React Flow edge types; flow-smooth is React Flow's default.
+const G6_SHAPES: Record<string, string> = { "flow-polyline": "step", "flow-polyline-round": "smoothstep" };
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
 
 // "<folder>/<file name>" (the old src/assets/images layout, and #109's file keys) -> graphic id.
 const byKey = legacyTemplates as Record<string, string>;
@@ -106,8 +112,12 @@ export function fromG6(g6: G6Diagram): Diagram {
       source: e.source as string,
       target: e.target as string,
       markerEnd: custom ? { type: ARROW, color: custom } : { type: ARROW },
+      ...(G6_SHAPES[e.shape as string] && { type: G6_SHAPES[e.shape as string] }),
       ...(typeof e.label === "string" && e.label && { label: e.label }),
-      ...(custom && { style: { stroke: custom } }),
+      style: {
+        ...(custom && { stroke: custom }),
+        ...(isObject(e.style) && typeof e.style.lineWidth === "number" && { strokeWidth: e.style.lineWidth }),
+      },
     };
   });
 

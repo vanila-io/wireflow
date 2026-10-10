@@ -7,7 +7,8 @@
 // everything a version 1 diagram holds keeps its meaning, so version 1 data is
 // read as it is (see migrate in storage.ts), and the editor before this change
 // can still read what version 2 writes (a group is React Flow's built-in
-// "group" node type there).
+// "group" node type there). Edges may also carry a line shape (React Flow's
+// edge `type`) and a width (style.strokeWidth), as in the earlier editor.
 import type { Edge, Node } from "@xyflow/react";
 import graphicSizes from "@/lib/graphic-sizes.json";
 import { graphicById, type Graphic } from "@/lib/graphics";
@@ -73,6 +74,31 @@ export function makeCard(g: Graphic, position: { x: number; y: number }, id = ne
 // saved, so stored or opened data can't point an image at another host.
 export const cardGraphic = (data: Pick<CardData, "graphicId">) => graphicById(data.graphicId);
 
-// The edge colour from globals.css (.react-flow__edge-path).
-export const DEFAULT_EDGE_COLOR = "#a3a8c3";
+// How an edge without a colour or width of its own is drawn: React Flow's own
+// defaults (--xy-edge-stroke-default, --xy-edge-stroke-width-default). That is
+// what wireflow.co shows: globals.css sets #a3a8c3 at 2px for
+// .react-flow__edge-path, but @xyflow/react/dist/style.css loads after it with
+// the same selector and wins. The panel shows the colour and width that are drawn.
+export const DEFAULT_EDGE_COLOR = "#b1b1b7";
 export const ARROW = "arrowclosed" as const;
+
+// Line shapes, as the earlier editor named them, and the React Flow edge type
+// that draws each. Smooth (a bezier curve) is React Flow's default type, which
+// edges without a `type` already use, so it is never stored.
+export const EDGE_SHAPES = [
+  { shape: "smooth", label: "Smooth", type: undefined },
+  { shape: "polyline", label: "Polyline", type: "step" },
+  { shape: "polyline-round", label: "Rounded polyline", type: "smoothstep" },
+] as const;
+export type EdgeShape = (typeof EDGE_SHAPES)[number]["shape"];
+export const edgeShape = (e: Pick<DiagramEdge, "type">): EdgeShape =>
+  EDGE_SHAPES.find((s) => s.type === e.type)?.shape ?? "smooth";
+export const edgeType = (shape: EdgeShape) => EDGE_SHAPES.find((s) => s.shape === shape)?.type;
+
+// Line width in px, 1 to 10 as in the earlier editor; the default (see above)
+// is never stored.
+export const DEFAULT_EDGE_WIDTH = 1;
+export const MIN_EDGE_WIDTH = 1;
+export const MAX_EDGE_WIDTH = 10;
+export const edgeWidth = (e: Pick<DiagramEdge, "style">) =>
+  typeof e.style?.strokeWidth === "number" ? e.style.strokeWidth : DEFAULT_EDGE_WIDTH;

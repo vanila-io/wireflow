@@ -42,7 +42,7 @@ test("a colour typed as hex or rgb() is applied, opaque, and offered again for o
   await selectEdge(page, "ab");
   await expect(panel(page)).toBeVisible();
   await expect(page.getByText("Keyboard shortcuts")).toBeHidden();
-  await expect(hex(page)).toHaveValue("#a3a8c3");
+  await expect(hex(page)).toHaveValue("#b1b1b7");
 
   await hex(page).fill("E8590C80");
   await hex(page).press("Enter");
@@ -83,7 +83,7 @@ test("the panel follows undo and redo, and a same colour or an unchanged label a
   await page.getByRole("button", { name: "Undo" }).click();
   await expect.poll(() => stroke(page, "ab")).toBeUndefined();
   // The edge stays selected and its panel shows the undone state.
-  await expect(hex(page)).toHaveValue("#a3a8c3");
+  await expect(hex(page)).toHaveValue("#b1b1b7");
   await page.getByRole("button", { name: "Redo" }).click();
   await expect(hex(page)).toHaveValue("#4353ff");
 

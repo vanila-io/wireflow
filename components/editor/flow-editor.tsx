@@ -48,6 +48,13 @@ const isTyping = (target: EventTarget | null) =>
     ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
     !!target.closest("[data-no-shortcuts]"));
 
+// A panel control that holds no text (the width slider, the line menu, the
+// colour picker): Undo and Redo still reach the diagram from it, other
+// shortcuts don't (Backspace there must not delete the selected connection).
+const isControl = (target: EventTarget | null) =>
+  (target instanceof HTMLInputElement && ["range", "color", "checkbox", "radio"].includes(target.type)) ||
+  target instanceof HTMLSelectElement;
+
 const NEWER =
   "This diagram was saved by a newer version of Wireflow. Reload the page to get it; changes made here are not saved.";
 
@@ -273,9 +280,9 @@ function EditorInner({ loaded }: { loaded: Start }) {
   // copy and paste cards (a paste is one undo step).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e.target)) return;
       const mod = e.ctrlKey || e.metaKey;
       const k = e.key.toLowerCase();
+      if (isTyping(e.target) && !(isControl(e.target) && mod && (k === "z" || k === "y"))) return;
       if (!mod) {
         if (e.altKey) return;
         // H toggles the header on every selected card (original wireflow behavior)

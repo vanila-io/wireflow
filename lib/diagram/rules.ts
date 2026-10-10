@@ -7,7 +7,8 @@
 // - a card shows a catalog graphic, and its image URL is the catalog's;
 // - a parentId names an existing group, parent chains have no loops, and
 //   parents come before their children (React Flow requires it);
-// - every edge connects two existing cards (no loose or dangling edges);
+// - every edge connects two existing cards (no loose or dangling edges), and
+//   its shape, width and colour are ones the editor offers;
 // - only known fields are kept, so nothing like "__proto__" gets through, and
 //   React Flow's selection, drag state and measurements never reach storage.
 //
@@ -15,7 +16,14 @@
 // it dropped so callers can tell the user.
 import { graphicById } from "@/lib/graphics";
 import { EMPTY_GROUP, fitGroups } from "./groups";
-import { ARROW, isGroup, type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode } from "./model";
+import {
+  ARROW,
+  DEFAULT_EDGE_WIDTH,
+  EDGE_SHAPES,
+  MAX_EDGE_WIDTH,
+  MIN_EDGE_WIDTH,
+  isGroup,
+  type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode } from "./model";
 
 // `parents` (only when there were any): items taken out of a group that doesn't
 // exist or contains itself.
@@ -84,13 +92,21 @@ function edge(raw: Obj, id: string): DiagramEdge | undefined {
   const stroke =
     isObject(raw.style) && typeof raw.style.stroke === "string" ? raw.style.stroke.toLowerCase() : undefined;
   const color = stroke && COLOR_RE.test(stroke) ? stroke : undefined;
+  const w = isObject(raw.style) ? raw.style.strokeWidth : undefined;
+  const width =
+    Number.isInteger(w) && (w as number) >= MIN_EDGE_WIDTH && (w as number) <= MAX_EDGE_WIDTH && w !== DEFAULT_EDGE_WIDTH
+      ? (w as number)
+      : undefined;
+  const type = EDGE_SHAPES.find((s) => s.type !== undefined && s.type === raw.type)?.type;
+  const style = { ...(color && { stroke: color }), ...(width && { strokeWidth: width }) };
   return {
     id,
     source: raw.source,
     target: raw.target,
+    ...(type && { type }),
     markerEnd: color ? { type: ARROW, color } : { type: ARROW },
     ...(label && { label }),
-    ...(color && { style: { stroke: color } }),
+    ...(Object.keys(style).length > 0 && { style }),
   };
 }
 

@@ -1,12 +1,21 @@
 "use client";
 
-// The selected connection's label and colour (#106). The editor had no edge
-// editing; this adds only that. Every value is read from the store on each
+// The selected connection's label, line shape, width and colour: the earlier
+// editor's Edge panel (#106). Every value is read from the store on each
 // render, so the panel follows undo and redo; a field being edited is only
 // overwritten when its own value changed in the store.
 import { useEffect, useRef, useState } from "react";
 import { EDGE_PALETTE, parseColor, toRgb } from "@/lib/color";
-import { DEFAULT_EDGE_COLOR, type DiagramEdge } from "@/lib/diagram/model";
+import {
+  DEFAULT_EDGE_COLOR,
+  EDGE_SHAPES,
+  edgeShape,
+  edgeWidth,
+  MAX_EDGE_WIDTH,
+  MIN_EDGE_WIDTH,
+  type DiagramEdge,
+  type EdgeShape,
+} from "@/lib/diagram/model";
 import { useStore } from "./store-context";
 
 const colorOf = (e: DiagramEdge) => (typeof e.style?.stroke === "string" ? e.style.stroke : DEFAULT_EDGE_COLOR);
@@ -92,6 +101,24 @@ export default function EdgePanel({ edge, edges }: { edge: DiagramEdge; edges: D
     // The input is remounted when the stored colour changes (its key).
   }, [color]);
 
+  // The width slider, likewise: dragging shows the width as it goes ("input"),
+  // and only where it is let go is stored ("change"), so a drag is one undo
+  // step; each arrow key press is one step.
+  const width = edgeWidth(edge);
+  const [widthDraft, setWidthDraft] = useDraft(String(width));
+  const slider = useRef<HTMLInputElement>(null);
+  const setWidthRef = useRef((w: number) => store.updateEdge(edge.id, { width: w }));
+  useEffect(() => {
+    setWidthRef.current = (w: number) => store.updateEdge(edge.id, { width: w });
+  });
+  useEffect(() => {
+    const el = slider.current;
+    if (!el) return;
+    const onChange = () => setWidthRef.current(Number(el.value));
+    el.addEventListener("change", onChange);
+    return () => el.removeEventListener("change", onChange);
+  }, []);
+
   return (
     <aside
       aria-label="Connection"
@@ -113,6 +140,39 @@ export default function EdgePanel({ edge, edges }: { edge: DiagramEdge; edges: D
           }}
           placeholder="e.g. Sign in"
           className="mt-1 block w-full rounded-md border border-wire-border px-2 py-1.5 text-xs font-normal text-ink outline-none focus:border-wire-blue"
+        />
+      </label>
+      <label className="mt-3 block text-[11px] font-semibold text-ink-soft">
+        Line
+        <select
+          value={edgeShape(edge)}
+          onChange={(e) => store.updateEdge(edge.id, { shape: e.target.value as EdgeShape })}
+          className="mt-1 block w-full rounded-md border border-wire-border bg-white px-2 py-1.5 text-xs font-normal text-ink outline-none focus:border-wire-blue"
+        >
+          {EDGE_SHAPES.map((s) => (
+            <option key={s.shape} value={s.shape}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="mt-3 block text-[11px] font-semibold text-ink-soft">
+        <span className="flex items-center justify-between">
+          Width
+          <span className="font-mono font-normal text-ink" aria-hidden>
+            {widthDraft} px
+          </span>
+        </span>
+        <input
+          ref={slider}
+          type="range"
+          min={MIN_EDGE_WIDTH}
+          max={MAX_EDGE_WIDTH}
+          step={1}
+          value={widthDraft}
+          onChange={(e) => setWidthDraft(e.target.value)}
+          aria-valuetext={`${widthDraft} px`}
+          className="mt-1.5 block w-full accent-wire-blue"
         />
       </label>
       <p className="mt-3 text-[11px] font-semibold text-ink-soft">Colour</p>

@@ -30,6 +30,7 @@ import {
   ungroupItem,
   updateEdge,
   type Clip,
+  type EdgePatch,
 } from "./ops";
 import { enforceRules, serialize } from "./rules";
 
@@ -224,8 +225,8 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     setHeaderText(id: string, value: string) {
       apply((d) => setHeaderText(d, id, value));
     },
-    /** An edge's colour (null or the default colour: none of its own) and label. Unchanged values add no step. */
-    updateEdge(id: string, patch: { color?: string | null; label?: string }) {
+    /** An edge's colour (null or the default colour: none of its own), label, shape and width. Unchanged values add no step. */
+    updateEdge(id: string, patch: EdgePatch) {
       const color = patch.color === DEFAULT_EDGE_COLOR ? null : patch.color;
       apply((d) => updateEdge(d, id, { ...patch, ...(color !== undefined && { color }) }));
     },

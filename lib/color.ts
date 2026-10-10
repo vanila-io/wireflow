@@ -23,7 +23,7 @@ export const toRgb = (hex: string) => {
 
 // The palette; the first entry is the default edge colour.
 export const EDGE_PALETTE = [
-  "#a3a8c3",
+  "#b1b1b7",
   "#2d2b33",
   "#4353ff",
   "#13c2c2",
