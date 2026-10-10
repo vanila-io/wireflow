@@ -60,6 +60,12 @@ export type SendOptions = {
  */
 export type Chat = {
   send(input: { text?: string[]; toolResults?: ToolResult[] }, options?: SendOptions): Promise<Turn>;
+  /**
+   * The history the next request continues from, exactly as the provider will
+   * send it, as plain JSON (for "Keep chat after reload"). Pass it back as
+   * createChat's `history` to continue the conversation.
+   */
+  history(): unknown;
 };
 
 export type Provider = {
@@ -71,5 +77,6 @@ export type Provider = {
   defaultModel: string;
   /** Throws an AiError if the key is not accepted (costs no tokens). */
   validateKey(args: { apiKey: string; model: string }): Promise<void>;
-  createChat(args: { apiKey: string; model: string; system: string; tools: Tool[] }): Chat;
+  /** `history` is what an earlier chat's history() returned; anything malformed starts a new chat. */
+  createChat(args: { apiKey: string; model: string; system: string; tools: Tool[]; history?: unknown }): Chat;
 };

@@ -381,6 +381,7 @@ describe("the agent loop with the store", () => {
   const scripted = (turns: Array<Partial<Turn>>): Chat => {
     let i = 0;
     return {
+      history: () => null,
       async send() {
         const t = turns[i++];
         return {

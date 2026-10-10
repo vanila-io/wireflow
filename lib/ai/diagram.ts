@@ -49,6 +49,10 @@ export function snapshot({ data, selected = [], view }: { data: Diagram; selecte
       hourlyRate: data.settings.hourlyRate,
       currency: data.settings.currency ?? "USD",
     }),
+    // Project stages (#84): read-only for the model.
+    ...(data.settings?.stages && {
+      stages: data.settings.stages.map((s) => ({ ...s, label: s.label.slice(0, MAX_LABEL) })),
+    }),
     screens: data.nodes.filter(isCard).map((n) => {
       const b = boxes.get(n.id)!;
       return {
