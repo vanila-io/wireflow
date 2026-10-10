@@ -17,7 +17,7 @@
   // Serve on <worker>.<subdomain>.workers.dev, without public per-version URLs.
   "workers_dev": true,
   "preview_urls": false,
-  // ISR for "/" (the sponsors list revalidates hourly), as in OpenNext's
+  // ISR for "/" (the star count and sponsors list revalidate hourly), as in OpenNext's
   // template: an R2 incremental cache, and a self-reference for the memory
   // queue that revalidates pages. `npm run preview` simulates both locally.
   "r2_buckets": [
