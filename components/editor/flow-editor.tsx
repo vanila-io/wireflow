@@ -19,6 +19,8 @@ import { STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
+import { Sparkles } from "lucide-react";
+import { LOAD_FAILED, PanelBoundary, useAiPanel } from "@/components/ai/use-ai-panel";
 import ConfirmDialog from "./confirm-dialog";
 import FlowNodeComp from "./flow-node";
 import GraphicsPanel from "./graphics-panel";
@@ -34,10 +36,13 @@ function browserStorage(kind: "localStorage" | "sessionStorage"): Storage | null
   }
 }
 
-// Typing in a field must not trigger canvas shortcuts.
+// Typing in a field, or using a panel that opts out (the AI assistant), must
+// not trigger canvas shortcuts.
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
-  (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+  (target.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+    !!target.closest("[data-no-shortcuts]"));
 
 const NEWER =
   "This diagram was saved by a newer version of Wireflow. Reload the page to get it; changes made here are not saved.";
@@ -162,6 +167,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
 
   const dismiss = useCallback((id: number) => setNotices((ns) => ns.filter((n) => n.id !== id)), []);
   const say = useCallback((n: Notice) => setNotices((ns) => [...ns.slice(-3), n]), []);
+  const ai = useAiPanel();
 
   const addGraphic = useCallback(
     (g: Graphic, at?: { x: number; y: number }) => {
@@ -359,6 +365,18 @@ function EditorInner({ loaded }: { loaded: Start }) {
             {saveFailed ? "Not saved in this browser" : "All changes saved"}
           </span>
           <button
+            onClick={() => void ai.toggle()}
+            aria-expanded={ai.open}
+            aria-label={ai.failed ? LOAD_FAILED : "AI assistant"}
+            title={ai.failed ? LOAD_FAILED : "AI assistant (your own Anthropic key)"}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 transition ${
+              ai.failed ? "text-rose-600 ring-rose-300" : "text-wire-blue ring-wire-blue/40 hover:bg-wire-lavender"
+            }`}
+          >
+            <Sparkles size={14} aria-hidden />
+            AI
+          </button>
+          <button
             onClick={chooseFile}
             title="Open a wireflow.json file"
             className="rounded-md px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-wire-blue ring-1 ring-wire-blue/40 transition hover:bg-wire-lavender"
@@ -417,6 +435,11 @@ function EditorInner({ loaded }: { loaded: Start }) {
             <MiniMap pannable zoomable maskColor="rgba(240,242,245,0.8)" nodeStrokeWidth={0} />
           </ReactFlow>
 
+          {ai.Panel && (
+            <PanelBoundary>
+              <ai.Panel open={ai.open} onClose={ai.close} />
+            </PanelBoundary>
+          )}
           <Notices notices={notices} onDismiss={dismiss} />
           <ConfirmDialog
             open={!!pendingOpen}

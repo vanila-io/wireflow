@@ -1,5 +1,5 @@
 // Pure operations on a diagram. The store applies each one as a single undo step.
-import { newCardId, newId, type Diagram } from "./model";
+import { ARROW, newCardId, newId, type Diagram, type DiagramEdge } from "./model";
 
 // Remove nodes and edges, plus the edges left without an end.
 export function removeItems(d: Diagram, ids: Iterable<string>): Diagram {
@@ -43,6 +43,32 @@ export function pasteItems(
     target: ids.get(e.target)!,
   }));
   return { diagram: { nodes: [...d.nodes, ...nodes], edges: [...d.edges, ...edges] }, ids: nodes.map((n) => n.id) };
+}
+
+// An edge's colour (null: the default colour) and label (empty: none).
+export function updateEdge(d: Diagram, id: string, patch: { color?: string | null; label?: string }): Diagram {
+  return {
+    nodes: d.nodes,
+    edges: d.edges.map((e): DiagramEdge => {
+      if (e.id !== id) return e;
+      const next: DiagramEdge = { ...e };
+      if (patch.color !== undefined) {
+        if (patch.color === null) {
+          delete next.style;
+          next.markerEnd = { type: ARROW };
+        } else {
+          next.style = { stroke: patch.color };
+          next.markerEnd = { type: ARROW, color: patch.color };
+        }
+      }
+      if (patch.label !== undefined) {
+        const label = patch.label.trim();
+        if (label) next.label = label;
+        else delete next.label;
+      }
+      return next;
+    }),
+  };
 }
 
 // The H shortcut: show or hide the header of each given card.
