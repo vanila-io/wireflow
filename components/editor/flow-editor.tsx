@@ -194,8 +194,9 @@ function EditorInner({ loaded }: { loaded: Start }) {
       const pos =
         at ??
         screenToFlowPosition({ x: window.innerWidth / 2 - 120, y: window.innerHeight / 2 });
-      // stagger repeated adds so cards don't land on top of each other
-      const step = store.getState().nodes.length % 5;
+      // stagger repeated adds so cards don't land on top of each other; a card
+      // dropped at a point (mouse or finger) lands where it was dropped
+      const step = at ? 0 : store.getState().nodes.length % 5;
       const offset = { x: step * 260, y: (step % 2) * 60 };
       store.addCard(g, { x: pos.x + offset.x, y: pos.y + offset.y });
     },

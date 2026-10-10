@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, openEditor, saved, test } from "./fixtures";
+import { expect, openEditor, SAMPLE, saved, seed, test } from "./fixtures";
 
 const sidebar = (page: Page) => page.getByRole("complementary", { name: "Screen templates" });
 const tiles = (page: Page) => sidebar(page).locator('button[draggable="true"]');
@@ -63,4 +63,24 @@ test("a template drags from anywhere on its tile, and Enter adds one from the ke
   await page.keyboard.press("Enter");
   await expect(page.locator(".react-flow__node")).toHaveCount(3);
   await expect.poll(async () => (await saved(page))?.nodes.length).toBe(3);
+});
+
+// The editor offset every new card by up to 1040px to stagger clicked adds,
+// so a dropped template could land far from where it was dropped.
+test("a dropped template lands where it was dropped, however many cards there are", async ({ page }) => {
+  await seed(page, SAMPLE);
+  await openEditor(page);
+  const pane = (await page.locator(".react-flow__pane").boundingBox())!;
+  const at = { x: 500, y: 650 };
+  await page
+    .locator('aside button[draggable="true"]')
+    .nth(20)
+    .dragTo(page.locator(".react-flow__pane"), { targetPosition: { x: at.x - pane.x, y: at.y - pane.y } });
+  await expect(page.locator(".react-flow__node")).toHaveCount(3);
+  // The new card is drawn last.
+  const box = (await page.locator(".react-flow__node").last().boundingBox())!;
+  expect(at.x).toBeGreaterThan(box.x);
+  expect(at.x).toBeLessThan(box.x + box.width);
+  expect(at.y).toBeGreaterThan(box.y);
+  expect(at.y).toBeLessThan(box.y + box.height);
 });
