@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // The teammate's agent tooling (vendored skills and scripts), not app code.
     ".agents/**",
+    // Local-only directories: Claude Code worktrees and wrangler state.
+    ".claude/**",
+    ".wrangler/**",
     ".box-internal/**",
     // Test output.
     "playwright-report/**",
