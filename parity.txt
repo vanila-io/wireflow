@@ -4,8 +4,8 @@ Differing pixels: exact RGB, and pixelmatch threshold 0.1.
 
 landing desktop   1440x900   exact 0.00%   pixelmatch 0.00%   (0 px)
 landing phone      390x844   exact 0.00%   pixelmatch 0.00%   (0 px)
-app desktop       1440x900   exact 3.61%   pixelmatch 1.82%   all inside the template list (x 0-255, y >= 270)
-app phone          390x844   exact 12.58%  pixelmatch 6.48%   all inside the template list (x 0-255, y >= 270)
+app desktop       1440x900   exact 3.62%   pixelmatch 1.82%   all inside the template list (x 0-255, y >= 270)
+app phone          390x844   exact 12.56%  pixelmatch 6.48%   all inside the template list (x 0-255, y >= 270)
 app desktop      1920x1080   exact 2.81%   pixelmatch 1.45%   all inside the template list (x 0-255, y >= 270)
 
 Outside the template list: 0 px differ at every size (max channel delta 0).
