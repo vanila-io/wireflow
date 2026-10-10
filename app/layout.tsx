@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { analytics } from "@/lib/env";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -50,6 +51,8 @@ export const viewport: Viewport = {
   themeColor: "#465BFF",
 };
 
+const { rybbit, gaId } = analytics();
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -62,23 +65,18 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         {children}
-        <script
-          async
-          defer
-          src="https://dokploy-rybbit-059dcf.automatio.run/api/script.js"
-          data-site-id="3"
-          data-api-key="rb_9893c5768820f59953ab49af2782f465"
-        />
-        {/* Google Analytics 4 — property WireFlow.co - GA4 (365729338) */}
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-GBPQX24QS2"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: "window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', 'G-GBPQX24QS2');",
-          }}
-        />
+        {/* Analytics load only when configured (lib/env.ts, README "Environment variables"). */}
+        {rybbit && <script async defer src={rybbit.src} data-site-id={rybbit.siteId} />}
+        {gaId && (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', '${gaId}');`,
+              }}
+            />
+          </>
+        )}
       </body>
     </html>
   );
