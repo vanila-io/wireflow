@@ -18,6 +18,10 @@ const eslintConfig = defineConfig([
     // Test output.
     "playwright-report/**",
     "test-results/**",
+    // Build output: the OpenNext Worker, wrangler's local state, the offline worker.
+    ".open-next/**",
+    ".wrangler/**",
+    "public/sw.js",
   ]),
 ]);
 
