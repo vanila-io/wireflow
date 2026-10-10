@@ -1,16 +1,12 @@
 "use client";
 
-import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
-import { CARD_WIDTH, cardSize } from "@/lib/diagram/model";
+import { CARD_WIDTH, cardSize, type CardData } from "@/lib/diagram/model";
+import { useStore } from "./store-context";
 
-export type FlowNodeData = {
-  graphicId: string;
-  src: string;
-  label: string;
-  headerText?: string;
-  showHeader?: boolean;
-};
+// The same fields as before; lib/diagram/model.ts defines them for the whole editor.
+export type FlowNodeData = CardData;
 
 // The graphic's drawn size inside the card's 1px border. Known before the image
 // loads (width/height set its aspect ratio), so the card and its handles never
@@ -24,7 +20,7 @@ function truncateLabel(label: string): string {
 
 export default function FlowNode({ id, data }: NodeProps) {
   const d = data as unknown as FlowNodeData;
-  const { updateNodeData } = useReactFlow();
+  const store = useStore();
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -48,7 +44,8 @@ export default function FlowNode({ id, data }: NodeProps) {
   const end = (value: string | null) => {
     if (ended.current) return;
     ended.current = true;
-    if (value !== null) updateNodeData(id, { headerText: value.trim() || d.label });
+    // Empty means the template's label (lib/diagram/ops.ts setHeaderText); one undo step.
+    if (value !== null) store.setHeaderText(id, value);
     setEditing(false);
   };
 
