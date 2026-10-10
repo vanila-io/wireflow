@@ -96,3 +96,39 @@ test("Export image is disabled on an empty canvas", async ({ page }) => {
   await openEditor(page);
   await expect(page.getByRole("button", { name: "Export image" })).toBeDisabled();
 });
+
+test("the selection isn't drawn in the exported image", async ({ page }) => {
+  const two = {
+    nodes: [WIDE.nodes[0], { ...WIDE.nodes[1], position: { x: 0, y: 400 } }],
+    edges: [{ id: "e", source: "n0", target: "n1", markerEnd: { type: "arrowclosed" } }],
+  };
+  await seed(page, two);
+  await openEditor(page);
+  await page.locator(".react-flow__pane").click({ position: { x: 10, y: 10 } });
+  await page.keyboard.press("Control+a");
+  await page.keyboard.press("Control+g");
+  await page.keyboard.press("Control+a");
+  // On screen: blue outlines, a blue connection and a solid blue frame.
+  await expect(page.locator(".flow-node.selected")).toHaveCount(2);
+  const png = await exportAs(page, "PNG image");
+  const data = `data:image/png;base64,${readFileSync((await png.path())!).toString("base64")}`;
+  const blue = await page.evaluate(async (src) => {
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+    const c = document.createElement("canvas");
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const ctx = c.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+    const { data } = ctx.getImageData(0, 0, c.width, c.height);
+    let n = 0;
+    // The wire blue (#4353ff) and colours near it; the templates' blues are lighter.
+    for (let i = 0; i < data.length; i += 4) if (data[i] < 110 && data[i + 1] < 120 && data[i + 2] > 200) n++;
+    return n;
+  }, data);
+  expect(blue).toBeLessThan(50);
+  // The selection is still there afterwards.
+  await expect(page.locator(".flow-node.selected")).toHaveCount(2);
+  await expect(page.locator("[data-exporting]")).toHaveCount(0);
+});

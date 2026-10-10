@@ -447,6 +447,8 @@ function EditorInner({ loaded }: { loaded: Start }) {
       const viewport = canvas.current?.querySelector<HTMLElement>(".react-flow__viewport");
       if (!viewport || !getNodes().length || exporting) return;
       setExporting(true);
+      // The selection is left out of the image (editor.css).
+      canvas.current!.dataset.exporting = "";
       try {
         const image = await renderImage(viewport, getNodesBounds(getNodes()), format);
         download(image.url, `wireflow.${format}`);
@@ -454,6 +456,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
       } catch {
         say(notice("Couldn't export the image. Try again, or save the diagram with Export JSON.", "error"));
       } finally {
+        delete canvas.current?.dataset.exporting;
         setExporting(false);
       }
     },

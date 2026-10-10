@@ -87,6 +87,26 @@
   filter: drop-shadow(0 0 2px rgb(67 83 255 / 0.9));
 }
 
+/* While an image is exported (flow-editor.tsx sets data-exporting on the
+   canvas), the selection isn't drawn: the image shows the diagram, not what
+   happens to be selected. Transitions are off so the capture sees the result. */
+[data-exporting] .react-flow {
+  --xy-edge-stroke-selected-default: #a3a8c3;
+}
+[data-exporting] .flow-node.selected {
+  outline-color: transparent;
+  transition: none;
+}
+[data-exporting] .react-flow__edge.colored.selected .react-flow__edge-path {
+  stroke-width: var(--xy-edge-stroke-width-default);
+  filter: none;
+}
+[data-exporting] .flow-group.selected {
+  border-style: dashed;
+  border-color: #b8bfd6;
+  transition: none;
+}
+
 /* The template that follows a finger dragged from the sidebar. */
 .touch-drag-ghost {
   position: fixed;
