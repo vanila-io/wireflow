@@ -18,9 +18,14 @@
 }
 
 /* ---- Landing page (components/landing) ---- */
-/* The wire blue, written out: @theme inline doesn't define --color-* variables. */
+/* The wire blue, written out: @theme inline doesn't define --color-* variables.
+   The colour is set before focus too, so transition-colors has nothing to fade. */
+.landing :is(a, button, summary) {
+  outline-color: #4353ff;
+}
 .landing :is(a, button, summary):focus-visible {
-  outline: 2px solid #4353ff;
+  outline-style: solid;
+  outline-width: 2px;
   outline-offset: 3px;
 }
 

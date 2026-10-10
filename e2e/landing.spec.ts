@@ -154,9 +154,15 @@ test("starts with a skip link, shows focus, and every image has alt text or is m
   await page.goto("/");
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
-  // Keyboard focus shows a wire-blue ring.
-  await page.keyboard.press("Tab");
-  expect(await page.evaluate(() => getComputedStyle(document.activeElement!).outlineColor)).toBe("rgb(67, 83, 255)");
+  // Keyboard focus shows a wire-blue ring at once (logo, three nav links, then the header CTA).
+  for (let i = 0; i < 5; i++) await page.keyboard.press("Tab");
+  await expect(page.locator("header").getByRole("link", { name: "Start designing" })).toBeFocused();
+  expect(
+    await page.evaluate(() => {
+      const s = getComputedStyle(document.activeElement!);
+      return `${s.outlineStyle} ${s.outlineColor}`;
+    })
+  ).toBe("solid rgb(67, 83, 255)");
   const missing = await page.locator("img:not([alt])").count();
   expect(missing).toBe(0);
   await expect(page.locator("main")).toHaveCount(1);
