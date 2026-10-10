@@ -8,6 +8,10 @@ import { APP_PATHS, securityHeaders } from "./lib/security";
 const blogOrigin = process.env.BLOG_ORIGIN?.replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
+  // .next/standalone: a self-contained Node server for the Docker image
+  // (Dockerfile). OpenNext's Cloudflare build turns this on by itself
+  // (NEXT_PRIVATE_STANDALONE), so it changes nothing there; `next start` still works.
+  output: "standalone",
   images: { unoptimized: true },
   typescript: { ignoreBuildErrors: true },
   // Don't advertise the framework.

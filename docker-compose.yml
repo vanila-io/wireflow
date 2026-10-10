@@ -1,0 +1,17 @@
+name: wireflow
+
+services:
+  web:
+    build:
+      context: .
+      # Build-time settings (see .env.example), taken from the shell or a .env file.
+      args:
+        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
+        NEXT_PUBLIC_RYBBIT_SRC: ${NEXT_PUBLIC_RYBBIT_SRC:-}
+        NEXT_PUBLIC_RYBBIT_SITE_ID: ${NEXT_PUBLIC_RYBBIT_SITE_ID:-}
+        CLOUDFLARE_WEB_ANALYTICS: ${CLOUDFLARE_WEB_ANALYTICS:-}
+        BLOG_ORIGIN: ${BLOG_ORIGIN:-}
+        NEXT_PUBLIC_OFFLINE: ${NEXT_PUBLIC_OFFLINE:-}
+    ports:
+      - "8083:3000"
+    restart: unless-stopped
