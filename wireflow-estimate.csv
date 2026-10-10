@@ -1,0 +1,15 @@
+"Type","Name","Group","Hours","Basis","Rate (EUR/h)","Cost (EUR)"
+"Card","Log in","Auth",4,"",90,360
+"Card","Sign up","Auth",6,"",90,540
+"Card","Home","Shop",8,"",90,720
+"Card","Product","Shop",6,"",90,540
+"Card","Cart","Shop",5,"",90,450
+"Card","Checkout","Shop",8,"",90,720
+"Card","Help","",,"",90,
+"Group","Auth","",10,"2 of 2 cards estimated",90,900
+"Group","Shop","",27,"4 of 4 cards estimated",90,2430
+"Subtotal","Cards","",37,"6 of 7 cards estimated",90,3330
+"Stage","Design","",7.4,"20% of card hours",90,666
+"Stage","QA","",5.55,"15% of card hours",90,499.5
+"Stage","Project management","",12,"Fixed hours",90,1080
+"Total","Total","",61.95,"",90,5575.5
