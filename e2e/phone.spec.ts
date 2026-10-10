@@ -51,3 +51,26 @@ test("the toolbar stays on screen and every button in it can be reached", async 
   await toolbar.getByRole("button", { name: "More tools" }).tap();
   await expect(page.getByRole("menuitem", { name: "Export JPG image" })).toBeInViewport();
 });
+
+test("a selected card's panel is a sheet across the screen above the toolbar, and a tap above it deselects", async ({ page }) => {
+  await seed(page, DIAGRAM);
+  await openEditor(page);
+  await page.locator(".react-flow__node").first().locator("img").tap();
+  const panel = page.getByRole("complementary", { name: "Card" });
+  await expect(panel).toBeVisible();
+  const p = (await panel.boundingBox())!;
+  const t = (await page.getByRole("toolbar", { name: "Diagram" }).boundingBox())!;
+  expect(p.x).toBeGreaterThanOrEqual(0);
+  expect(p.x + p.width).toBeLessThanOrEqual(390);
+  expect(p.width).toBeGreaterThan(300);
+  expect(p.y + p.height).toBeLessThanOrEqual(t.y);
+  // At most 45% of the screen: the top of the canvas stays free.
+  expect(p.height).toBeLessThanOrEqual(844 * 0.45 + 1);
+  const header = panel.getByRole("textbox", { name: "Header" });
+  await header.fill("Basket");
+  await header.press("Enter");
+  await expect(page.locator(".react-flow__node").first()).toContainText("Basket");
+  const pane = (await page.locator(".react-flow__pane").boundingBox())!;
+  await page.touchscreen.tap(pane.x + pane.width - 10, pane.y + 20);
+  await expect(panel).toBeHidden();
+});

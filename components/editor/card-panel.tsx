@@ -7,6 +7,7 @@
 // stored header itself changes.
 import { useState } from "react";
 import type { CardNode } from "@/lib/diagram/model";
+import { PANEL_CLASS } from "./panel";
 import { useStore } from "./store-context";
 
 export default function CardPanel({ card }: { card: CardNode }) {
@@ -23,7 +24,7 @@ export default function CardPanel({ card }: { card: CardNode }) {
   return (
     <aside
       aria-label="Card"
-      className="absolute right-4 top-4 z-10 w-60 max-w-[calc(100%-2rem)] rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border"
+      className={PANEL_CLASS}
     >
       <h3 className="text-sm font-bold text-ink">Card</h3>
       <p className="mt-1 text-[11px] text-ink-soft">{card.data.label}</p>

@@ -5,6 +5,7 @@
 // edited it is only overwritten when the stored label itself changes.
 import { useState } from "react";
 import type { GroupNode } from "@/lib/diagram/model";
+import { PANEL_CLASS } from "./panel";
 import { useStore } from "./store-context";
 
 export default function GroupPanel({ group }: { group: GroupNode }) {
@@ -20,7 +21,7 @@ export default function GroupPanel({ group }: { group: GroupNode }) {
   return (
     <aside
       aria-label="Group"
-      className="absolute right-4 top-4 z-10 w-60 max-w-[calc(100%-2rem)] rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border"
+      className={PANEL_CLASS}
     >
       <h3 className="text-sm font-bold text-ink">Group</h3>
       <label className="mt-3 block text-[11px] font-semibold text-ink-soft">
