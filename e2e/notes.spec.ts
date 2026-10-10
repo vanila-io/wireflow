@@ -166,6 +166,19 @@ test("a note is in the exported image, without its editing controls", async ({ p
   expect(shot.blue).toBeLessThan(200);
 });
 
+test("notes added by clicking don't land on each other or on the last card", async ({ page }) => {
+  await seed(page, { version: 3, nodes: [cardNode("a", 0, 0)], edges: [] });
+  await openEditor(page);
+  for (let i = 0; i < 2; i++) {
+    await noteTile(page).click();
+    await page.keyboard.press("Escape");
+  }
+  const boxes = await page.locator(".react-flow__node").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().toJSON()));
+  expect(boxes).toHaveLength(3);
+  const overlap = (a: DOMRect, b: DOMRect) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) expect(overlap(boxes[i], boxes[j])).toBe(false);
+});
+
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
@@ -173,6 +186,12 @@ test.describe("on a phone", () => {
     await openEditor(page);
     await noteTile(page).tap();
     await expect(page.getByRole("textbox", { name: "Note text" })).toBeFocused();
+    // It lands in the middle of the canvas, beside the templates panel.
+    const n = (await page.locator(".react-flow__node-note").boundingBox())!;
+    const side = (await sidebar(page).boundingBox())!;
+    const pane = (await page.locator(".react-flow__pane").boundingBox())!;
+    expect(Math.abs(n.x + n.width / 2 - (pane.x + pane.width / 2))).toBeLessThan(2);
+    expect(n.x + n.width / 2).toBeGreaterThan(side.x + side.width);
     await page.keyboard.type("Tap to edit");
     await page.locator(".react-flow__pane").tap({ position: { x: 20, y: 20 } });
     await expect.poll(async () => (await savedNote(page))?.data.text).toBe("Tap to edit");

@@ -286,6 +286,22 @@ function EditorInner({ loaded }: { loaded: Start }) {
   // browser's storage, so it is refused when that would be (nearly) full, and
   // the user is warned when it is getting full. `point` is where it was dropped.
   const imageInput = useRef<HTMLInputElement>(null);
+  const canvas = useRef<HTMLDivElement>(null);
+  // The middle of the canvas on screen: beside the templates panel, which on a
+  // phone takes most of the window's width.
+  const canvasMiddle = useCallback(() => {
+    const r = canvas.current?.getBoundingClientRect();
+    return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  }, []);
+  // A clicked note or image is staggered the way addGraphic staggers clicked
+  // templates, so repeated adds don't land on each other or on the last card.
+  const staggered = useCallback(
+    (pos: { x: number; y: number }) => {
+      const step = store.getState().nodes.length % 5;
+      return { x: pos.x + step * 260, y: pos.y + (step % 2) * 60 };
+    },
+    [store]
+  );
   const addImageFile = useCallback(
     async (file: File, point?: { x: number; y: number }) => {
       if (lock.readOnly) {
@@ -312,8 +328,9 @@ function EditorInner({ loaded }: { loaded: Start }) {
         return;
       }
       const { height } = cardSize({ graphicId: OWN_IMAGE, ratio: image.ratio });
-      const centre = screenToFlowPosition(point ?? { x: window.innerWidth / 2, y: window.innerHeight / 2 });
-      store.addImage(image.src, image.ratio, image.label, { x: centre.x - CARD_WIDTH / 2, y: centre.y - height / 2 });
+      const centre = screenToFlowPosition(point ?? canvasMiddle());
+      const at = { x: centre.x - CARD_WIDTH / 2, y: centre.y - height / 2 };
+      store.addImage(image.src, image.ratio, image.label, point ? at : staggered(at));
       if (store.getState().saveFailed) {
         store.undo();
         say(notice(`Couldn't add ${file.name}: this browser's storage is full, so the diagram is unchanged.`, "error"));
@@ -328,7 +345,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
         );
       }
     },
-    [store, lock, say, screenToFlowPosition]
+    [store, lock, say, screenToFlowPosition, canvasMiddle, staggered]
   );
 
   // What a sidebar tile adds: a template card, a note (#83), or the user's own
@@ -338,11 +355,10 @@ function EditorInner({ loaded }: { loaded: Start }) {
     (item: Addable, at?: { x: number; y: number }) => {
       if (item === "image") return imageInput.current?.click();
       if (item !== "note") return addGraphic(item, at);
-      const pos =
-        at ?? screenToFlowPosition({ x: window.innerWidth / 2 - NOTE_SIZE.width / 2, y: window.innerHeight / 2 });
-      store.addNote(pos);
+      const middle = screenToFlowPosition(canvasMiddle());
+      store.addNote(at ?? staggered({ x: middle.x - NOTE_SIZE.width / 2, y: middle.y - NOTE_SIZE.height / 2 }));
     },
-    [store, addGraphic, screenToFlowPosition]
+    [store, addGraphic, screenToFlowPosition, canvasMiddle, staggered]
   );
 
   useEffect(() => {
@@ -468,7 +484,6 @@ function EditorInner({ loaded }: { loaded: Start }) {
   }, [store, zoomIn, zoomOut, zoomTo]);
 
   // A template dragged with a finger from the sidebar, dropped on the canvas.
-  const canvas = useRef<HTMLDivElement>(null);
   // Dropped items are centred where they land (a card at about its centre).
   const dropAt = useCallback(
     (item: Addable, point: { x: number; y: number }) => {

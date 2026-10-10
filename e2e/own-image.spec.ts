@@ -151,5 +151,9 @@ test.describe("on a phone", () => {
     await (await chooser).setFiles({ name: "screen.png", mimeType: "image/png", buffer: await png(page, 390, 844) });
     await expect(page.getByRole("img", { name: "screen", exact: true })).toBeAttached();
     expect(await ownCards(page)).toHaveLength(1);
+    // Added in the middle of the canvas, beside the templates panel (which takes most of the width).
+    const pane = (await page.locator(".react-flow__pane").boundingBox())!;
+    const c = (await page.locator(".react-flow__node").boundingBox())!;
+    expect(Math.abs(c.x + c.width / 2 - (pane.x + pane.width / 2))).toBeLessThan(2);
   });
 });
