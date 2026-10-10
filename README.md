@@ -23,7 +23,10 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 
 ## Features
 
-- **100+ screen templates** in ten categories (Article, Blog, E-Commerce, Features, Gallery, Header, Misc, Multimedia, Sign in, Socials), with category chips and a search that looks in every category.
+- **100+ screen templates** in ten categories (Article, Blog, E-Commerce, Features, Gallery, Header, Misc, Multimedia, Sign in, Socials), with category chips and a search that looks in every category. Drag the panel's right edge (or use the arrow keys on it) to make it wider or narrower; the thumbnails fill the columns that fit.
+- **Your own images**: "Your image" at the top of the templates (or an image file dropped on the canvas) adds any picture as a card, a phone screenshot or a sketch, at its own shape. It is scaled down in the browser and kept with the diagram, in the file too; Wireflow warns when the browser's storage (about 5 MB) is getting full.
+- **Notes**: "Note" at the top of the templates adds a box of free text. Double-click it to write (several lines), drag its corners to resize it, and connect or group it like a card.
+- **Estimates**: give a card its hours in the Card panel. Groups show their total, and the header shows the project's; it opens a breakdown per group where an hourly rate (saved with the diagram) turns hours into cost.
 - **Drag and drop** templates onto a zoomable canvas, or tap one on a touch screen (a sideways swipe drags it).
 - **Connect screens** from a card's bottom dot to another card. Each connection has its own label, line shape (smooth, polyline, rounded polyline), width (1 to 10 px) and colour.
 - **Edit cards**: rename the header (double-click it, or in the Card panel), and hide or show it (H, Ctrl+H / Ctrl+K, or the panel).
@@ -34,7 +37,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 - **Export** the whole diagram as a JPG or PNG at twice the screen's pixel density, however large it is and whatever part of it is on screen.
 - **Save and open files**: download the diagram as `wireflow.json` and open it again later, here or in another browser. Files from the earlier gg-editor app open too, with their groups.
 - **Autosave**: every change is saved in your browser's `localStorage`.
-- **AI assistant** (optional, bring your own Anthropic API key): describe a flow or a change in plain language and Claude edits the diagram, groups included. Each change is one undo step.
+- **AI assistant** (optional, bring your own Anthropic API key): describe a flow or a change in plain language and Claude edits the diagram, groups and notes included. It reads estimates, and changes them only when asked. Each change is one undo step.
 - **Works offline and installs as an app** (PWA), once you have opened the editor online.
 
 ## How it works
@@ -47,7 +50,7 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 2. **Connect the flow.** Hover a card, grab its bottom dot and drop it on another card. Select a card, connection or group to edit it in the panel on the right.
 3. **Export.** Use the image button in the toolbar for a JPG or PNG of the whole diagram. You don't need to save; the diagram is stored in your browser as you work. To keep an editable copy or move it to another browser, use **Export JSON**, and **Open file** to load it back.
 
-On screens narrower than 1400 px, the toolbar's less common commands (copy, paste, delete, actual size, arrange, multi-select, group, export image) are under **More tools**. On a phone, **AI** and **Open file** are under the **More** button in the header, and the toolbar scrolls sideways. The **Keyboard shortcuts** panel collapses from its heading and remembers that choice; in windows shorter than 941 px, where it would cover the minimap, it starts collapsed.
+On screens narrower than 1400 px, the toolbar's less common commands (copy, paste, delete, actual size, arrange, multi-select, group, export image) are under **More tools**. On a phone, **AI**, **Open file** and the estimate are under the **More** button in the header, the toolbar scrolls sideways, and the panel for a selected card, note, group or connection is a sheet above the toolbar. The **Keyboard shortcuts** panel collapses from its heading and remembers that choice; in windows shorter than 941 px, where it would cover the minimap, it starts collapsed.
 
 ## Keyboard shortcuts
 
@@ -78,11 +81,11 @@ After one online visit to `/app`, the editor works offline. To get a window of i
 
 ## Data and privacy
 
-- **No accounts, no server storage.** The diagram autosaves in this browser's `localStorage["wireflow-flow-v1"]`, the key wireflow.co's editor has always used. Diagrams saved before these changes open unchanged; saves add `"version": 2`, which the earlier editor can still read.
-- Every write goes through one save boundary (`lib/diagram/store.ts` → `lib/diagram/rules.ts`): connections need two existing cards, a card's group must exist and groups can't contain themselves, ids are unique strings, only known fields are kept (no `__proto__`), image URLs come from the template catalog. If loading has to leave something out, or the stored data can't be read, the original is first copied to `wireflow-flow-v1.backup` (later copies get a time suffix). A diagram saved by a newer version is shown but never overwritten. Two open tabs follow each other's saves.
+- **No accounts, no server storage.** The diagram autosaves in this browser's `localStorage["wireflow-flow-v1"]`, the key wireflow.co's editor has always used. Diagrams saved before these changes open unchanged. Saves add `"version": 3` (2 added groups and connection styles; 3 adds notes, your own images, estimates and the hourly rate). An editor that knows an earlier version shows a newer diagram as far as it can but never saves over it; wireflow.co's current editor ignores the version.
+- Every write goes through one save boundary (`lib/diagram/store.ts` → `lib/diagram/rules.ts`): connections need two existing cards, a card's group must exist and groups can't contain themselves, ids are unique strings, only known fields are kept (no `__proto__`), template image URLs come from the catalog, and your own images are only kept as JPEG, PNG or WebP data, never as links. If loading has to leave something out, or the stored data can't be read, the original is first copied to `wireflow-flow-v1.backup` (later copies get a time suffix). A diagram saved by a newer version is shown but never overwritten. Two open tabs follow each other's saves.
 - The undo history of a tab is kept in `sessionStorage["wireflow-history-v1"]`, so it survives a reload of that tab.
 - The autosaved diagram only exists in the browser where you made it, and clearing site data deletes it. To keep it or move it to another browser, use **Export JSON** and later **Open file**. Opening a file replaces the diagram on the canvas as one undo step (Wireflow asks first if the canvas isn't empty). An exported image is a picture of the diagram, not an editable file.
-- **AI assistant** (the AI button, optional): bring your own Anthropic API key. Requests go straight from the browser to `api.anthropic.com` with your messages and a compact copy of the diagram (screen labels, template ids, positions, connections and groups); Wireflow has no server in between and never sees them, and Anthropic's terms and your organization's data settings apply. The chat is kept in memory only. The key stays in memory and is gone when the tab closes, unless you tick "Remember on this device", which stores it **unencrypted** in this browser's `localStorage["wireflow-ai"]`, where any script running on the page could read it. Use a dedicated key with an expiry and a spend limit. Each reply shows its cost. Model output is shown as plain text.
+- **AI assistant** (the AI button, optional): bring your own Anthropic API key. Requests go straight from the browser to `api.anthropic.com` with your messages and a compact copy of the diagram (screen labels, template ids, positions, connections, groups, note text, estimates and the hourly rate; not your own images); Wireflow has no server in between and never sees them, and Anthropic's terms and your organization's data settings apply. The chat is kept in memory only. The key stays in memory and is gone when the tab closes, unless you tick "Remember on this device", which stores it **unencrypted** in this browser's `localStorage["wireflow-ai"]`, where any script running on the page could read it. Use a dedicated key with an expiry and a spend limit. Each reply shows its cost. Model output is shown as plain text.
 - Analytics load only when configured (see Environment variables). Apart from them and the AI assistant, the editor makes no third-party requests; the landing page shows Open Collective sponsor avatars.
 
 ## File format (Export JSON / Open file)
@@ -90,22 +93,29 @@ After one online visit to `/app`, the editor works offline. To get a window of i
 ```json
 {
   "format": "wireflow",
-  "version": 2,
+  "version": 3,
   "diagram": {
     "nodes": [
       { "id": "g1", "type": "group", "position": { "x": -16, "y": -36 }, "width": 572, "height": 270,
         "data": { "label": "Checkout" } },
       { "id": "…", "type": "flow", "parentId": "g1", "position": { "x": 16, "y": 36 },
-        "data": { "graphicId": "e-commerce-cart", "label": "Cart", "headerText": "My cart", "showHeader": true } }
+        "data": { "graphicId": "e-commerce-cart", "label": "Cart", "headerText": "My cart", "showHeader": true,
+                  "estimate": 6 } },
+      { "id": "…", "type": "flow", "position": { "x": 620, "y": 0 },
+        "data": { "graphicId": "own-image", "src": "data:image/jpeg;base64,…", "ratio": 2.16, "label": "Phone home" } },
+      { "id": "…", "type": "note", "position": { "x": 620, "y": 520 }, "width": 220, "height": 120,
+        "data": { "text": "Coupon field: optional" } }
     ],
     "edges": [{ "id": "…", "source": "…", "target": "…", "type": "smoothstep", "markerEnd": { "type": "arrowclosed" },
-                "label": "Checkout", "style": { "stroke": "#e8590c", "strokeWidth": 3 } }]
+                "label": "Checkout", "style": { "stroke": "#e8590c", "strokeWidth": 3 } }],
+    "settings": { "hourlyRate": 90, "currency": "EUR" }
   }
 }
 ```
 
-- Cards name their template by the stable id in `lib/graphics.json`; image URLs are not stored and always come from this build.
-- Groups are React Flow parent nodes: a member's `position` is relative to its group (`parentId`), and a group's frame always wraps its members. Connections join cards only.
+- Cards name their template by the stable id in `lib/graphics.json`; image URLs are not stored and always come from this build. A card with your own image (`"graphicId": "own-image"`) keeps the picture itself, scaled to at most 1280 px a side, and its height-to-width `ratio`.
+- Notes (`"type": "note"`) keep their text (up to 2000 characters) and size. A card's `estimate` is in hours; `settings` holds the hourly rate and its currency.
+- Groups are React Flow parent nodes: a member's `position` is relative to its group (`parentId`), and a group's frame always wraps its members. Connections join cards and notes.
 - A connection's `type` is its line shape (`step`: polyline, `smoothstep`: rounded polyline; none: smooth) and `style.strokeWidth` its width (1 to 10; none: 2 px). A connection without a `style.stroke` is drawn #a3a8c3. The defaults are not stored.
 - Open file also reads Export JSON from before version 2 (plain React Flow `{nodes, edges}`), the earlier gg-editor app's `{"format": "wireflow", "version": 1}` files with `Category/Name` template keys, and its plain G6 `{nodes, edges, groups}` (`lib/legacy-templates.json` maps all 102 old keys; layouts scale from 96 to 220 px cards; groups, line shapes and widths are kept).
 - It refuses non-JSON, other formats, newer versions, bad or duplicate ids, missing positions, unknown templates, broken groups or group loops, more than 2000 items or 5 MB; asks before replacing a diagram; keeps the current one if storage refuses the new one; drops loose connections with a message.
