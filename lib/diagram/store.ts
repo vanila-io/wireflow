@@ -14,8 +14,8 @@ import {
 } from "@xyflow/react";
 import type { Graphic } from "@/lib/graphics";
 import { canRedo, canUndo, createHistory, record, redo, undo, type History } from "./history";
-import { ARROW, makeCard, type Diagram, type DiagramEdge, type DiagramNode } from "./model";
-import { copyItems, pasteItems, removeItems, setHeaderText, toggleHeaders, type Clip } from "./ops";
+import { ARROW, DEFAULT_EDGE_COLOR, makeCard, type Diagram, type DiagramEdge, type DiagramNode } from "./model";
+import { copyItems, pasteItems, removeItems, setHeaderText, toggleHeaders, updateEdge, type Clip } from "./ops";
 import { enforceRules, serialize } from "./rules";
 
 export type StoreState = {
@@ -150,6 +150,11 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     },
     setHeaderText(id: string, value: string) {
       apply((d) => setHeaderText(d, id, value));
+    },
+    /** An edge's colour (null or the default colour: none of its own) and label. Unchanged values add no step. */
+    updateEdge(id: string, patch: { color?: string | null; label?: string }) {
+      const color = patch.color === DEFAULT_EDGE_COLOR ? null : patch.color;
+      apply((d) => updateEdge(d, id, { ...patch, ...(color !== undefined && { color }) }));
     },
     /** Copy the selected cards (and the connections between them). Returns false if nothing is selected. */
     copy() {

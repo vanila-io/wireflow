@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import "@xyflow/react/dist/style.css";
 import "./editor.css";
 import { graphicById, type Graphic } from "@/lib/graphics";
@@ -22,6 +22,7 @@ import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diag
 import { Sparkles } from "lucide-react";
 import { LOAD_FAILED, PanelBoundary, useAiPanel } from "@/components/ai/use-ai-panel";
 import ConfirmDialog from "./confirm-dialog";
+import EdgePanel from "./edge-panel";
 import FlowNodeComp from "./flow-node";
 import GraphicsPanel from "./graphics-panel";
 import Notices, { notice, type Notice } from "./notices";
@@ -163,6 +164,24 @@ function EditorInner({ loaded }: { loaded: Start }) {
   const { store, notices: initialNotices, hadDiagram, lock } = loaded;
   const [notices, setNotices] = useState(initialNotices);
   const { nodes, edges, saveFailed } = useStoreState(store);
+  // The connection panel shows for exactly one selected edge and nothing else selected.
+  const selectedEdges = edges.filter((e) => e.selected);
+  const selectedEdge = selectedEdges.length === 1 && !nodes.some((n) => n.selected) ? selectedEdges[0] : null;
+  // How edges are drawn (not stored): an edge with a colour of its own keeps it
+  // when selected, so it gets a class that marks the selection another way.
+  const shownEdges = useMemo(
+    () =>
+      edges.map((e) => ({
+        ...e,
+        ...(e.style?.stroke && { className: "colored" }),
+        ...(e.label && {
+          labelStyle: { fill: "#6b6875", fontSize: 11, fontWeight: 600 },
+          labelBgPadding: [6, 3] as [number, number],
+          labelBgBorderRadius: 4,
+        }),
+      })),
+    [edges]
+  );
   const { screenToFlowPosition, zoomIn, zoomOut, fitView } = useReactFlow();
 
   const dismiss = useCallback((id: number) => setNotices((ns) => ns.filter((n) => n.id !== id)), []);
@@ -418,7 +437,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
           <ReactFlow
             nodeTypes={nodeTypes}
             nodes={nodes}
-            edges={edges}
+            edges={shownEdges}
             onNodesChange={store.onNodesChange}
             onEdgesChange={store.onEdgesChange}
             onConnect={store.onConnect}
@@ -464,7 +483,9 @@ function EditorInner({ loaded }: { loaded: Start }) {
             <ToolbarButton label="Clear canvas" onClick={clearCanvas} />
           </div>
 
-          <aside className="absolute right-4 top-4 hidden w-60 rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border lg:block">
+          {/* A selected connection shows its panel in this place instead. */}
+          {selectedEdge && <EdgePanel edge={selectedEdge} edges={edges} />}
+          <aside className={`absolute right-4 top-4 hidden w-60 rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border ${selectedEdge ? "" : "lg:block"}`}>
             <h3 className="text-sm font-bold text-ink">Keyboard shortcuts</h3>
             <dl className="mt-3 space-y-2 text-xs">
               {[
@@ -489,6 +510,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
               <li>Hover a card, grab its bottom dot and drop it on another card to connect them</li>
               <li>Double-click a card&rsquo;s header to rename it, press H to hide/show it</li>
               <li>Click a card and press Backspace to remove it</li>
+              <li>Click a connection to label or colour it</li>
               <li>Your flow autosaves in this browser</li>
               <li>Export JSON saves it as a file; Open file opens it again</li>
             </ul>

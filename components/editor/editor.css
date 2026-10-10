@@ -65,3 +65,10 @@
   border-radius: 50%;
   background: #c4cbd1;
 }
+
+/* A connection with a colour of its own keeps it when selected (#106), so the
+   selection shows as a thicker, glowing line instead of the selection blue. */
+.react-flow__edge.colored.selected .react-flow__edge-path {
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 2px rgb(67 83 255 / 0.9));
+}
