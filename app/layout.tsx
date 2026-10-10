@@ -39,6 +39,8 @@ export const metadata: Metadata = {
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    // Safari's pinned tab icon (a one-colour SVG), from the earlier app.
+    other: [{ rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#465BFF" }],
   },
   appleWebApp: {
     capable: true,
