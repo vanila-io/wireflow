@@ -15,10 +15,10 @@ describe("edge shapes and widths", () => {
     const keep = (e: object) => enforceRules({ nodes: two().nodes, edges: [{ ...edge("e", "a", "b"), ...e }] }).diagram.edges[0];
     expect(keep({ type: "step", style: { strokeWidth: 6 } })).toMatchObject({ type: "step", style: { strokeWidth: 6 } });
     expect(keep({ type: "smoothstep" }).type).toBe("smoothstep");
-    // Smooth is React Flow's default type and the default width is 1: neither is stored.
-    expect(keep({ type: "default", style: { strokeWidth: 1 } })).not.toHaveProperty("type");
-    expect(keep({ type: "default", style: { strokeWidth: 1 } })).not.toHaveProperty("style");
-    expect(keep({ style: { strokeWidth: 2 } }).style).toEqual({ strokeWidth: 2 });
+    // Smooth is React Flow's default type and the default width is 2: neither is stored.
+    expect(keep({ type: "default", style: { strokeWidth: 2 } })).not.toHaveProperty("type");
+    expect(keep({ type: "default", style: { strokeWidth: 2 } })).not.toHaveProperty("style");
+    expect(keep({ style: { strokeWidth: 1 } }).style).toEqual({ strokeWidth: 1 });
     for (const bad of [{ type: "straight" }, { type: "custom-evil" }, { type: 5 }]) expect(keep(bad)).not.toHaveProperty("type");
     for (const w of [0, 11, 2.5, "4", -1]) expect(keep({ style: { strokeWidth: w } })).not.toHaveProperty("style");
     expect(keep({ style: { stroke: "#e8590c", strokeWidth: 10 } }).style).toEqual({ stroke: "#e8590c", strokeWidth: 10 });
@@ -28,7 +28,7 @@ describe("edge shapes and widths", () => {
     expect(edgeShape(edge("e", "a", "b"))).toBe("smooth");
     expect(edgeShape(edge("e", "a", "b", { type: "step" }))).toBe("polyline");
     expect(edgeShape(edge("e", "a", "b", { type: "smoothstep" }))).toBe("polyline-round");
-    expect(edgeWidth(edge("e", "a", "b"))).toBe(1);
+    expect(edgeWidth(edge("e", "a", "b"))).toBe(2);
     expect(edgeWidth(edge("e", "a", "b", { style: { strokeWidth: 7 } }))).toBe(7);
   });
 
@@ -39,7 +39,7 @@ describe("edge shapes and widths", () => {
     d = updateEdge(d, "e", { color: null });
     expect(d.edges[0]).toMatchObject({ type: "smoothstep", style: { strokeWidth: 5 } });
     expect(d.edges[0].style).not.toHaveProperty("stroke");
-    d = updateEdge(d, "e", { shape: "smooth", width: 1 });
+    d = updateEdge(d, "e", { shape: "smooth", width: 2 });
     expect(enforceRules(d).diagram.edges[0]).toEqual(edge("e", "a", "b"));
   });
 
@@ -74,6 +74,7 @@ describe("edge shapes and widths", () => {
     expect([edgeShape(byId.round), edgeWidth(byId.round)]).toEqual(["polyline-round", 2]);
     expect([edgeShape(byId.poly), edgeWidth(byId.poly)]).toEqual(["polyline", 6]);
     expect([edgeShape(byId.smooth), edgeWidth(byId.smooth)]).toEqual(["smooth", 1]);
-    expect([edgeShape(byId.bare), edgeWidth(byId.bare)]).toEqual(["smooth", 1]);
+    // No width: the default, 2px, as the earlier editor drew it.
+    expect([edgeShape(byId.bare), edgeWidth(byId.bare)]).toEqual(["smooth", 2]);
   });
 });

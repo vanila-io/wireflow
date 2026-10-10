@@ -189,7 +189,7 @@ describe("planOps", () => {
         { op: "add_screen", id: "n", template: "misc-404", label: "", x: 0, y: 900 },
         { op: "update_screen", id: "a", label: "  " },
         { op: "update_connection", id: "e1", color: "#E8590C" },
-        { op: "update_connection", id: "e1", color: "#B1B1B7" },
+        { op: "update_connection", id: "e1", color: "#A3A8C3" },
       ]).actions
     );
     expect(cardData(d, "n").headerText).toBe("Not Found 404");

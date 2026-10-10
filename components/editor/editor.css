@@ -1,6 +1,20 @@
 /* Editor node + canvas styles (kept in its own file so preview proxies never
    serve a stale cached chunk for it) */
 
+/* Connections without a colour or width of their own: #a3a8c3 at 2px, and the
+   wire blue when selected or focused. React Flow themes edges through these
+   variables, defined on .react-flow in @xyflow/react/dist/style.css; its
+   documented way to change them is a .react-flow rule that sets them, which
+   wins here because flow-editor.tsx imports this file after that stylesheet
+   (Next.js orders CSS by import order). The arrowheads follow the same
+   variable (defaultMarkerColor={null} in flow-editor.tsx). Keep in step with
+   DEFAULT_EDGE_COLOR and DEFAULT_EDGE_WIDTH in lib/diagram/model.ts. */
+.react-flow {
+  --xy-edge-stroke-default: #a3a8c3;
+  --xy-edge-stroke-width-default: 2;
+  --xy-edge-stroke-selected-default: var(--color-wire-blue);
+}
+
 .flow-node {
   width: 220px;
   border-radius: 6px;

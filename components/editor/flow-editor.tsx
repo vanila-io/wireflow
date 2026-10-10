@@ -636,6 +636,9 @@ function EditorInner({ loaded }: { loaded: Start }) {
             selectionOnDrag={boxSelect}
             panOnDrag={boxSelect ? [1, 2] : true}
             defaultEdgeOptions={{ markerEnd: { type: MarkerType.ArrowClosed } }}
+            // Arrowheads without a colour of their own take the edge colour from
+            // React Flow's CSS variable (editor.css) instead of a fixed #b1b1b7.
+            defaultMarkerColor={null}
             fitView
             proOptions={{ hideAttribution: true }}
           >

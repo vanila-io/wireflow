@@ -74,12 +74,12 @@ export function makeCard(g: Graphic, position: { x: number; y: number }, id = ne
 // saved, so stored or opened data can't point an image at another host.
 export const cardGraphic = (data: Pick<CardData, "graphicId">) => graphicById(data.graphicId);
 
-// How an edge without a colour or width of its own is drawn: React Flow's own
-// defaults (--xy-edge-stroke-default, --xy-edge-stroke-width-default). That is
-// what wireflow.co shows: globals.css sets #a3a8c3 at 2px for
-// .react-flow__edge-path, but @xyflow/react/dist/style.css loads after it with
-// the same selector and wins. The panel shows the colour and width that are drawn.
-export const DEFAULT_EDGE_COLOR = "#b1b1b7";
+// How an edge without a colour or width of its own is drawn: #a3a8c3 at 2px,
+// what globals.css always meant (and close to the earlier app's #a4b2c0 at 2px).
+// editor.css sets React Flow's --xy-edge-stroke-default and
+// --xy-edge-stroke-width-default to these values; keep the two in step. The
+// panel shows the colour and width that are drawn.
+export const DEFAULT_EDGE_COLOR = "#a3a8c3";
 export const ARROW = "arrowclosed" as const;
 
 // Line shapes, as the earlier editor named them, and the React Flow edge type
@@ -97,7 +97,7 @@ export const edgeType = (shape: EdgeShape) => EDGE_SHAPES.find((s) => s.shape ==
 
 // Line width in px, 1 to 10 as in the earlier editor; the default (see above)
 // is never stored.
-export const DEFAULT_EDGE_WIDTH = 1;
+export const DEFAULT_EDGE_WIDTH = 2;
 export const MIN_EDGE_WIDTH = 1;
 export const MAX_EDGE_WIDTH = 10;
 export const edgeWidth = (e: Pick<DiagramEdge, "style">) =>
