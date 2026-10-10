@@ -1,0 +1,28 @@
+Production parity: https://wireflow.co (live, 2026-10-10) vs branch production-ports at 2b0de57 (next start, no env vars)
+Chromium (Playwright 1.63), deviceScaleFactor 1, service workers blocked, every third-party request
+(analytics, sponsor avatars) blocked on both sides. Differing pixels: exact RGB, and pixelmatch threshold 0.1.
+
+live vs branch
+landing desktop   1440x900   exact 0.00%  pixelmatch 0.00%   (0 px)
+landing phone      390x844   exact 0.00%  pixelmatch 0.00%   (0 px)
+app desktop       1440x900   exact 5.56%  pixelmatch 1.21%   (72,020 / 15,662 of 1,296,000 px)
+app phone          390x844   exact 7.20%  pixelmatch 1.33%   (23,685 / 4,368 of 329,160 px)
+
+/app outside the areas this PR changes on purpose:
+app desktop  outside the header buttons (x>=940, y<56), the right-hand panel and the minimap it
+             overlaps (x>=1160), and the toolbar (+shadow, y>=800, 300<=x<1160):
+             87 of 945,680 px differ (0.01%), max channel delta 2
+app phone    outside the header (y<56) and the toolbar (y>=760):
+             944 of 274,560 px differ (0.34%), max channel delta 2
+
+Why the intended areas differ:
+- desktop header: AI and Open file (added by #118);
+- desktop right panel: three more shortcut rows (Group / ungroup, Actual size, Select all / none)
+  and #118's two "How it works" lines, so the panel is taller and covers more of the minimap;
+- desktop toolbar: the earlier editor's commands inline at >= 1400 px (Copy, Paste, Delete, Actual
+  size, To back, To front, Multi-select, Group, Ungroup, Export image), and the toolbar is centred
+  in the canvas area left of the panel (lg and up) so it doesn't run under the panel;
+- phone header: a More button (AI assistant, Open file), so the counts and status wrap tighter;
+- phone toolbar: it spans the screen and scrolls sideways; production's ran off the right edge.
+The residual differences are channel deltas of at most 2 (rasterisation noise; #118 measured the
+same kind of noise between wireflow.co and a local build of its own code, dff6546).
