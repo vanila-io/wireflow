@@ -61,7 +61,7 @@ npm run preview        # OpenNext build + local Cloudflare Workers runtime (wran
 
 ## Environment variables
 
-All optional. They are read at build time (the pages are prerendered), so set them in the build environment, not only as Worker vars.
+All optional; `.env.example` lists them, with the analytics values wireflow.co used. They are read at build time (the pages are prerendered), so set them in the build environment, not only as Worker vars.
 
 | Variable | What it does |
 | --- | --- |
