@@ -15,16 +15,18 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { DiagramFileError, FILE_NAME, MAX_FILE_BYTES, parseFile, serializeFile, type Opened } from "@/lib/diagram/file";
-import { STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
+import { isGroup, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
-import { Sparkles } from "lucide-react";
+import { Group, Sparkles, Ungroup } from "lucide-react";
 import { LOAD_FAILED, PanelBoundary, useAiPanel } from "@/components/ai/use-ai-panel";
 import ConfirmDialog from "./confirm-dialog";
 import EdgePanel from "./edge-panel";
 import FlowNodeComp from "./flow-node";
 import GraphicsPanel from "./graphics-panel";
+import GroupNodeComp from "./group-node";
+import GroupPanel from "./group-panel";
 import Notices, { notice, type Notice } from "./notices";
 import { StoreContext, useStoreState } from "./store-context";
 import UpdatePrompt from "./update-prompt";
@@ -52,10 +54,11 @@ const NEWER =
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 // What the rules dropped from a loaded diagram, in words.
-function droppedNotices({ nodes, edges }: Dropped): Notice[] {
+function droppedNotices({ nodes, edges, parents }: Dropped): Notice[] {
   return [
     edges && notice(`Removed ${plural(edges, "connection", "connections")} that didn't connect two cards.`),
     nodes && notice(`Removed ${plural(nodes, "item", "items")} that Wireflow can't show.`),
+    parents && notice(`Took ${plural(parents, "item", "items")} out of a group that was broken.`),
   ].filter((n): n is Notice => !!n);
 }
 
@@ -125,15 +128,31 @@ function start(): Start {
 }
 
 
-function ToolbarButton({ label, onClick }: { label: string; onClick: () => void }) {
+// Production's toolbar buttons draw their own icons; the ones added since pass a
+// lucide `icon`. A button whose command can't run now is disabled, as in the
+// earlier editor's toolbar. `title` adds the shortcut to the tooltip.
+function ToolbarButton({
+  label,
+  onClick,
+  icon,
+  disabled,
+  title,
+}: {
+  label: string;
+  onClick: () => void;
+  icon?: React.ReactNode;
+  disabled?: boolean;
+  title?: string;
+}) {
   return (
     <button
       onClick={onClick}
-      title={label}
+      title={title ?? label}
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-md text-ink transition hover:bg-wire-canvas hover:text-wire-blue"
+      disabled={disabled}
+      className="flex h-9 w-9 items-center justify-center rounded-md text-ink transition hover:bg-wire-canvas hover:text-wire-blue disabled:pointer-events-none disabled:opacity-35"
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      {icon ?? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
         {label === "Zoom out" && <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />}
         {label === "Zoom in" && <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />}
         {label === "Fit view" && (
@@ -154,12 +173,12 @@ function ToolbarButton({ label, onClick }: { label: string; onClick: () => void 
         {label === "Clear canvas" && (
           <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         )}
-      </svg>
+      </svg>}
     </button>
   );
 }
 
-const nodeTypes = { flow: FlowNodeComp };
+const nodeTypes = { flow: FlowNodeComp, group: GroupNodeComp };
 
 function EditorInner({ loaded }: { loaded: Start }) {
   const { store, notices: initialNotices, hadDiagram, lock } = loaded;
@@ -168,6 +187,12 @@ function EditorInner({ loaded }: { loaded: Start }) {
   // The connection panel shows for exactly one selected edge and nothing else selected.
   const selectedEdges = edges.filter((e) => e.selected);
   const selectedEdge = selectedEdges.length === 1 && !nodes.some((n) => n.selected) ? selectedEdges[0] : null;
+  // The group panel shows for exactly one selected group and nothing else selected.
+  const selectedNodes = nodes.filter((n) => n.selected);
+  const selectedGroup =
+    selectedNodes.length === 1 && isGroup(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
+  const canGroup = !!store.groupable();
+  const canUngroup = !!store.selectedGroup();
   // How edges are drawn (not stored): an edge with a colour of its own keeps it
   // when selected, so it gets a class that marks the selection another way.
   const shownEdges = useMemo(
@@ -266,6 +291,12 @@ function EditorInner({ loaded }: { loaded: Start }) {
         }
         return;
       }
+      if (k === "g") {
+        // Only when there is something to (un)group; otherwise the browser keeps
+        // Ctrl+G (find next).
+        if (e.shiftKey ? store.ungroup() : store.group()) e.preventDefault();
+        return;
+      }
       if (k === "z" && !e.shiftKey) {
         e.preventDefault();
         store.undo();
@@ -326,7 +357,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
   const [pendingOpen, setPendingOpen] = useState<({ name: string } & Opened) | null>(null);
 
   const replaceWith = useCallback(
-    ({ name, diagram, dropped, groups }: { name: string } & Opened) => {
+    ({ name, diagram, dropped }: { name: string } & Opened) => {
       setPendingOpen(null);
       if (lock.readOnly) {
         say(notice(`Couldn't open ${name}: this tab doesn't save (see the message above). Reload the page, then open the file.`, "error"));
@@ -340,9 +371,6 @@ function EditorInner({ loaded }: { loaded: Start }) {
         ...ns.slice(-2),
         notice(`Opened ${name}.`),
         ...droppedNotices(dropped),
-        ...(groups
-          ? [notice(`Left out ${plural(groups, "group", "groups")} from the earlier editor; ${groups === 1 ? "its" : "their"} cards are kept.`)]
-          : []),
       ]);
       setTimeout(() => fitView({ padding: 0.2, duration: 250 }), 60);
     },
@@ -495,14 +523,30 @@ function EditorInner({ loaded }: { loaded: Start }) {
             <ToolbarButton label="Zoom in" onClick={() => zoomIn({ duration: 150 })} />
             <ToolbarButton label="Fit view" onClick={() => fitView({ duration: 250, padding: 0.2 })} />
             <span className="mx-1 h-5 w-px bg-wire-border" />
+            <ToolbarButton
+              label="Group"
+              title="Group the selection (Ctrl + G)"
+              icon={<Group size={16} aria-hidden />}
+              disabled={!canGroup}
+              onClick={store.group}
+            />
+            <ToolbarButton
+              label="Ungroup"
+              title="Ungroup, keeping the cards (Ctrl + Shift + G)"
+              icon={<Ungroup size={16} aria-hidden />}
+              disabled={!canUngroup}
+              onClick={store.ungroup}
+            />
+            <span className="mx-1 h-5 w-px bg-wire-border" />
             <ToolbarButton label="Open file" onClick={chooseFile} />
             <ToolbarButton label="Export JSON" onClick={exportJson} />
             <ToolbarButton label="Clear canvas" onClick={clearCanvas} />
           </div>
 
-          {/* A selected connection shows its panel in this place instead. */}
+          {/* A selected connection or group shows its panel in this place instead. */}
           {selectedEdge && <EdgePanel edge={selectedEdge} edges={edges} />}
-          <aside className={`absolute right-4 top-4 hidden w-60 rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border ${selectedEdge ? "" : "lg:block"}`}>
+          {selectedGroup && isGroup(selectedGroup) && <GroupPanel group={selectedGroup} />}
+          <aside className={`absolute right-4 top-4 hidden w-60 rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border ${selectedEdge || selectedGroup ? "" : "lg:block"}`}>
             <h3 className="text-sm font-bold text-ink">Keyboard shortcuts</h3>
             <dl className="mt-3 space-y-2 text-xs">
               {[
@@ -514,6 +558,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
                 ["Edit header", "Double-click"],
                 ["Delete selected", "Backspace"],
                 ["Copy / paste", "Ctrl + C / V"],
+                ["Group / ungroup", "Ctrl + G / ⇧G"],
               ].map(([action, keys]) => (
                 <div key={action} className="flex items-center justify-between">
                   <dt className="text-ink-soft">{action}</dt>
@@ -528,6 +573,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
               <li>Double-click a card&rsquo;s header to rename it, press H to hide/show it</li>
               <li>Click a card and press Backspace to remove it</li>
               <li>Click a connection to label or colour it</li>
+              <li>Select cards and press Group; drag a card onto a group to add it</li>
               <li>Your flow autosaves in this browser</li>
               <li>Export JSON saves it as a file; Open file opens it again</li>
             </ul>

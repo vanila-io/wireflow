@@ -6,7 +6,9 @@
 //     "diagram": { "nodes": [...], "edges": [...] }
 //   }
 //
-// `diagram` is the stored diagram (see model.ts), except that a card keeps only
+// `diagram` is the stored diagram (see model.ts): cards, groups (React Flow
+// parent nodes: a member's position is relative to its group) and connections,
+// except that a card keeps only
 // its template id (data.graphicId, the stable ids in lib/graphics.json such as
 // "e-commerce-cart") and not the image URL, which this build derives from it.
 //
@@ -17,8 +19,8 @@
 //   "<folder>/<file>" template keys;
 // - that app's plain G6 {nodes, edges, groups} (its localStorage["data"]).
 import { fromG6, legacyGraphic, type G6Diagram } from "./legacy";
-import type { Diagram } from "./model";
-import { dropProto, enforceRules, type Dropped } from "./rules";
+import { isCard, type Diagram } from "./model";
+import { dropProto, enforceRules, enforceRulesOnLoad, type Dropped } from "./rules";
 
 export const FILE_FORMAT = "wireflow";
 export const FILE_VERSION = 2;
@@ -33,6 +35,7 @@ export class DiagramFileError extends Error {}
 export function serializeFile(diagram: Diagram): string {
   const { nodes, edges } = enforceRules(diagram).diagram;
   const fileNodes = nodes.map((n) => {
+    if (!isCard(n)) return n;
     const data: Partial<typeof n.data> = { ...n.data };
     delete data.src;
     return { ...n, data };
@@ -49,9 +52,12 @@ function check(condition: unknown, problem: string): asserts condition {
   if (!condition) throw new DiagramFileError(problem);
 }
 
-// Size and ids, the same for both formats. Edges are checked for ids only: one
-// with a missing end is dropped later, with a message.
-function checkIds(items: unknown[], edges: unknown[]) {
+// Size, ids and group nesting, the same for both formats. Edges are checked for
+// ids only: one with a missing end is dropped later, with a message. A file
+// whose groups are broken is refused (the old editor hung on a group inside
+// itself). `groups` are the G6 format's; the current format's groups are nodes.
+function checkStructure(nodes: Obj[], edges: unknown[], groups: Obj[], parentKey: "parentId" | "parent") {
+  const items = [...groups, ...nodes];
   check(items.length <= MAX_NODES && edges.length <= MAX_EDGES, "It has more items than Wireflow can show.");
   const ids = new Set<string>();
   const checkId = (item: unknown, kind: string) => {
@@ -61,17 +67,35 @@ function checkIds(items: unknown[], edges: unknown[]) {
   };
   items.forEach((item) => checkId(item, "an item"));
   edges.forEach((e) => checkId(e, "a connection"));
+
+  const byId = new Map(items.map((n) => [n.id as string, n]));
+  const isGroupItem = (n: Obj | undefined) => !!n && (parentKey === "parent" ? groups.includes(n) : n.type === "group");
+  for (const n of items) {
+    const parent = n[parentKey];
+    if (parent === undefined || parent === null) continue;
+    check(isId(parent) && isGroupItem(byId.get(parent)), `The item "${n.id}" is in a group that doesn't exist.`);
+    // A chain longer than the number of items has a loop.
+    let p: unknown = parent;
+    for (let steps = 0; isId(p); steps++) {
+      check(steps <= items.length, `The group "${p}" is inside itself.`);
+      p = byId.get(p)?.[parentKey];
+    }
+  }
 }
 
 function parseCurrent(diagram: Obj): Obj {
   const { nodes, edges = [] } = diagram as { nodes: unknown[]; edges?: unknown };
   check(Array.isArray(edges), "It doesn't contain a Wireflow diagram.");
   nodes.forEach((n) => check(isObject(n), "It doesn't contain a Wireflow diagram."));
-  checkIds(nodes, edges);
+  checkStructure(nodes as Obj[], edges, [], "parentId");
   for (const n of nodes as Obj[]) {
-    check(n.type === "flow", `The item "${n.id}" isn't a card.`);
+    check(n.type === "flow" || n.type === "group", `The item "${n.id}" isn't a card or a group.`);
     check(isObject(n.position) && finite(n.position.x) && finite(n.position.y), `The item "${n.id}" has no position.`);
     const data = isObject(n.data) ? n.data : {};
+    if (n.type === "group") {
+      check(data.label === undefined || typeof data.label === "string", `The group "${n.id}" has a label that isn't text.`);
+      continue;
+    }
     check(isId(data.graphicId), `The card "${n.id}" doesn't say which screen template it shows.`);
     check(
       enforceRules({ nodes: [n], edges: [] }).diagram.nodes.length === 1,
@@ -91,23 +115,7 @@ function parseG6(diagram: Obj): G6Diagram {
   const { nodes, edges = [], groups = [] } = diagram as { nodes: unknown[]; edges?: unknown; groups?: unknown };
   check(Array.isArray(edges) && Array.isArray(groups), "It doesn't contain a Wireflow diagram.");
   [...nodes, ...groups].forEach((n) => check(isObject(n), "It doesn't contain a Wireflow diagram."));
-  checkIds([...groups, ...nodes], edges);
-  // Groups are left out, but a file whose groups are broken is broken (the old
-  // editor hung on a group inside itself), so it is refused as before.
-  const all = [...groups, ...nodes] as Obj[];
-  const byId = new Map(all.map((n) => [n.id as string, n]));
-  for (const n of all) {
-    if (n.parent === undefined || n.parent === null) continue;
-    check(
-      isId(n.parent) && (groups as Obj[]).includes(byId.get(n.parent)!),
-      `The item "${n.id}" is in a group that doesn't exist.`
-    );
-    let p: unknown = n.parent;
-    for (let steps = 0; isId(p); steps++) {
-      check(steps <= all.length, `The group "${p}" is inside itself.`);
-      p = byId.get(p)?.parent;
-    }
-  }
+  checkStructure(nodes as Obj[], edges, groups as Obj[], "parent");
   for (const n of nodes as Obj[]) {
     check(finite(n.x) && finite(n.y), `The item "${n.id}" has no position.`);
     check(n.label === undefined || typeof n.label === "string", `The item "${n.id}" has a label that isn't text.`);
@@ -117,6 +125,9 @@ function parseG6(diagram: Obj): G6Diagram {
     }
     check(graphic, `The card "${n.id}" doesn't show one of Wireflow's screen templates.`);
   }
+  for (const g of groups as Obj[]) {
+    check(g.label === undefined || typeof g.label === "string", `The group "${g.id}" has a label that isn't text.`);
+  }
   return { nodes, edges, groups } as G6Diagram;
 }
 
@@ -124,8 +135,6 @@ export type Opened = {
   diagram: Diagram;
   /** What the rules dropped (connections with a missing end). */
   dropped: Dropped;
-  /** Groups of an old gg-editor file that were left out (their cards are kept). */
-  groups: number;
 };
 
 /**
@@ -156,9 +165,5 @@ export function parseFile(text: string): Opened {
   legacy ??=
     "groups" in diagram || (diagram.nodes as unknown[]).some((n) => isObject(n) && !("position" in n) && "x" in n);
 
-  if (legacy) {
-    const g6 = parseG6(diagram);
-    return { ...enforceRules(fromG6(g6)), groups: g6.groups.length };
-  }
-  return { ...enforceRules(parseCurrent(diagram)), groups: 0 };
+  return enforceRulesOnLoad(legacy ? fromG6(parseG6(diagram)) : parseCurrent(diagram));
 }

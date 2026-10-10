@@ -3,10 +3,20 @@
 // Wireflow's diagram; `applyActions` is the React Flow apply step: a pure
 // function whose result the store records as ONE undo step.
 import { graphicById } from "@/lib/graphics";
-import { ARROW, cardSize, DEFAULT_EDGE_COLOR, makeCard, type Diagram } from "@/lib/diagram/model";
-import { removeItems, updateEdge } from "@/lib/diagram/ops";
+import { absoluteBoxes, absolutePositions, fitGroups } from "@/lib/diagram/groups";
+import {
+  ARROW,
+  cardSize,
+  DEFAULT_EDGE_COLOR,
+  isCard,
+  isGroup,
+  makeCard,
+  type Diagram,
+  type DiagramNode,
+} from "@/lib/diagram/model";
+import { groupItems, removeItems, ungroupItem, updateEdge } from "@/lib/diagram/ops";
 import { templateExists } from "./catalog";
-import { layoutIssues, type Screen } from "./layout";
+import { layoutIssues, type Group, type Screen } from "./layout";
 
 const GAP_X = 300;
 const MAX_LABEL = 80;
@@ -20,27 +30,25 @@ const MAX_WARNINGS = 10;
 export type View = { x: number; y: number; width: number; height: number };
 
 const round = (n: number) => Math.round(n);
-const centre = (n: Diagram["nodes"][number]) => {
-  const { width, height } = cardSize(n.data);
-  return { x: n.position.x + width / 2, y: n.position.y + height / 2, width, height };
-};
 
 // Compact view of the diagram sent to the model with every user message. x and
 // y are a screen's centre on the canvas. `view` is the part of the canvas the
 // user can see, when the caller knows it.
 export function snapshot({ data, selected = [], view }: { data: Diagram; selected?: string[]; view?: View }) {
+  const boxes = absoluteBoxes(data.nodes);
   return {
     selected,
     ...(view ? { view } : {}),
-    screens: data.nodes.map((n) => {
-      const c = centre(n);
+    screens: data.nodes.filter(isCard).map((n) => {
+      const b = boxes.get(n.id)!;
       return {
         id: n.id,
         template: n.data.graphicId,
         label: (n.data.headerText ?? n.data.label).slice(0, MAX_LABEL),
-        x: round(c.x),
-        y: round(c.y),
+        x: round(b.x + b.width / 2),
+        y: round(b.y + b.height / 2),
         header: n.data.showHeader !== false,
+        group: n.parentId ?? null,
       };
     }),
     connections: data.edges.map((e) => ({
@@ -49,6 +57,7 @@ export function snapshot({ data, selected = [], view }: { data: Diagram; selecte
       to: e.target,
       label: typeof e.label === "string" ? e.label : "",
     })),
+    groups: data.nodes.filter(isGroup).map((g) => ({ id: g.id, label: g.data.label, parent: g.parentId ?? null })),
   };
 }
 
@@ -70,7 +79,8 @@ export const EDIT_DIAGRAM_TOOL = {
     "Apply a batch of changes to the wireflow diagram. The batch is validated as a whole against the " +
     "current diagram and applied atomically as one undo step; if any operation is invalid nothing is " +
     "applied and the errors are returned. Operations run in order, so later operations may reference " +
-    "ids created earlier in the same batch. Removing a screen also removes its connections.",
+    "ids created earlier in the same batch. Removing a screen also removes its connections; removing a " +
+    "group also removes the screens inside it (use ungroup to keep them).",
   parameters: {
     type: "object",
     properties: {
@@ -132,9 +142,23 @@ export const EDIT_DIAGRAM_TOOL = {
               },
               ["id"]
             ),
-            op("remove", "Delete screens or connections.", { ids: { type: "array", items: { type: "string" } } }, [
-              "ids",
-            ]),
+            op(
+              "group",
+              "Put two or more screens (or groups) into a new labelled group frame.",
+              {
+                id: str("New unique group id."),
+                label: str("Group label."),
+                members: { type: "array", items: { type: "string" }, description: "Ids of screens or groups to include." },
+              },
+              ["id", "label", "members"]
+            ),
+            op("ungroup", "Dissolve a group, keeping its screens.", { id: str("Group id.") }, ["id"]),
+            op(
+              "remove",
+              "Delete screens, connections or groups.",
+              { ids: { type: "array", items: { type: "string" } } },
+              ["ids"]
+            ),
           ],
         },
       },
@@ -152,6 +176,8 @@ export type Action =
   | { kind: "update_screen"; id: string; template?: string; label?: string; x?: number; y?: number; header?: boolean }
   | { kind: "connect"; id: string; from: string; to: string; label?: string }
   | { kind: "update_connection"; id: string; label?: string; color?: string }
+  | { kind: "group"; id: string; label: string; members: string[] }
+  | { kind: "ungroup"; id: string }
   | { kind: "remove"; id: string };
 
 export type PlanError = { index: number; op: string | null; message: string };
@@ -179,6 +205,8 @@ const ALLOWED: Record<string, string[]> = {
   update_screen: ["id", "template", "label", "x", "y", "header"],
   connect: ["id", "from", "to", "label"],
   update_connection: ["id", "label", "color"],
+  group: ["id", "label", "members"],
+  ungroup: ["id"],
   remove: ["ids"],
 };
 
@@ -190,8 +218,9 @@ const sizeFor = (template: string, header: boolean): [number, number] => {
 /**
  * Validate a tool input against the live diagram and turn it into actions.
  * Returns {errors} (nothing may be applied) or {actions, placed, summary,
- * warnings}. Warnings name screens the batch makes overlap; the batch is still
- * valid, and the model can move things in a follow-up call.
+ * warnings}. Warnings name layout problems the batch creates (overlapping
+ * screens, a screen inside the frame of a group it is not in); the batch is
+ * still valid, and the model can move things in a follow-up call.
  */
 export function planOps(input: unknown, data: Diagram): Plan {
   const errors: PlanError[] = [];
@@ -210,28 +239,43 @@ export function planOps(input: unknown, data: Diagram): Plan {
 
   // Working copy of the diagram so each operation sees the effect of the previous ones.
   type S = Screen & { template: string; header: boolean };
+  const boxes = absoluteBoxes(data.nodes);
   const N = new Map<string, S>(
-    data.nodes.map((n) => {
-      const c = centre(n);
+    data.nodes.filter(isCard).map((n) => {
+      const b = boxes.get(n.id)!;
       return [
         n.id,
-        { x: c.x, y: c.y, size: [c.width, c.height], template: n.data.graphicId, header: n.data.showHeader !== false },
+        {
+          x: b.x + b.width / 2,
+          y: b.y + b.height / 2,
+          size: [b.width, b.height],
+          parent: n.parentId ?? null,
+          template: n.data.graphicId,
+          header: n.data.showHeader !== false,
+        },
       ];
     })
   );
   const E = new Map(data.edges.map((e) => [e.id, { source: e.source, target: e.target }]));
-  const exists = (id: string) => N.has(id) || E.has(id);
+  const G = new Map<string, Group>(data.nodes.filter(isGroup).map((g) => [g.id, { parent: g.parentId ?? null }]));
+  const exists = (id: string) => N.has(id) || E.has(id) || G.has(id);
   const first = ops[0] as { op?: unknown } | null;
-  const layoutBefore = first?.op === "clear" ? new Map() : layoutIssues(N);
+  const layoutBefore = first?.op === "clear" ? new Map() : layoutIssues(N, G);
 
   const removeNode = (id: string) => {
     N.delete(id);
     for (const [eid, e] of E) if (e.source === id || e.target === id) E.delete(eid);
   };
+  const removeGroup = (id: string) => {
+    G.delete(id);
+    for (const [nid, n] of N) if (n.parent === id) removeNode(nid);
+    for (const [gid, g] of G) if (g.parent === id) removeGroup(gid);
+    for (const [eid, e] of E) if (e.source === id || e.target === id) E.delete(eid);
+  };
 
   // Every id the batch has seen, so a removal can tell "already removed by an
   // earlier id in this batch" (fine) from "never existed" (an error).
-  const known = new Set([...N.keys(), ...E.keys()]);
+  const known = new Set([...N.keys(), ...E.keys(), ...G.keys()]);
 
   // Auto-placement: a row to the right of everything already on the canvas.
   let cursor: { x: number; y: number } | null = null;
@@ -277,6 +321,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
         if (i !== 0) return fail(i, name, "clear is only allowed as the first operation");
         N.clear();
         E.clear();
+        G.clear();
         known.clear();
         actions.push({ kind: "clear" });
         return;
@@ -297,6 +342,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
           x,
           y,
           size: sizeFor(o.template as string, header),
+          parent: null,
           template: o.template as string,
           header,
         });
@@ -358,16 +404,45 @@ export function planOps(input: unknown, data: Diagram): Plan {
         });
         return;
       }
+      case "group": {
+        if (!newId(o.id)) return;
+        if (typeof o.label !== "string") return fail(i, name, "label must be a string");
+        if (!Array.isArray(o.members) || new Set(o.members).size < 2) {
+          return fail(i, name, "a group needs at least 2 distinct members");
+        }
+        const members = [...new Set(o.members as unknown[])];
+        if (members.some((m) => typeof m !== "string")) return fail(i, name, "members must be strings");
+        const missing = (members as string[]).filter((m) => !N.has(m) && !G.has(m));
+        if (missing.length) return fail(i, name, `unknown member(s): ${missing.join(", ")}`);
+        const parents = new Set((members as string[]).map((m) => (N.get(m) ?? G.get(m))!.parent));
+        if (parents.size > 1) return fail(i, name, "all members must currently be in the same group (or in none)");
+        const [parent] = parents;
+        G.set(o.id as string, { parent });
+        (members as string[]).forEach((m) => ((N.get(m) ?? G.get(m))!.parent = o.id as string));
+        known.add(o.id as string);
+        actions.push({ kind: "group", id: o.id as string, label: cleanLabel(o.label), members: members as string[] });
+        return;
+      }
+      case "ungroup": {
+        const group = G.get(o.id as string);
+        if (!group) return fail(i, name, `no group "${o.id}"`);
+        for (const n of [...N.values(), ...G.values()]) if (n.parent === o.id) n.parent = group.parent;
+        G.delete(o.id as string);
+        for (const [eid, e] of E) if (e.source === o.id || e.target === o.id) E.delete(eid);
+        actions.push({ kind: "ungroup", id: o.id as string });
+        return;
+      }
       case "remove": {
         if (!Array.isArray(o.ids) || !o.ids.length) return fail(i, name, "ids must be a non-empty array");
         for (const id of o.ids as unknown[]) {
           if (typeof id !== "string") return fail(i, name, "ids must be strings");
           if (N.has(id)) removeNode(id);
           else if (E.has(id)) E.delete(id);
+          else if (G.has(id)) removeGroup(id);
           // Already removed with an earlier id of this batch (an edge of a
-          // removed screen): nothing left to do.
+          // removed screen, a screen in a removed group): nothing left to do.
           else if (known.has(id)) continue;
-          else return fail(i, name, `no screen or connection "${id}"`);
+          else return fail(i, name, `no screen, connection or group "${id}"`);
           actions.push({ kind: "remove", id });
         }
         return;
@@ -383,7 +458,7 @@ export function planOps(input: unknown, data: Diagram): Plan {
   if (errors.length) return { errors };
 
   // Only problems this batch creates; the user's own layout is not the model's to fix.
-  const warnings = [...layoutIssues(N)].filter(([key]) => !layoutBefore.has(key)).map(([, message]) => message);
+  const warnings = [...layoutIssues(N, G)].filter(([key]) => !layoutBefore.has(key)).map(([, message]) => message);
   if (warnings.length > MAX_WARNINGS) {
     warnings.splice(MAX_WARNINGS, Infinity, `and ${warnings.length - MAX_WARNINGS} more`);
   }
@@ -392,6 +467,18 @@ export function planOps(input: unknown, data: Diagram): Plan {
 }
 
 // --- Apply (React Flow) -----------------------------------------------------
+
+// Move a node so its centre is at (x, y) on the canvas, inside its group if it has one.
+function moveCentre(d: Diagram, id: string, centre: { x: number; y: number }): DiagramNode[] {
+  const boxes = absoluteBoxes(d.nodes);
+  const positions = absolutePositions(d.nodes);
+  return d.nodes.map((n) => {
+    if (n.id !== id) return n;
+    const b = boxes.get(id)!;
+    const parent = n.parentId === undefined ? { x: 0, y: 0 } : positions.get(n.parentId)!;
+    return { ...n, position: { x: centre.x - b.width / 2 - parent.x, y: centre.y - b.height / 2 - parent.y } };
+  });
+}
 
 function applyAction(d: Diagram, a: Action): Diagram {
   switch (a.kind) {
@@ -407,25 +494,22 @@ function applyAction(d: Diagram, a: Action): Diagram {
     }
     case "update_screen": {
       // Header and template change the card's height: apply them first, then
-      // place the centre (the old one if none is given).
-      return {
-        nodes: d.nodes.map((n) => {
-          if (n.id !== a.id) return n;
-          const before = centre(n);
-          const data = { ...n.data };
-          if (a.template) {
-            const g = graphicById(a.template)!;
-            Object.assign(data, { graphicId: g.id, src: g.src, label: g.label });
-          }
-          if (a.label !== undefined) data.headerText = a.label || data.label;
-          if (a.header !== undefined) data.showHeader = a.header;
-          const { width, height } = cardSize(data);
-          const x = (a.x ?? before.x) - width / 2;
-          const y = (a.y ?? before.y) - height / 2;
-          return { ...n, data, position: { x, y } };
-        }),
-        edges: d.edges,
-      };
+      // place the centre (the old one if none is given). A card in a group is
+      // placed relative to it.
+      const before = absoluteBoxes(d.nodes).get(a.id)!;
+      const nodes = d.nodes.map((n): DiagramNode => {
+        if (n.id !== a.id || !isCard(n)) return n;
+        const data = { ...n.data };
+        if (a.template) {
+          const g = graphicById(a.template)!;
+          Object.assign(data, { graphicId: g.id, src: g.src, label: g.label });
+        }
+        if (a.label !== undefined) data.headerText = a.label || data.label;
+        if (a.header !== undefined) data.showHeader = a.header;
+        return { ...n, data };
+      });
+      const centre = { x: a.x ?? before.x + before.width / 2, y: a.y ?? before.y + before.height / 2 };
+      return { nodes: moveCentre({ nodes, edges: d.edges }, a.id, centre), edges: d.edges };
     }
     case "connect":
       return {
@@ -440,12 +524,18 @@ function applyAction(d: Diagram, a: Action): Diagram {
         ...(a.label !== undefined && { label: a.label }),
         ...(a.color && { color: a.color === DEFAULT_EDGE_COLOR ? null : a.color }),
       });
+    case "group":
+      return groupItems(d, a.members, { id: a.id, label: a.label });
+    case "ungroup":
+      return ungroupItem(d, a.id);
     case "remove":
-      return removeItems(d, [a.id]);
+      // A group's contents may already be gone with an earlier removal.
+      return d.nodes.some((n) => n.id === a.id) || d.edges.some((e) => e.id === a.id) ? removeItems(d, [a.id]) : d;
   }
 }
 
 /** Apply planned actions to a diagram; the caller stores the result as one undo step. */
 export function applyActions(d: Diagram, actions: Action[]): Diagram {
-  return actions.reduce(applyAction, d);
+  const result = actions.reduce(applyAction, d);
+  return { nodes: fitGroups(result.nodes), edges: result.edges };
 }

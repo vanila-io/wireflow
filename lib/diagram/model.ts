@@ -2,10 +2,12 @@
 //
 // The editor has always saved React Flow's own shape in
 // localStorage["wireflow-flow-v1"]: {nodes, edges}. That is version 1 (no
-// "version" field). Version 2 adds the field and lets edges carry a label and a
-// colour; everything a version 1 diagram holds keeps its meaning, so version 1
-// data is read as it is (see migrate in storage.ts), and the editor before this
-// change can still read what version 2 writes.
+// "version" field). Version 2 adds the field, group nodes (React Flow parent
+// nodes, as in the earlier gg-editor app) and edges with a label and a colour;
+// everything a version 1 diagram holds keeps its meaning, so version 1 data is
+// read as it is (see migrate in storage.ts), and the editor before this change
+// can still read what version 2 writes (a group is React Flow's built-in
+// "group" node type there).
 import type { Edge, Node } from "@xyflow/react";
 import graphicSizes from "@/lib/graphic-sizes.json";
 import { graphicById, type Graphic } from "@/lib/graphics";
@@ -21,12 +23,17 @@ export type CardData = {
   headerText?: string;
   showHeader?: boolean;
 };
+export type GroupData = { label: string };
 
 export type CardNode = Node<CardData, "flow">;
-export type DiagramNode = CardNode;
+export type GroupNode = Node<GroupData, "group">;
+export type DiagramNode = CardNode | GroupNode;
 export type DiagramEdge = Edge;
 
 export type Diagram = { nodes: DiagramNode[]; edges: DiagramEdge[] };
+
+export const isCard = (node: Node): node is CardNode => node.type === "flow";
+export const isGroup = (node: Node): node is GroupNode => node.type === "group";
 
 // Card geometry, from components/editor/editor.css: a 220px wide box with a 1px
 // border, a 24px header and the graphic drawn at the inner width.
@@ -49,7 +56,7 @@ export function cardSize(data: Pick<CardData, "graphicId" | "showHeader">): {
 // New card ids, as the editor has always made them: <graphic id>-<time>-<random>.
 export const newCardId = (graphicId: string) => `${graphicId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-// Ids for edges made by Wireflow itself (not React Flow's addEdge).
+// Ids for edges and groups made by Wireflow itself (not React Flow's addEdge).
 export const newId = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 

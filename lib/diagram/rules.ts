@@ -5,17 +5,21 @@
 //
 // - every node and edge has a non-empty string id, unique across the diagram;
 // - a card shows a catalog graphic, and its image URL is the catalog's;
-// - no node has a parent (the editor has no groups), so there are no parent loops;
-// - every edge connects two existing nodes (no loose or dangling edges);
+// - a parentId names an existing group, parent chains have no loops, and
+//   parents come before their children (React Flow requires it);
+// - every edge connects two existing cards (no loose or dangling edges);
 // - only known fields are kept, so nothing like "__proto__" gets through, and
 //   React Flow's selection, drag state and measurements never reach storage.
 //
 // It never throws on bad input: what it can't keep it drops, and it counts what
 // it dropped so callers can tell the user.
 import { graphicById } from "@/lib/graphics";
-import { ARROW, type CardNode, type Diagram, type DiagramEdge } from "./model";
+import { EMPTY_GROUP, fitGroups } from "./groups";
+import { ARROW, isGroup, type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode } from "./model";
 
-export type Dropped = { nodes: number; edges: number };
+// `parents` (only when there were any): items taken out of a group that doesn't
+// exist or contains itself.
+export type Dropped = { nodes: number; edges: number; parents?: number };
 
 type Obj = Record<string, unknown>;
 const isObject = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -44,6 +48,7 @@ function card(raw: Obj, id: string): CardNode | undefined {
     id,
     type: "flow",
     position: pos,
+    ...(isId(raw.parentId) && { parentId: raw.parentId }),
     data: {
       graphicId: graphic.id,
       src: graphic.src,
@@ -51,6 +56,25 @@ function card(raw: Obj, id: string): CardNode | undefined {
       ...(headerText !== undefined && { headerText }),
       ...(typeof data.showHeader === "boolean" && { showHeader: data.showHeader }),
     },
+  };
+}
+
+function group(raw: Obj, id: string): GroupNode | undefined {
+  const pos = position(raw.position);
+  if (raw.type !== "group" || !pos) return undefined;
+  const data = isObject(raw.data) ? raw.data : {};
+  // A group always has a size: React Flow would draw one without it as a 150px sliver.
+  const size =
+    isNum(raw.width) && isNum(raw.height) && raw.width > 0 && raw.height > 0
+      ? { width: raw.width, height: raw.height }
+      : { ...EMPTY_GROUP };
+  return {
+    id,
+    type: "group",
+    position: pos,
+    ...(isId(raw.parentId) && { parentId: raw.parentId }),
+    ...size,
+    data: { label: text(data.label, MAX_LABEL) ?? "Group" },
   };
 }
 
@@ -76,10 +100,10 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
   const rawEdges = isObject(input) && Array.isArray(input.edges) ? input.edges : [];
 
   const ids = new Set<string>();
-  const nodes: CardNode[] = [];
+  const nodes: DiagramNode[] = [];
   for (const raw of rawNodes) {
     const id = isObject(raw) && isId(raw.id) && !ids.has(raw.id) ? raw.id : undefined;
-    const node = id === undefined ? undefined : card(raw as Obj, id);
+    const node = id === undefined ? undefined : (card(raw as Obj, id) ?? group(raw as Obj, id));
     if (!node) {
       dropped.nodes++;
       continue;
@@ -88,7 +112,40 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
     nodes.push(node);
   }
 
-  const nodeIds = new Set(nodes.map((n) => n.id));
+  // Parents must be groups, and following parents must end. A broken link is
+  // cut, which leaves that item at the top level, where it is drawn.
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const cut = (node: DiagramNode) => {
+    delete node.parentId;
+    dropped.parents = (dropped.parents ?? 0) + 1;
+  };
+  for (const node of nodes) {
+    const parent = node.parentId === undefined ? undefined : byId.get(node.parentId);
+    if (node.parentId !== undefined && !(parent && isGroup(parent))) cut(node);
+  }
+  for (const node of nodes) {
+    const seen = new Set([node.id]);
+    for (let p = node.parentId; p !== undefined; p = byId.get(p)!.parentId) {
+      if (seen.has(p)) {
+        cut(node);
+        break;
+      }
+      seen.add(p);
+    }
+  }
+  // Parents before children, otherwise in the given order (the drawing order).
+  const depth = (node: DiagramNode) => {
+    let d = 0;
+    for (let p = node.parentId; p !== undefined; p = byId.get(p)!.parentId) d++;
+    return d;
+  };
+  const ordered = nodes
+    .map((node, index) => ({ node, index, depth: depth(node) }))
+    .sort((a, b) => a.depth - b.depth || a.index - b.index)
+    .map((o) => o.node);
+
+  // Groups have no handles, so a connection joins two cards.
+  const nodeIds = new Set(nodes.filter((n) => n.type === "flow").map((n) => n.id));
   const edges: DiagramEdge[] = [];
   for (const raw of rawEdges) {
     const id = isObject(raw) && isId(raw.id) && !ids.has(raw.id) ? raw.id : undefined;
@@ -101,8 +158,15 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
     edges.push(e);
   }
 
-  return { diagram: { nodes, edges }, dropped };
+  return { diagram: { nodes: ordered, edges }, dropped };
 }
 
 // A diagram as stored: only what the rules keep.
 export const serialize = (diagram: Diagram) => JSON.stringify(enforceRules(diagram).diagram);
+
+// For a diagram from outside (storage, a file, another tab): the rules, then
+// every group framed around its members (a hand-made file may give groups no size).
+export function enforceRulesOnLoad(input: unknown): { diagram: Diagram; dropped: Dropped } {
+  const { diagram, dropped } = enforceRules(input);
+  return { diagram: { nodes: fitGroups(diagram.nodes), edges: diagram.edges }, dropped };
+}

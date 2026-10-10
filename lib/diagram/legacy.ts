@@ -5,19 +5,30 @@
 //
 // G6 format                                     Wireflow (React Flow)
 // node {id, x, y (centre), size: [96, 88],      card {id, type: "flow", position (top-left),
-//   shape, img | template, label, parent}         data: {graphicId, src, label,
+//   shape, img | template, label, parent}         parentId, data: {graphicId, src, label,
 //                                                  headerText, showHeader}}
-// group {id, label, parent, x?, y?}             (none: the editor has no groups; the
-//                                                  cards stay where they were)
+// group {id, label, parent, x?, y?}             group {id, type: "group", parentId,
+//                                                  data: {label}}, framed around its members
 // edge {id, source, target, label, color, ...}  edge {id, source, target, label, style.stroke}
 //
 // Cards are 220px wide instead of 96px, so positions are scaled by 220/96 around
 // the origin: the layout keeps its shape. G6 node positions are absolute, also
-// inside a group, so leaving groups out moves nothing. Anchors, line shapes and
-// widths have no counterpart (cards connect bottom to top) and are not kept.
+// inside a group, so every card stays where it was and each group is framed
+// around its members, as G6 drew it. Anchors have no counterpart (cards connect
+// bottom to top) and are not kept.
 import legacyTemplates from "@/lib/legacy-templates.json";
 import { graphicById, graphicBySrc, type Graphic } from "@/lib/graphics";
-import { ARROW, cardSize, CARD_WIDTH, DEFAULT_EDGE_COLOR, makeCard, type Diagram, type DiagramEdge } from "./model";
+import { fitGroups } from "./groups";
+import {
+  ARROW,
+  cardSize,
+  CARD_WIDTH,
+  DEFAULT_EDGE_COLOR,
+  makeCard,
+  type Diagram,
+  type DiagramEdge,
+  type DiagramNode,
+} from "./model";
 import { COLOR_RE } from "./rules";
 
 export const G6_NODE_WIDTH = 96;
@@ -59,14 +70,31 @@ const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0
 
 /** Convert a G6 diagram whose items are already checked (ids, positions, templates). */
 export function fromG6(g6: G6Diagram): Diagram {
-  const nodes = g6.nodes.map((n) => {
+  const groupIds = new Set(g6.groups.map((g) => g.id));
+  const parentOf = (item: G6Item) =>
+    typeof item.parent === "string" && groupIds.has(item.parent) ? item.parent : undefined;
+
+  // Every item first at its absolute position; a group with members at the
+  // origin, so a member's position relative to it is its absolute position.
+  // fitGroups then frames each group around its members and keeps everyone in place.
+  const hasMembers = new Set([...g6.nodes, ...g6.groups].map(parentOf).filter(Boolean));
+  const groups: DiagramNode[] = g6.groups.map((g) => ({
+    id: g.id,
+    type: "group",
+    position: hasMembers.has(g.id) ? { x: 0, y: 0 } : { x: num(g.x) * SCALE, y: num(g.y) * SCALE },
+    ...(parentOf(g) && { parentId: parentOf(g) }),
+    data: { label: typeof g.label === "string" ? g.label : "Group" },
+  }));
+
+  const cards: DiagramNode[] = g6.nodes.map((n) => {
     const graphic = legacyGraphic(n)!;
     const showHeader = n.shape !== PLAIN_SHAPE;
     const { width, height } = cardSize({ graphicId: graphic.id, showHeader });
     const card = makeCard(graphic, { x: num(n.x) * SCALE - width / 2, y: num(n.y) * SCALE - height / 2 }, n.id);
     card.data.showHeader = showHeader;
     if (typeof n.label === "string") card.data.headerText = n.label;
-    return card;
+    const parentId = parentOf(n);
+    return parentId ? { ...card, parentId } : card;
   });
 
   const edges: DiagramEdge[] = g6.edges.map((e) => {
@@ -83,5 +111,5 @@ export function fromG6(g6: G6Diagram): Diagram {
     };
   });
 
-  return { nodes, edges };
+  return { nodes: fitGroups([...groups, ...cards]), edges };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dropProto, enforceRules, serialize } from "@/lib/diagram/rules";
-import { card, edge, PRODUCTION_EDGE, PRODUCTION_SAMPLE } from "./helpers";
+import { card, edge, group, PRODUCTION_EDGE, PRODUCTION_SAMPLE } from "./helpers";
 
 const ids = (items: { id: string }[]) => items.map((i) => i.id).sort();
 
@@ -60,7 +60,7 @@ describe("diagram rules (the save boundary)", () => {
         { ...card("b"), data: { ...card("b").data, graphicId: "not-a-template" } },
         { ...card("c"), position: { x: Infinity, y: 0 } },
         { ...card("d"), type: "input" },
-        { ...card("e"), type: "group" },
+        { ...group("e"), position: { x: 0, y: NaN } },
       ],
       edges: [],
     });
@@ -68,12 +68,52 @@ describe("diagram rules (the save boundary)", () => {
     expect(dropped.nodes).toBe(4);
   });
 
-  it("keeps no parent links, so there can be no parent loop", () => {
-    const { diagram } = enforceRules({
-      nodes: [card("a", 0, 0, { parentId: "b" }), card("b", 0, 0, { parentId: "a" })],
+  it("cuts parent links to missing items, to cards, and in loops; parents come first", () => {
+    const { diagram, dropped } = enforceRules({
+      nodes: [
+        card("in-g2", 10, 40, { parentId: "g2" }),
+        group("g2", 20, 40, { parentId: "g1" }),
+        group("g1", 100, 100),
+        card("orphan", 0, 0, { parentId: "nope" }),
+        card("in-card", 0, 0, { parentId: "orphan" }),
+        group("loop-a", 0, 0, { parentId: "loop-b" }),
+        group("loop-b", 0, 0, { parentId: "loop-a" }),
+      ],
       edges: [],
     });
-    expect(diagram.nodes.map((n) => n.parentId)).toEqual([undefined, undefined]);
+    const byId = Object.fromEntries(diagram.nodes.map((n) => [n.id, n]));
+    expect(byId.orphan.parentId).toBeUndefined();
+    expect(byId["in-card"].parentId).toBeUndefined();
+    expect(byId["in-g2"].parentId).toBe("g2");
+    // A loop is broken, and following parents always ends.
+    for (const n of diagram.nodes) {
+      const seen = new Set<string>();
+      for (let p = n.parentId; p !== undefined; p = byId[p].parentId) {
+        expect(seen.has(p)).toBe(false);
+        seen.add(p);
+      }
+    }
+    expect(dropped.parents).toBe(3);
+    const order = diagram.nodes.map((n) => n.id);
+    expect(order.indexOf("g1")).toBeLessThan(order.indexOf("g2"));
+    expect(order.indexOf("g2")).toBeLessThan(order.indexOf("in-g2"));
+  });
+
+  it("keeps a group's label and size, gives a group without a size the default frame, and drops connections to groups", () => {
+    const { diagram, dropped } = enforceRules({
+      nodes: [
+        group("g", 0, 0, { width: 600, height: 300, data: { label: "Checkout" } }),
+        { ...group("bare"), data: {} },
+        card("a", 20, 40, { parentId: "g" }),
+        card("b", 900, 0),
+      ],
+      edges: [edge("ok", "a", "b"), edge("to-group", "b", "g")],
+    });
+    const byId = Object.fromEntries(diagram.nodes.map((n) => [n.id, n]));
+    expect(byId.g).toMatchObject({ type: "group", width: 600, height: 300, data: { label: "Checkout" } });
+    expect(byId.bare).toMatchObject({ width: 252, height: 120, data: { label: "Group" } });
+    expect(diagram.edges.map((e) => e.id)).toEqual(["ok"]);
+    expect(dropped).toEqual({ nodes: 0, edges: 1 });
   });
 
   it("always takes the image URL from the catalog", () => {

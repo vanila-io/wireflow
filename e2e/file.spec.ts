@@ -123,7 +123,7 @@ test("files Wireflow cannot open show why and change nothing", async ({ page }) 
   expect(await raw(page)).toBe(storage);
 });
 
-test("opens the earlier Export JSON and the gg-editor app's files, dropping loose connections with a message", async ({
+test("opens the earlier Export JSON and the gg-editor app's files with their groups, dropping loose connections with a message", async ({
   page,
 }) => {
   await openEditor(page);
@@ -176,8 +176,21 @@ test("opens the earlier Export JSON and the gg-editor app's files, dropping loos
   await expect(
     page.getByRole("status").filter({ hasText: "Removed 1 connection that didn't connect two cards." })
   ).toBeVisible();
-  await expect(page.getByRole("status").filter({ hasText: "Left out 1 group from the earlier editor" })).toBeVisible();
-  await expect(page.locator(".react-flow__node")).toHaveCount(2);
+  // The old group comes along as a frame around its two cards.
+  const frame = page.locator(".react-flow__node-group");
+  await expect(frame).toHaveCount(1);
+  await expect(frame.getByRole("button", { name: "Shop" })).toBeVisible();
+  // (Checked again until the fit-view animation after opening has settled.)
+  await expect(async () => {
+    const fb = (await frame.boundingBox())!;
+    for (const c of await page.locator(".react-flow__node-flow").all()) {
+      const b = (await c.boundingBox())!;
+      expect(b.x).toBeGreaterThan(fb.x);
+      expect(b.x + b.width).toBeLessThan(fb.x + fb.width);
+      expect(b.y + b.height).toBeLessThan(fb.y + fb.height);
+    }
+  }).toPass();
+  await expect(page.locator(".react-flow__node-flow")).toHaveCount(2);
   await expect(page.locator(".flow-node-header").getByText("Sign in", { exact: true })).toBeVisible();
   await expect(page.locator(".react-flow__edge")).toHaveCount(1);
   await expect(page.getByText("Add", { exact: true })).toBeVisible();

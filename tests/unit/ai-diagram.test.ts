@@ -6,7 +6,9 @@ import { catalogText, templateExists } from "@/lib/ai/catalog";
 import { layoutIssues, type Screen } from "@/lib/ai/layout";
 import { runRequest } from "@/lib/ai/agent";
 import { systemPrompt } from "@/lib/ai/prompt";
-import { cardSize, type Diagram } from "@/lib/diagram/model";
+import { absoluteBoxes, GROUP_PADDING } from "@/lib/diagram/groups";
+import { cardSize, isGroup, type CardNode, type Diagram } from "@/lib/diagram/model";
+import { groupItems } from "@/lib/diagram/ops";
 import { enforceRules } from "@/lib/diagram/rules";
 import { createDiagramStore } from "@/lib/diagram/store";
 import { stepState } from "@/lib/diagram/history";
@@ -30,10 +32,10 @@ const base = (): Diagram => ({
   edges: [edge("e1", "a", "b")],
 });
 const centreOf = (d: Diagram, id: string) => {
-  const n = d.nodes.find((x) => x.id === id)!;
-  const { width, height } = cardSize(n.data);
-  return { x: n.position.x + width / 2, y: n.position.y + height / 2 };
+  const b = absoluteBoxes(d.nodes).get(id)!;
+  return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
 };
+const cardData = (d: Diagram, id: string) => (d.nodes.find((n) => n.id === id) as CardNode).data;
 
 const ok = (ops: unknown[], data = base()) => {
   const r = planOps({ summary: "s", operations: ops }, data);
@@ -58,7 +60,8 @@ describe("catalog and prompt", () => {
   it("keeps the system prompt the same for every request, so it can be cached", () => {
     expect(systemPrompt()).toBe(systemPrompt());
     expect(systemPrompt()).toContain("e-commerce-cart | E-Commerce | Cart");
-    expect(systemPrompt()).not.toMatch(/group/i);
+    // Groups are explained, with the frame's real padding (#105's hidden-screen fix).
+    expect(systemPrompt()).toContain(`plus ${GROUP_PADDING.top} px above for the title`);
   });
 });
 
@@ -75,8 +78,10 @@ describe("snapshot", () => {
       x: 600,
       y: 200,
       header: true,
+      group: null,
     });
     expect(s.connections).toEqual([{ id: "e1", from: "a", to: "b", label: "" }]);
+    expect(s.groups).toEqual([]);
   });
 });
 
@@ -120,7 +125,10 @@ describe("planOps", () => {
     bad([{ op: "update_connection", id: "e1", width: 3 }]);
     bad([{ op: "connect", id: "self", from: "a", to: "a" }]);
     bad([{ op: "add_screen", id: "x", template: "e-commerce-cart", label: "x" }, { op: "clear" }]);
-    bad([{ op: "group", id: "g", label: "G", members: ["a", "b"] }]);
+    bad([{ op: "group", id: "g", label: "G", members: ["a"] }]);
+    bad([{ op: "group", id: "g", label: "G", members: ["a", "nope"] }]);
+    bad([{ op: "group", id: "a", label: "G", members: ["b", "c"] }]);
+    bad([{ op: "ungroup", id: "a" }]);
     bad([{ op: "frobnicate" }]);
     bad([null]);
     bad([]);
@@ -170,7 +178,7 @@ describe("planOps", () => {
 
   it("after a clear, an id from before the clear is unknown", () => {
     expect(bad([{ op: "clear" }, { op: "remove", ids: ["a"] }])).toEqual([
-      { index: 1, op: "remove", message: 'no screen or connection "a"' },
+      { index: 1, op: "remove", message: 'no screen, connection or group "a"' },
     ]);
   });
 
@@ -184,14 +192,14 @@ describe("planOps", () => {
         { op: "update_connection", id: "e1", color: "#A3A8C3" },
       ]).actions
     );
-    expect(d.nodes.find((n) => n.id === "n")!.data.headerText).toBe("Not Found 404");
-    expect(d.nodes.find((n) => n.id === "a")!.data.headerText).toBe("e-commerce-cart");
+    expect(cardData(d, "n").headerText).toBe("Not Found 404");
+    expect(cardData(d, "a").headerText).toBe("e-commerce-cart");
     expect(d.edges[0]).toEqual(edge("e1", "a", "b"));
   });
 });
 
 describe("layout warnings", () => {
-  const s = (x: number, y: number): Screen => ({ x, y, size: [220, H] });
+  const s = (x: number, y: number, parent: string | null = null): Screen => ({ x, y, size: [220, H], parent });
 
   it("finds overlapping screens, not ones that only touch", () => {
     expect([
@@ -199,7 +207,8 @@ describe("layout warnings", () => {
         new Map([
           ["a", s(0, 0)],
           ["b", s(100, 0)],
-        ])
+        ]),
+        new Map()
       ).keys(),
     ]).toEqual(["screens:a|b"]);
     expect(
@@ -207,7 +216,8 @@ describe("layout warnings", () => {
         new Map([
           ["a", s(0, 0)],
           ["b", s(220, 0)],
-        ])
+        ]),
+        new Map()
       ).size
     ).toBe(0);
   });
@@ -223,6 +233,78 @@ describe("layout warnings", () => {
     // A follow-up that moves the screen away has none.
     const placed = applyActions(stacked, plan.actions);
     expect(ok([{ op: "update_screen", id: "c", y: 600 }], placed).warnings).toEqual([]);
+  });
+});
+
+describe("groups (#105's group and ungroup operations)", () => {
+  // a on its own; b and c in group g.
+  const grouped = (): Diagram => groupItems(base(), ["b", "c"], { id: "g", label: "Pay" });
+
+  it("shows groups and membership in the snapshot", () => {
+    const s = snapshot({ data: grouped() });
+    expect(s.screens.find((x) => x.id === "b")).toMatchObject({ x: 600, y: 200, group: "g" });
+    expect(s.screens.find((x) => x.id === "a")).toMatchObject({ group: null });
+    expect(s.groups).toEqual([{ id: "g", label: "Pay", parent: null }]);
+    // The group itself is not a screen.
+    expect(s.screens.map((x) => x.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("only groups members that share a parent, and tracks groups within a batch", () => {
+    bad([{ op: "group", id: "g2", label: "x", members: ["a", "b"] }], grouped());
+    ok([{ op: "group", id: "g2", label: "x", members: ["b", "c"] }], grouped());
+    ok([{ op: "group", id: "outer", label: "x", members: ["g", "a"] }], grouped());
+    bad([{ op: "remove", ids: ["g"] }, { op: "update_screen", id: "b", label: "x" }], grouped());
+    ok(
+      [
+        { op: "ungroup", id: "g" },
+        { op: "update_screen", id: "b", label: "x" },
+        { op: "group", id: "g2", label: "All", members: ["a", "b", "c"] },
+      ],
+      grouped()
+    );
+  });
+
+  it("applies group and ungroup; removing a group removes its screens and their connections", () => {
+    const d = applyActions(base(), ok([{ op: "group", id: "auth", label: "Auth", members: ["a", "b"] }]).actions);
+    expect(isGroup(d.nodes.find((n) => n.id === "auth")!)).toBe(true);
+    expect(d.nodes.filter((n) => n.parentId === "auth").map((n) => n.id)).toEqual(["a", "b"]);
+    // Members stay where they were.
+    expect(centreOf(d, "a")).toEqual({ x: 200, y: 200 });
+    expect(enforceRules(d).dropped).toEqual({ nodes: 0, edges: 0 });
+    const un = applyActions(d, ok([{ op: "ungroup", id: "auth" }], d).actions);
+    expect(un.nodes.map((n) => n.id)).toEqual(["a", "b", "c"]);
+    expect(centreOf(un, "b")).toEqual({ x: 600, y: 200 });
+    const removed = applyActions(grouped(), ok([{ op: "remove", ids: ["g"] }], grouped()).actions);
+    expect(removed.nodes.map((n) => n.id)).toEqual(["a"]);
+    expect(removed.edges).toEqual([]);
+  });
+
+  it("moves a screen inside a group to the given canvas centre, and its frame follows", () => {
+    const d = applyActions(grouped(), ok([{ op: "update_screen", id: "c", x: 1200, y: 500 }], grouped()).actions);
+    expect(centreOf(d, "c")).toEqual({ x: 1200, y: 500 });
+    const frame = absoluteBoxes(d.nodes).get("g")!;
+    expect(frame.x + frame.width).toBeCloseTo(1200 + 110 + GROUP_PADDING.right);
+  });
+
+  it("warns when a group's frame covers a screen that isn't in it (#105), and not once it is moved out", () => {
+    const s = (x: number, y: number, parent: string | null = null): Screen => ({ x, y, size: [220, H], parent });
+    const inside = layoutIssues(
+      new Map([
+        ["m1", s(0, 0, "g")],
+        ["m2", s(300, 0, "g")],
+        ["x", s(150, -H / 2 - GROUP_PADDING.top + 5)],
+      ]),
+      new Map([["g", { parent: null }]])
+    );
+    expect([...inside.keys()]).toContain("inside:x|g");
+    const data: Diagram = {
+      nodes: [at("a", "e-commerce-cart", 0, 0), at("b", "e-commerce-cart", 600, 0), at("x", "e-commerce-cart", 300, 0)],
+      edges: [],
+    };
+    const plan = ok([{ op: "group", id: "g", label: "G", members: ["a", "b"] }], data);
+    expect(plan.warnings).toEqual([expect.stringMatching(/^screen "x" is not in group "g" but lies inside its frame/)]);
+    const after = applyActions(data, plan.actions);
+    expect(ok([{ op: "update_screen", id: "x", y: 600 }], after).warnings).toEqual([]);
   });
 });
 

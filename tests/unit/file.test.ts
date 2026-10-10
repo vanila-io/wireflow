@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DiagramFileError, MAX_NODES, parseFile, serializeFile } from "@/lib/diagram/file";
 import { legacyGraphic, SCALE } from "@/lib/diagram/legacy";
-import { cardSize, type Diagram } from "@/lib/diagram/model";
+import { absoluteBoxes } from "@/lib/diagram/groups";
+import { cardSize, isCard, isGroup, type CardNode, type Diagram } from "@/lib/diagram/model";
 import { copyItems, pasteItems } from "@/lib/diagram/ops";
 import { serialize } from "@/lib/diagram/rules";
 import legacyTemplates from "@/lib/legacy-templates.json";
@@ -52,10 +53,9 @@ describe("wireflow.json", () => {
 
   it("opens what it saves, unchanged, including pasted copies and hidden headers", () => {
     const d = sample();
-    const { diagram, dropped, groups } = parseFile(serializeFile(d));
+    const { diagram, dropped } = parseFile(serializeFile(d));
     expect(serialize(diagram)).toBe(serialize(d));
     expect(dropped).toEqual({ nodes: 0, edges: 0 });
-    expect(groups).toBe(0);
     const pasted = pasteItems(d, copyItems(d, ["a", "b"]), { x: 40, y: 40 }).diagram;
     expect(serialize(parseFile(serializeFile(pasted)).diagram)).toBe(serialize(pasted));
   });
@@ -63,7 +63,7 @@ describe("wireflow.json", () => {
   it("opens Export JSON from before this change (plain React Flow {nodes, edges})", () => {
     const { diagram } = parseFile(JSON.stringify(PRODUCTION_SAMPLE));
     expect(diagram.nodes.map((n) => n.id)).toEqual(PRODUCTION_SAMPLE.nodes.map((n) => n.id));
-    expect(diagram.nodes[1].data.headerText).toBe("My cart");
+    expect((diagram.nodes[1] as CardNode).data.headerText).toBe("My cart");
     expect(diagram.edges).toHaveLength(1);
   });
 
@@ -100,7 +100,12 @@ describe("wireflow.json", () => {
     reject(file([{ ...card("a"), position: { x: "left" } }]), /has no position/);
     reject(file([{ ...card("a"), data: { graphicId: "no-such-template" } }]), /doesn't have: "no-such-template"/);
     reject(file([{ ...card("a"), data: { graphicId: "article-article-1", label: 5 } }]), /label that isn't text/);
-    reject(file([{ ...card("a"), type: "group" }]), /isn't a card/);
+    reject(file([{ ...card("a"), type: "input" }]), /isn't a card or a group/);
+    reject(file([{ ...card("a"), parentId: "nope" }]), /in a group that doesn't exist/);
+    reject(file([card("b"), { ...card("a"), parentId: "b" }]), /in a group that doesn't exist/);
+    const g = (id: string, parentId?: string) => ({ id, type: "group", position: { x: 0, y: 0 }, parentId, data: {} });
+    reject(file([g("g1", "g2"), g("g2", "g1")]), /inside itself/);
+    reject(file([{ ...g("g1"), data: { label: 5 } }]), /label that isn't text/);
     reject(file(Array.from({ length: MAX_NODES + 1 }, (_, i) => card(`n${i}`))), /more items than Wireflow can show/);
   });
 });
@@ -171,12 +176,13 @@ describe("files from the earlier gg-editor app (G6)", () => {
     expect(new Set(ids)).toEqual(new Set(graphics.map((g) => g.id)));
   });
 
-  it("opens #109's version 1 files, scaling the layout and leaving groups out", () => {
+  it("opens #109's version 1 files, scaling the layout and keeping their groups", () => {
     expect(legacyGraphic({ template: "Misc/Error" })).toBeDefined();
-    const { diagram, dropped, groups } = parseFile(JSON.stringify(v1));
+    const { diagram, dropped } = parseFile(JSON.stringify(v1));
     expect(dropped.edges).toBe(1);
-    expect(groups).toBe(1);
-    const byId = Object.fromEntries(diagram.nodes.map((n) => [n.id, n]));
+    const group = diagram.nodes.find(isGroup)!;
+    expect(group).toMatchObject({ id: "grp1", type: "group", data: { label: "Shop" } });
+    const byId = Object.fromEntries(diagram.nodes.filter(isCard).map((n) => [n.id, n]));
     expect(byId["3a85f3e3"].data).toMatchObject({
       graphicId: "sign-in-sign-in-1",
       headerText: "Sign in",
@@ -187,13 +193,25 @@ describe("files from the earlier gg-editor app (G6)", () => {
       headerText: "Cart",
       showHeader: false,
     });
-    // Centres scale by 220/96 around the origin; group members stay where they were.
+    // Centres scale by 220/96 around the origin; group members stay where they
+    // were on the canvas, inside their group, whose frame wraps them.
+    const boxes = absoluteBoxes(diagram.nodes);
     for (const n of v1.diagram.nodes) {
       const { width, height } = cardSize(byId[n.id].data);
-      expect(byId[n.id].position.x + width / 2).toBeCloseTo(n.x * SCALE);
-      expect(byId[n.id].position.y + height / 2).toBeCloseTo(n.y * SCALE);
-      expect(byId[n.id]).not.toHaveProperty("parentId");
+      expect(boxes.get(n.id)!.x + width / 2).toBeCloseTo(n.x * SCALE);
+      expect(boxes.get(n.id)!.y + height / 2).toBeCloseTo(n.y * SCALE);
+      expect(byId[n.id].parentId).toBe(n.parent);
     }
+    const frame = boxes.get("grp1")!;
+    for (const id of ["3a85f3e3", "24e3e373"]) {
+      const b = boxes.get(id)!;
+      expect(b.x).toBeGreaterThan(frame.x);
+      expect(b.y).toBeGreaterThan(frame.y);
+      expect(b.x + b.width).toBeLessThan(frame.x + frame.width);
+      expect(b.y + b.height).toBeLessThan(frame.y + frame.height);
+    }
+    // Groups survive a save and open in the current format.
+    expect(serialize(parseFile(serializeFile(diagram)).diagram)).toBe(serialize(diagram));
     const [colored, plain] = diagram.edges;
     expect(colored).toMatchObject({
       id: "13396ba6",
@@ -223,7 +241,7 @@ describe("files from the earlier gg-editor app (G6)", () => {
       edges: [{ id: "e", source: "n1", target: "n2" }],
     };
     const { diagram } = parseFile(JSON.stringify(plain));
-    expect(diagram.nodes.map((n) => n.data.graphicId)).toEqual([
+    expect(diagram.nodes.filter(isCard).map((n) => n.data.graphicId)).toEqual([
       "e-commerce-cart",
       "sign-in-sign-up-1",
       "article-article-1",

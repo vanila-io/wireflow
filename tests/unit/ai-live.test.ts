@@ -11,7 +11,8 @@ import { applyActions, snapshot } from "@/lib/ai/diagram";
 import { layoutIssues, type Screen } from "@/lib/ai/layout";
 import { systemPrompt } from "@/lib/ai/prompt";
 import { getProvider } from "@/lib/ai/providers";
-import { cardSize } from "@/lib/diagram/model";
+import { absoluteBoxes } from "@/lib/diagram/groups";
+import { isCard, isGroup } from "@/lib/diagram/model";
 import { enforceRules } from "@/lib/diagram/rules";
 import { createDiagramStore } from "@/lib/diagram/store";
 
@@ -66,18 +67,20 @@ describe.skipIf(!live)("live: anthropic", () => {
     console.log("turn 2", JSON.stringify(r2), JSON.stringify(snapshot({ data: d })));
     expect(r2.status).toBe("done");
     expect(d.nodes.length).toBe(before + 1);
-    expect(d.nodes.some((n) => n.data.headerText === "My Bag")).toBe(true);
+    expect(d.nodes.some((n) => isCard(n) && n.data.headerText === "My Bag")).toBe(true);
     // The system prompt + tools (thousands of tokens) were cached on turn 1 and read back on turn 2.
     expect(r2.usage.cacheRead).toBeGreaterThan(2000);
     // The result follows every diagram rule, and no screen is stacked on another.
     expect(enforceRules(d).dropped).toEqual({ nodes: 0, edges: 0 });
+    const boxes = absoluteBoxes(d.nodes);
     const screens = new Map<string, Screen>(
-      d.nodes.map((n) => {
-        const { width, height } = cardSize(n.data);
-        return [n.id, { x: n.position.x + width / 2, y: n.position.y + height / 2, size: [width, height] }];
+      d.nodes.filter(isCard).map((n) => {
+        const b = boxes.get(n.id)!;
+        return [n.id, { x: b.x + b.width / 2, y: b.y + b.height / 2, size: [b.width, b.height], parent: n.parentId ?? null }];
       })
     );
-    expect([...layoutIssues(screens).values()]).toEqual([]);
+    const groups = new Map(d.nodes.filter(isGroup).map((g) => [g.id, { parent: g.parentId ?? null }]));
+    expect([...layoutIssues(screens, groups).values()]).toEqual([]);
     const report = { model, turn1: r1.usage, turn2: r2.usage, usd: r1.usage.usd + r2.usage.usd };
     console.log(`total cost $${report.usd.toFixed(4)}`);
     if (process.env.AI_LIVE_REPORT) appendFileSync(process.env.AI_LIVE_REPORT, `${JSON.stringify(report)}\n`);

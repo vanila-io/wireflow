@@ -14,8 +14,23 @@ import {
 } from "@xyflow/react";
 import type { Graphic } from "@/lib/graphics";
 import { canRedo, canUndo, createHistory, record, redo, undo, type History } from "./history";
-import { ARROW, DEFAULT_EDGE_COLOR, makeCard, type Diagram, type DiagramEdge, type DiagramNode } from "./model";
-import { copyItems, pasteItems, removeItems, setHeaderText, toggleHeaders, updateEdge, type Clip } from "./ops";
+import { fitGroups } from "./groups";
+import { ARROW, DEFAULT_EDGE_COLOR, isGroup, makeCard, newId, type Diagram, type DiagramEdge, type DiagramNode } from "./model";
+import {
+  canGroup,
+  copyItems,
+  dropTargets,
+  groupItems,
+  pasteItems,
+  removeItems,
+  setGroupLabel,
+  setHeaderText,
+  setParents,
+  toggleHeaders,
+  ungroupItem,
+  updateEdge,
+  type Clip,
+} from "./ops";
 import { enforceRules, serialize } from "./rules";
 
 export type StoreState = {
@@ -25,6 +40,8 @@ export type StoreState = {
   canRedo: boolean;
   /** The last save failed (storage full or blocked); the diagram is only in memory. */
   saveFailed: boolean;
+  /** While a card is dragged: the group it would join if dropped now. */
+  dropTarget: string | null;
 };
 
 export type StoreOptions = {
@@ -45,6 +62,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     canUndo: canUndo(history),
     canRedo: canRedo(history),
     saveFailed: false,
+    dropTarget: null,
   };
   const listeners = new Set<() => void>();
   let clipboard: Clip | null = null;
@@ -57,7 +75,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
 
   // The save boundary. `kind` labels the undo step this change makes. Returns
   // the id of the step it recorded, or null if the stored diagram didn't change.
-  function commit(next: Partial<Pick<StoreState, "nodes" | "edges">>, kind?: string): number | null {
+  function commit(next: Partial<Pick<StoreState, "nodes" | "edges" | "dropTarget">>, kind?: string): number | null {
     state = { ...state, ...next };
     let recorded: number | null = null;
     if (!state.nodes.some((n) => n.dragging)) {
@@ -80,7 +98,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     const selected = (id: string) => (select ? select.includes(id) : !!old.get(id)?.selected);
     const nodes = d.nodes.map((n) => {
       const prev = old.get(n.id) as DiagramNode | undefined;
-      return { ...n, selected: selected(n.id), ...(prev?.measured && { measured: prev.measured }) };
+      return { ...n, selected: selected(n.id), ...(prev?.measured && { measured: prev.measured }) } as DiagramNode;
     });
     const edges = d.edges.map((e) => ({ ...e, selected: selected(e.id) }));
     return { nodes, edges };
@@ -102,12 +120,23 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
 
   const selectedIds = () => [...state.nodes, ...state.edges].filter((i) => i.selected).map((i) => i.id);
 
-  // Only a handle-to-handle connection between two existing nodes becomes an
+  // Only a handle-to-handle connection between two existing cards becomes an
   // edge. React Flow asks while dragging, so an invalid target never
   // highlights, and a release anywhere else creates nothing.
   const isValidConnection = (c: Connection | DiagramEdge) => {
-    const ids = new Set(state.nodes.map((n) => n.id));
+    const ids = new Set(state.nodes.filter((n) => n.type === "flow").map((n) => n.id));
     return !!c.source && !!c.target && ids.has(c.source) && ids.has(c.target);
+  };
+
+  /** Selected nodes that can be grouped (two or more in the same group, or in none). */
+  const groupable = () => {
+    const ids = state.nodes.filter((n) => n.selected).map((n) => n.id);
+    return canGroup(live(), ids) ? ids : null;
+  };
+  /** The one selected node, if it is a group. */
+  const selectedGroup = () => {
+    const selected = state.nodes.filter((n) => n.selected);
+    return selected.length === 1 && isGroup(selected[0]) ? selected[0].id : null;
   };
 
   /** Apply a batch of changes as one undo step. Returns the step's id (null: nothing changed). */
@@ -127,7 +156,26 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     isValidConnection,
 
     onNodesChange(changes: NodeChange<DiagramNode>[]) {
-      commit({ nodes: applyNodeChanges(changes, state.nodes) });
+      let nodes = applyNodeChanges(changes, state.nodes);
+      const moving = changes.filter((c) => c.type === "position");
+      const ended = moving.filter((c) => c.dragging === false).map((c) => c.id);
+      let dropTarget: string | null = null;
+      if (ended.length) {
+        // A drag ended: a card dropped into a frame joins that group (#81), one
+        // dragged out of its frame leaves it, and frames wrap their members again.
+        const parents = dropTargets(nodes, ended);
+        nodes = Object.keys(parents).length
+          ? setParents({ nodes, edges: state.edges }, parents).nodes
+          : fitGroups(nodes);
+      } else if (moving.some((c) => c.dragging)) {
+        // While dragging, highlight the group the card would join.
+        const targets = dropTargets(
+          nodes,
+          moving.map((c) => c.id)
+        );
+        dropTarget = Object.values(targets).find((id) => id !== undefined) ?? null;
+      }
+      commit({ nodes, dropTarget });
     },
     onEdgesChange(changes: EdgeChange<DiagramEdge>[]) {
       commit({ edges: applyEdgeChanges(changes, state.edges) });
@@ -136,14 +184,39 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       if (isValidConnection(c)) commit({ edges: addEdge({ ...c, markerEnd: { type: ARROW } }, state.edges) });
     },
 
+    /** Add a card at a canvas position; dropped inside a group's frame, it joins that group (#81). */
     addCard(g: Graphic, position: { x: number; y: number }) {
       const card = makeCard(g, position);
-      return apply((d) => ({ nodes: [...d.nodes, card], edges: d.edges }));
+      return apply((d) => {
+        const added = { nodes: [...d.nodes, card], edges: d.edges };
+        const into = dropTargets(added.nodes, [card.id])[card.id];
+        return into ? setParents(added, { [card.id]: into }) : added;
+      });
     },
     /** Nodes with their edges, and selected edges: one undo step. */
     removeSelected() {
       const ids = selectedIds();
       if (ids.length) apply((d) => removeItems(d, ids));
+    },
+    groupable,
+    /** Put the selected nodes into a new group, and select it: one undo step. */
+    group() {
+      const ids = groupable();
+      if (!ids) return false;
+      const id = newId("group");
+      apply((d) => groupItems(d, ids, { id }), { select: [id] });
+      return true;
+    },
+    selectedGroup,
+    /** Dissolve the selected group; its members stay, selected: one undo step. */
+    ungroup() {
+      const id = selectedGroup();
+      if (!id) return false;
+      apply((d) => ungroupItem(d, id), { select: state.nodes.filter((n) => n.parentId === id).map((n) => n.id) });
+      return true;
+    },
+    setGroupLabel(id: string, value: string) {
+      apply((d) => setGroupLabel(d, id, value));
     },
     toggleHeaders(ids: string[]) {
       if (ids.length) apply((d) => toggleHeaders(d, ids));
@@ -156,7 +229,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       const color = patch.color === DEFAULT_EDGE_COLOR ? null : patch.color;
       apply((d) => updateEdge(d, id, { ...patch, ...(color !== undefined && { color }) }));
     },
-    /** Copy the selected cards (and the connections between them). Returns false if nothing is selected. */
+    /** Copy the selected cards and groups (with their contents, and the connections between them). Returns false if nothing is selected. */
     copy() {
       const ids = state.nodes.filter((n) => n.selected).map((n) => n.id);
       if (!ids.length) return false;
@@ -199,7 +272,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       const json = serialize(d);
       if (json === history.present.json) return;
       history = record(history, json, "sync");
-      state = { ...state, ...show(d), canUndo: canUndo(history), canRedo: canRedo(history) };
+      state = { ...state, ...show(d), dropTarget: null, canUndo: canUndo(history), canRedo: canRedo(history) };
       emit();
     },
     undo: () => travel(undo),

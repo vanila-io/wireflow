@@ -1,4 +1,4 @@
-import type { CardNode, DiagramEdge } from "@/lib/diagram/model";
+import type { CardNode, DiagramEdge, GroupNode } from "@/lib/diagram/model";
 
 // localStorage stand-in; `quota` (characters) makes setItem throw like a full browser storage.
 export class MemoryStorage implements Storage {
@@ -37,6 +37,14 @@ export const card = (id: string, x = 0, y = 0, extra: Partial<CardNode> = {}): C
     headerText: "Article",
     showHeader: true,
   },
+  ...extra,
+});
+
+export const group = (id: string, x = 0, y = 0, extra: Partial<GroupNode> = {}): GroupNode => ({
+  id,
+  type: "group",
+  position: { x, y },
+  data: { label: "Group" },
   ...extra,
 });
 

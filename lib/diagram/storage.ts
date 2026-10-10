@@ -3,7 +3,7 @@
 // change opens unchanged.
 import { parseHistory, type History, type Step } from "./history";
 import { DIAGRAM_VERSION, STORAGE_KEY, type Diagram } from "./model";
-import { dropProto, enforceRules, serialize, type Dropped } from "./rules";
+import { dropProto, enforceRules, enforceRulesOnLoad, serialize, type Dropped } from "./rules";
 
 // Where stored data is copied before anything could overwrite it (unreadable
 // data, or data the rules trimmed on load); later copies get a time suffix.
@@ -68,10 +68,10 @@ export function readDiagram(storage: Storage): Loaded {
   }
   const migrated = migrate(raw);
   if (!migrated) return { status: "unreadable", backup: backup(storage, text) };
-  const { diagram, dropped } = enforceRules(migrated.data);
+  const { diagram, dropped } = enforceRulesOnLoad(migrated.data);
   if (migrated.version > DIAGRAM_VERSION) return { status: "newer", diagram };
   // The first save would write the diagram without what the rules dropped: keep the original.
-  const lost = dropped.nodes + dropped.edges > 0;
+  const lost = dropped.nodes + dropped.edges + (dropped.parents ?? 0) > 0;
   const key = lost ? backup(storage, text) : null;
   return { status: "loaded", diagram, dropped, backup: key, kept: !lost || key !== null };
 }

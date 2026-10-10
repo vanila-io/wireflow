@@ -85,3 +85,57 @@
   border-radius: 6px;
   box-shadow: 0 8px 30px rgb(29 28 40 / 0.25);
 }
+
+/* Groups: a labelled frame around its members, as in the earlier editor.
+   React Flow's own look for its "group" type is replaced. */
+.react-flow__node-group {
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+}
+.react-flow__node-group.selectable:hover,
+.react-flow__node-group.selectable.selected,
+.react-flow__node-group.selectable:focus,
+.react-flow__node-group.selectable:focus-visible {
+  box-shadow: none;
+}
+
+.flow-group {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed #b8bfd6;
+  border-radius: 10px;
+  background: rgb(238 240 255 / 0.45);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.flow-group.selected {
+  border-style: solid;
+  border-color: var(--color-wire-blue);
+}
+
+/* The group a dragged card would join if dropped now (#81). */
+.flow-group.drop-target {
+  border-color: var(--color-wire-blue);
+  background: rgb(67 83 255 / 0.08);
+}
+
+.flow-group-label {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  cursor: text;
+}
