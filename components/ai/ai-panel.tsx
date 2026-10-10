@@ -4,8 +4,16 @@
 // plain text only.
 import { useEffect, useRef, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
-import { Send, Sparkles, Square, X } from "lucide-react";
+import { Lock, Send, Sparkles, Square, X } from "lucide-react";
 import { runRequest, TOOLS, type AgentEditor } from "@/lib/ai/agent";
+import * as saved from "@/lib/ai/browser-store";
+import {
+  parseChatRecord,
+  stepFingerprint,
+  type AssistantMessage,
+  type ChatRecord,
+  type Message,
+} from "@/lib/ai/chat-record";
 import { applyActions } from "@/lib/ai/diagram";
 import { systemPrompt } from "@/lib/ai/prompt";
 import { getProvider, providers } from "@/lib/ai/providers";
@@ -15,46 +23,13 @@ import { useStore, useStoreState } from "../editor/store-context";
 
 export type AiPanelProps = { open: boolean; onClose: () => void };
 
-const SETTINGS = "wireflow-ai";
-type Settings = { provider?: string; model?: string; apiKey?: string };
-
-// Remembered settings live in this browser only. The key is stored only when the
-// user ticks "Remember on this device", and then unencrypted.
-function loadSettings(): Settings {
-  try {
-    const v = JSON.parse(localStorage.getItem(SETTINGS) ?? "null");
-    return v && typeof v === "object" ? v : {};
-  } catch {
-    return {};
-  }
-}
-function storeSettings(settings: Settings) {
-  try {
-    localStorage.setItem(SETTINGS, JSON.stringify(settings));
-  } catch {
-    // Storage blocked: the settings just won't be remembered.
-  }
-}
+// Settings (provider, model, whether to keep the chat) live in this browser's
+// localStorage. The key stays in memory unless the user ticks "Remember on this
+// device"; it is then stored encrypted in IndexedDB, and so is the chat while
+// "Keep chat after reload" is on (lib/ai/browser-store.ts).
 
 const money = (usd: number) => `$${usd < 0.01 ? usd.toFixed(4) : usd.toFixed(3)}`;
 const maskKey = (key: string) => `${key.slice(0, 7)}…${key.slice(-4)}`;
-
-type Applied = { count: number; summary: string; step: number | null };
-type Message =
-  | { id: string; role: "user"; text: string }
-  | {
-      id: string;
-      role: "assistant";
-      text: string;
-      thinking: string;
-      applied: Applied[];
-      status: "streaming" | "done" | "refused" | "truncated" | "step_limit" | "aborted" | "error";
-      refusal?: string | null;
-      error?: string;
-      errorKind?: AiErrorKind;
-      cost?: number;
-    };
-type AssistantMessage = Extract<Message, { role: "assistant" }>;
 
 const STATUS_NOTE: Partial<Record<AssistantMessage["status"], string>> = {
   refused: "The model declined this request.",
@@ -82,24 +57,31 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
   const history = store.history();
   const rf = useReactFlow();
 
-  const [saved] = useState(loadSettings);
-  const [providerId, setProviderId] = useState(saved.provider ?? providers[0].id);
+  const [settings] = useState(saved.loadSettings);
+  const [providerId, setProviderId] = useState(settings.provider ?? providers[0].id);
   const provider = getProvider(providerId);
   const [model, setModel] = useState(
-    provider.models.some((m) => m.id === saved.model) ? saved.model! : provider.defaultModel
+    provider.models.some((m) => m.id === settings.model) ? settings.model! : provider.defaultModel
   );
-  const [apiKey, setApiKey] = useState<string | null>(saved.apiKey ?? null);
+  // undefined while the remembered key (if any) is being read.
+  const [apiKey, setApiKey] = useState<string | null | undefined>(undefined);
+  // Whether this browser lets the panel keep the key and the chat (null: not known yet).
+  const [canStore, setCanStore] = useState<boolean | null>(null);
+  const [remembered, setRemembered] = useState(false);
   const [keyDraft, setKeyDraft] = useState("");
-  const [remember, setRemember] = useState(!!saved.apiKey);
+  const [remember, setRemember] = useState(false);
   const [keyError, setKeyError] = useState<string | null>(null);
   const [checkingKey, setCheckingKey] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([]);
+  const [keepChat, setKeepChat] = useState(!!settings.keepChat);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [sessionCost, setSessionCost] = useState(0);
 
   const chat = useRef<Chat | null>(null);
+  // A kept chat's provider history, until the next request continues it.
+  const restoredHistory = useRef<unknown>(undefined);
   const abort = useRef<AbortController | null>(null);
   const listEnd = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLTextAreaElement>(null);
@@ -113,11 +95,64 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
     if (open && apiKey) composer.current?.focus();
   }, [open, apiKey]);
 
+  // On first open: what this browser kept. A key an earlier version kept in plain
+  // text is encrypted and its plain text deleted (once); then the remembered key,
+  // and the kept chat if "Keep chat after reload" is on.
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      const ok = await saved.storageAvailable();
+      const legacy = await saved.migrateLegacyKey();
+      const key = legacy?.key ?? (ok ? await saved.loadKey().catch(() => null) : null);
+      let kept: ChatRecord | null = null;
+      if (ok && settings.keepChat) {
+        const value = await saved.loadChat().catch(() => null);
+        kept = parseChatRecord(value, { provider: providerId, model, history: store.history() });
+      }
+      if (!live) return;
+      setCanStore(ok);
+      setApiKey(key);
+      setRemembered(legacy ? legacy.remembered : !!key);
+      if (kept) {
+        restoredHistory.current = kept.history;
+        setMessages(kept.messages);
+      }
+    })();
+    return () => {
+      live = false;
+    };
+    // Once, with the settings the panel opened with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // While "Keep chat after reload" is on, the chat is stored after every request
+  // (never in the middle of one): the messages on screen, and the provider's
+  // history, which holds only answered requests, unchanged.
+  useEffect(() => {
+    if (!keepChat || !canStore || busy || !messages.length) return;
+    const record: ChatRecord = {
+      v: 1,
+      provider: providerId,
+      model,
+      messages,
+      history: chat.current ? chat.current.history() : restoredHistory.current,
+    };
+    saved.saveChat(record).catch(() => {});
+  }, [keepChat, canStore, busy, messages, providerId, model]);
+
   const newChat = () => {
     abort.current?.abort();
     chat.current = null;
+    restoredHistory.current = undefined;
     setMessages([]);
+    if (canStore) saved.clearChat().catch(() => {});
   };
+
+  function changeKeepChat(on: boolean) {
+    setKeepChat(on);
+    saved.storeSettings({ provider: providerId, model, ...(on && { keepChat: true }) });
+    if (!on) saved.clearChat().catch(() => {});
+  }
 
   // The part of the canvas the user can see, in canvas coordinates: the canvas
   // minus what the open panel covers. The model places new screens in it.
@@ -153,7 +188,13 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
       { id, role: "assistant", text: "", thinking: "", applied: [], status: "streaming" },
     ]);
 
-    chat.current ??= provider.createChat({ apiKey, model, system: systemPrompt(), tools: TOOLS });
+    chat.current ??= provider.createChat({
+      apiKey,
+      model,
+      system: systemPrompt(),
+      tools: TOOLS,
+      history: restoredHistory.current,
+    });
     const controller = new AbortController();
     abort.current = controller;
     // The reply as streamed so far, and where the current step's part starts,
@@ -203,7 +244,11 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
           }
           if (e.type === "applied") {
             const step = lastStep;
-            update(id, (m) => ({ ...m, applied: [...m.applied, { count: e.count, summary: e.summary, step }] }));
+            const fingerprint = step === null ? undefined : stepFingerprint(store.history(), step);
+            update(id, (m) => ({
+              ...m,
+              applied: [...m.applied, { count: e.count, summary: e.summary, step, fingerprint }],
+            }));
           }
         },
       });
@@ -229,21 +274,37 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
     setKeyError(null);
     try {
       await provider.validateKey({ apiKey: key, model });
-      setApiKey(key);
-      setKeyDraft("");
-      chat.current = null;
-      storeSettings({ provider: providerId, model, ...(remember ? { apiKey: key } : {}) });
     } catch (err) {
       setKeyError((err as Error).message);
-    } finally {
       setCheckingKey(false);
+      return;
     }
+    // Remembered: encrypted in IndexedDB. Not remembered: nothing is stored, and a
+    // key remembered before is deleted.
+    let stored = false;
+    if (canStore) {
+      try {
+        if (remember) {
+          await saved.rememberKey(key);
+          stored = true;
+        } else await saved.forgetKey();
+      } catch {
+        // Couldn't store it: it is used for this tab only (the footer shows no lock).
+      }
+    }
+    setApiKey(key);
+    setRemembered(stored);
+    setKeyDraft("");
+    chat.current = null;
+    setCheckingKey(false);
   }
 
   function forgetKey() {
     newChat();
     setApiKey(null);
-    storeSettings({ provider: providerId, model });
+    setRemembered(false);
+    setRemember(false);
+    if (canStore) saved.forgetKey().catch(() => {});
   }
 
   // Screen readers hear each finished reply once, not every streamed token.
@@ -300,7 +361,7 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
           onChange={(e) => {
             setModel(e.target.value);
             newChat(); // a conversation stays on one model
-            storeSettings({ provider: providerId, model: e.target.value, ...(remember && apiKey ? { apiKey } : {}) });
+            saved.storeSettings({ provider: providerId, model: e.target.value, ...(keepChat && { keepChat: true }) });
           }}
           className="max-w-44 rounded-md border border-wire-border px-2 py-1 text-xs text-ink"
         >
@@ -319,7 +380,10 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
         </button>
       </header>
 
-      {!apiKey ? (
+      {apiKey === undefined ? (
+        // Reading the remembered key: a few milliseconds, so nothing to show.
+        <div aria-busy="true" className="flex-1" />
+      ) : !apiKey ? (
         <div className="flex flex-col gap-3 p-4 text-xs leading-5 text-ink">
           <p>
             Paste your {provider.label} API key. Requests go straight from this browser to {provider.label}, with your
@@ -336,18 +400,34 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
             aria-label="API key"
             className="ai-key-input rounded-md border border-wire-border px-3 py-2 text-sm outline-none focus:border-wire-blue"
           />
-          <label className="flex items-start gap-2">
+          <div className="flex items-start gap-2">
             <input
+              id="ai-remember"
               type="checkbox"
-              checked={remember}
+              checked={remember && !!canStore}
+              disabled={!canStore}
               onChange={(e) => setRemember(e.target.checked)}
+              aria-describedby="ai-remember-note"
               className="mt-1"
             />
-            <span>
-              Remember on this device. <strong>It is stored unencrypted</strong> in this browser&apos;s storage.
-              Unticked, the key stays in memory and is gone when you close or reload the tab.
-            </span>
-          </label>
+            <div>
+              <label htmlFor="ai-remember" className={canStore ? "font-semibold" : "font-semibold text-ink-soft"}>
+                Remember on this device
+              </label>
+              {canStore ? (
+                <p id="ai-remember-note" className="text-ink-soft">
+                  Stored encrypted in this browser, so the key never shows as plain text in its storage or in a copy of
+                  it. Code running on this page, a browser extension or someone using this browser profile could still
+                  use it. Unticked, the key stays in memory until you close or reload the tab.
+                </p>
+              ) : (
+                <p id="ai-remember-note" className="text-ink-soft">
+                  This browser doesn&apos;t let Wireflow keep data here (a private window, or site data blocked?), so
+                  the key can&apos;t be remembered. It stays in memory until you close or reload the tab.
+                </p>
+              )}
+            </div>
+          </div>
           {keyError && (
             <p role="alert" className="rounded-md bg-rose-50 px-3 py-2 text-rose-800 ring-1 ring-rose-200">
               {keyError}
@@ -493,10 +573,23 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
               </button>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2 px-4 pb-2 text-[11px] text-ink-soft">
-            <span>{money(sessionCost)} this session</span>
-            <span className="flex items-center gap-2">
-              <span className="ai-masked-key font-mono">{maskKey(apiKey)}</span>
+          {canStore && (
+            <label className="flex items-center gap-1.5 self-start px-4 pb-1 text-[11px] text-ink-soft">
+              <input type="checkbox" checked={keepChat} onChange={(e) => changeKeepChat(e.target.checked)} />
+              Keep chat after reload
+            </label>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-4 pb-2 text-[11px] text-ink-soft">
+            <span className="whitespace-nowrap">{money(sessionCost)} this session</span>
+            <span className="flex items-center gap-2 whitespace-nowrap">
+              <span
+                className="ai-masked-key flex items-center gap-1 font-mono"
+                title={remembered ? "Remembered on this device, encrypted" : "In memory until the tab closes"}
+              >
+                {remembered && <Lock size={10} aria-hidden />}
+                {maskKey(apiKey)}
+              </span>
+              {remembered && <span className="sr-only">Remembered on this device, encrypted.</span>}
               <button onClick={forgetKey} className={link}>
                 Forget key
               </button>

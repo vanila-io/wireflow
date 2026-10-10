@@ -212,6 +212,70 @@ describe("anthropic chat history", () => {
   });
 });
 
+describe("anthropic kept history (Keep chat after reload)", () => {
+  it("continues a saved conversation exactly where it was, thinking and owed tool results included", async () => {
+    const { bodies } = scriptApi([
+      reply([...thinking(0), ...toolUse(1, "toolu_1", { operations: [] })], { stop: "tool_use" }),
+      400,
+      reply(text(0, "ok")),
+    ]);
+    const first = newChat();
+    await first.send({ text: ["build"] });
+    // The step's result could not be delivered: it stays owed.
+    await expect(first.send({ toolResults: [{ id: "toolu_1", content: '{"ok":true}' }] })).rejects.toThrow();
+    const saved = JSON.parse(JSON.stringify(first.history()));
+
+    const second = anthropic.createChat({
+      apiKey: "sk-ant-test",
+      model: "claude-haiku-5-5",
+      system: "You edit diagrams.",
+      tools: [tool],
+      history: saved,
+    });
+    await second.send({ text: ["next"] });
+    expect(bodies[2].messages).toEqual([
+      bodies[0].messages[0],
+      {
+        role: "assistant",
+        content: [
+          { type: "thinking", thinking: "hmm", signature: "sig" },
+          { type: "tool_use", id: "toolu_1", name: "edit_diagram", input: { operations: [] } },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          { type: "tool_result", tool_use_id: "toolu_1", is_error: false, content: '{"ok":true}' },
+          { type: "text", text: "next" },
+        ],
+      },
+    ]);
+    expect(second.history()).toMatchObject({ messages: { length: 4 }, owed: [] });
+  });
+
+  it("starts over from a malformed history, and answers tool calls it has no result for as not applied", async () => {
+    const { bodies } = scriptApi([reply(text(0, "ok")), reply(text(0, "ok"))]);
+    const create = (history: unknown) =>
+      anthropic.createChat({ apiKey: "sk-ant-test", model: "claude-haiku-5-5", system: "s", tools: [tool], history });
+    await create({ messages: [{ role: "assistant", content: [] }], owed: [] }).send({ text: ["a"] });
+    expect(bodies[0].messages).toHaveLength(1);
+
+    const pending = {
+      messages: [
+        { role: "user", content: [{ type: "text", text: "build" }] },
+        { role: "assistant", content: [{ type: "tool_use", id: "toolu_9", name: "edit_diagram", input: {} }] },
+      ],
+      owed: [{ junk: true }],
+    };
+    await create(pending).send({ text: ["b"] });
+    expect(bodies[1].messages.at(-1)!.content[0]).toMatchObject({
+      type: "tool_result",
+      tool_use_id: "toolu_9",
+      is_error: true,
+    });
+  });
+});
+
 describe("anthropic request", () => {
   it("caches tools + system and the conversation, asks for summarized adaptive thinking, and sends the key only in x-api-key", async () => {
     const { bodies, headers } = scriptApi([reply(text(0, "ok"))]);

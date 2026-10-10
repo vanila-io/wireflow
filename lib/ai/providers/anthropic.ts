@@ -129,19 +129,57 @@ const notApplied = (id: string): ToolResultParam => ({
   content: "Not applied: the turn was interrupted.",
 });
 
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
+const isToolResult = (v: unknown): v is ToolResultParam =>
+  isObject(v) &&
+  v.type === "tool_result" &&
+  typeof v.tool_use_id === "string" &&
+  typeof v.is_error === "boolean" &&
+  typeof v.content === "string";
+
+/**
+ * A history saved by history() (see "Keep chat after reload"), read back: turns
+ * that alternate user / assistant, each a list of content blocks, and the answers
+ * owed to the last turn's tool calls (those not given are answered as not
+ * applied). Anything else starts a new conversation.
+ */
+function restore(value: unknown): { messages: BetaMessageParam[]; owed: Map<string, ToolResultParam> } {
+  const fresh = { messages: [], owed: new Map() };
+  if (!isObject(value) || !Array.isArray(value.messages) || !Array.isArray(value.owed)) return fresh;
+  const messages: unknown[] = value.messages;
+  const wellFormed =
+    messages.length % 2 === 0 &&
+    messages.every(
+      (m, i) =>
+        isObject(m) &&
+        m.role === (i % 2 ? "assistant" : "user") &&
+        Array.isArray(m.content) &&
+        m.content.every((b) => isObject(b) && typeof b.type === "string")
+    );
+  if (!wellFormed) return fresh;
+  const last = messages.at(-1) as { content: Record<string, unknown>[] } | undefined;
+  const ids = (last?.content ?? []).flatMap((b) => (b.type === "tool_use" && typeof b.id === "string" ? [b.id] : []));
+  const given = new Map(value.owed.filter(isToolResult).map((r) => [r.tool_use_id, r]));
+  return {
+    messages: messages as BetaMessageParam[],
+    owed: new Map(ids.map((id) => [id, given.get(id) ?? notApplied(id)])),
+  };
+}
+
 /**
  * A conversation with Claude. The history is kept in Anthropic's own format,
  * append-only: thinking blocks are replayed unchanged, and an append-only
- * history keeps the prompt cache warm.
+ * history keeps the prompt cache warm. `history` continues a saved conversation.
  */
-function createChat({ apiKey, model, system, tools }: Parameters<Provider["createChat"]>[0]): Chat {
+function createChat({ apiKey, model, system, tools, history }: Parameters<Provider["createChat"]>[0]): Chat {
   const info = MODELS.find((m) => m.id === model) ?? MODELS[0];
   const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
-  const messages: BetaMessageParam[] = [];
+  const restored = restore(history);
+  const messages: BetaMessageParam[] = restored.messages;
   // Answers owed to the tool calls of the last assistant turn, in call order. Every
   // tool_use is answered before anything else is sent; a call that never ran
   // (stopped, cut off, out of steps) is answered as not applied.
-  let owed = new Map<string, ToolResultParam>();
+  let owed = restored.owed;
 
   const apiTools = tools.map((t) => ({
     name: t.name,
@@ -151,6 +189,8 @@ function createChat({ apiKey, model, system, tools }: Parameters<Provider["creat
   }));
 
   return {
+    // As JSON, which is how the SDK sends it.
+    history: () => JSON.parse(JSON.stringify({ messages, owed: [...owed.values()] })),
     async send({ text = [], toolResults = [] }, { onText, onThinking, onRetry, signal } = {}): Promise<Turn> {
       for (const r of toolResults) {
         if (owed.has(r.id))

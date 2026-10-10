@@ -145,4 +145,27 @@ describe.skipIf(!live)("live: anthropic", () => {
     console.log(`note cost $${r.usage.usd.toFixed(4)}`);
     if (process.env.AI_LIVE_REPORT) appendFileSync(process.env.AI_LIVE_REPORT, `${JSON.stringify({ model, note: r.usage })}\n`);
   });
+
+  it("continues a kept chat after a reload: the saved history, thinking included, is accepted as it was (#104)", { timeout: 120_000 }, async () => {
+    const store = createDiagramStore({ initial: { nodes: [], edges: [] }, save: () => true });
+    const editor = {
+      read: () => ({ data: store.diagram(), selected: [], view: VIEW }),
+      apply: (actions: Parameters<typeof applyActions>[1]) =>
+        void store.apply((d) => applyActions(d, actions), { kind: "ai" }),
+    };
+    const first = provider.createChat({ apiKey, model, system: systemPrompt(), tools: TOOLS });
+    const r1 = await runRequest({ chat: first, editor, text: 'Add one sign-in screen labelled "Sign in".' });
+    expect(r1.status).toBe("done");
+    // What "Keep chat after reload" stores, through a structured clone as IndexedDB does.
+    const kept = structuredClone(JSON.parse(JSON.stringify(first.history())));
+    const second = provider.createChat({ apiKey, model, system: systemPrompt(), tools: TOOLS, history: kept });
+    const r2 = await runRequest({ chat: second, editor, text: 'Rename the screen you just added to "Log in".' });
+    const d = store.diagram();
+    console.log("kept chat", JSON.stringify(r1.usage), JSON.stringify(r2.usage), JSON.stringify(snapshot({ data: d })));
+    expect(r2.status).toBe("done");
+    expect(d.nodes.filter(isCard).map((n) => n.data.headerText)).toEqual(["Log in"]);
+    console.log(`kept chat cost $${(r1.usage.usd + r2.usage.usd).toFixed(4)}`);
+    if (process.env.AI_LIVE_REPORT)
+      appendFileSync(process.env.AI_LIVE_REPORT, `${JSON.stringify({ model, kept: [r1.usage, r2.usage] })}\n`);
+  });
 });
