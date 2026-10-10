@@ -23,7 +23,9 @@ Made by [The Vanila Team](https://vanila.io) and [Automatio AI](https://automati
 
 ## Features
 
-- **100+ screen templates** in ten categories (Article, Blog, E-Commerce, Features, Gallery, Header, Misc, Multimedia, Sign in, Socials), with category chips and a search that looks in every category. Drag the panel's right edge (or use the arrow keys on it) to make it wider or narrower; the thumbnails fill the columns that fit.
+- **125 screen templates** in twelve categories (Article, Blog, E-Commerce, Features, Gallery, Header, Misc, Multimedia, Sign in, Socials, Flow, Mobile), with category chips and a search that looks in every category. Drag the panel's right edge (or use the arrow keys on it) to make it wider or narrower; the thumbnails fill the columns that fit.
+  - **Mobile:** 15 portrait phone screens (onboarding, sign in and up, home feed, list, detail, search, tab bar, menu, profile, chat, settings, cart, checkout, empty state). Their cards are 124 px wide instead of 220, so a phone screen is drawn at the same scale as a desktop one.
+  - **Flow:** steps found in most flows: a yes / no choice, a three-way choice, email sent, email code and email confirmed, and wizard steps 1, 2 and 3.
 - **Your own images**: "Your image" at the top of the templates (or an image file dropped on the canvas) adds any picture as a card, a phone screenshot or a sketch, at its own shape. It is scaled down in the browser and kept with the diagram, in the file too; Wireflow warns when the browser's storage (about 5 MB) is getting full.
 - **Notes**: "Note" at the top of the templates adds a box of free text. Double-click it to write (several lines), drag its corners to resize it, and connect or group it like a card.
 - **Estimates**: give a card its hours in the Card panel. Groups show their total, and the header shows the project's; it opens a breakdown per group where an hourly rate (saved with the diagram) turns hours into cost.
@@ -113,7 +115,7 @@ After one online visit to `/app`, the editor works offline. To get a window of i
 }
 ```
 
-- Cards name their template by the stable id in `lib/graphics.json`; image URLs are not stored and always come from this build. A card with your own image (`"graphicId": "own-image"`) keeps the picture itself, scaled to at most 1280 px a side, and its height-to-width `ratio`.
+- Cards name their template by the stable id in `lib/graphics.json`; image URLs are not stored and always come from this build. A card's size follows from its template (Mobile templates make 124 px wide portrait cards, the others 220 px), so it isn't stored either. A card with your own image (`"graphicId": "own-image"`) keeps the picture itself, scaled to at most 1280 px a side, and its height-to-width `ratio`.
 - Notes (`"type": "note"`) keep their text (up to 2000 characters) and size. A card's `estimate` is in hours; `settings` holds the hourly rate and its currency.
 - Groups are React Flow parent nodes: a member's `position` is relative to its group (`parentId`), and a group's frame always wraps its members. Connections join cards and notes.
 - A connection's `type` is its line shape (`step`: polyline, `smoothstep`: rounded polyline; none: smooth) and `style.strokeWidth` its width (1 to 10; none: 2 px). A connection without a `style.stroke` is drawn #a3a8c3. The defaults are not stored.

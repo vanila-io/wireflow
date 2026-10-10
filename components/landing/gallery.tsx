@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { isPortrait } from "@/lib/diagram/model";
 import { categoryLabels, graphicsByCategory } from "@/lib/graphics";
 
 export default function Gallery() {
@@ -42,7 +43,8 @@ export default function Gallery() {
               src={g.src}
               alt={g.label}
               loading="lazy"
-              className="h-auto w-full"
+              // a phone screen at the scale of the others, as in the editor's panel
+              className={isPortrait({ graphicId: g.id }) ? "mx-auto h-auto w-[56%]" : "h-auto w-full"}
             />
             <p className="mt-2 truncate text-[11px] font-semibold text-ink-soft group-hover:text-wire-blue">
               {g.label}

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 425 334.5">
+<rect x="2" y="2" width="421" height="330.5" rx="14.06" fill="#BCC2C6"/>
+<rect x="7.88" y="7.88" width="409.24" height="318.74" rx="8.18" fill="#FFFFFF"/>
+<rect x="146" y="45.05" width="52.5" height="5.9" fill="#34495E"/>
+<rect x="226.5" y="45.05" width="52.5" height="5.9" fill="#BCC2C6"/>
+<rect x="118" y="34" width="28" height="28" fill="#34495E"/><rect x="122.4" y="38.4" width="19.2" height="19.2" fill="#27CABF"/>
+<rect x="110" y="72" width="44" height="7.2" rx="3.6" fill="#BCC2C6"/>
+<rect x="198.5" y="34" width="28" height="28" fill="#34495E"/><rect x="202.9" y="38.4" width="19.2" height="19.2" fill="#22A6EF"/>
+<rect x="190.5" y="72" width="44" height="7.2" rx="3.6" fill="#34495E"/>
+<rect x="279" y="34" width="28" height="28" fill="#BCC2C6"/><rect x="283.4" y="38.4" width="19.2" height="19.2" fill="#EBEFF0"/>
+<rect x="271" y="72" width="44" height="7.2" rx="3.6" fill="#BCC2C6"/>
+<rect x="96" y="116" width="110" height="7.9" rx="3.95" fill="#34495E"/>
+<rect x="96" y="140" width="22" height="22" fill="#34495E"/><rect x="99.9" y="143.9" width="14.2" height="14.2" fill="#22A6EF"/><rect x="132" y="147" width="150" height="7.9" rx="3.95" fill="#BCC2C6"/>
+<rect x="96" y="174" width="22" height="22" fill="#BCC2C6"/><rect x="99.9" y="177.9" width="14.2" height="14.2" fill="#EBEFF0"/><rect x="132" y="181" width="126" height="7.9" rx="3.95" fill="#BCC2C6"/>
+<rect x="96" y="208" width="22" height="22" fill="#34495E"/><rect x="99.9" y="211.9" width="14.2" height="14.2" fill="#22A6EF"/><rect x="132" y="215" width="102" height="7.9" rx="3.95" fill="#BCC2C6"/>
+<rect x="96" y="278" width="56" height="7.9" rx="3.95" fill="#BCC2C6"/>
+<rect x="240.9" y="272.7" width="91.3" height="32.6" rx="16.3" fill="#BCC2C6"/><rect x="242.55" y="270.85" width="81.6" height="22.9" rx="11.45" fill="#51F4E9"/><rect x="242.55" y="275.43" width="81.6" height="22.9" rx="11.45" fill="#27CABF"/><path fill-rule="evenodd" fill="#34495E" d="M254,266h58.7a16.3,16.3 0 0 1 0,32.6h-58.7a16.3,16.3 0 0 1 0,-32.6zM254,270.85h58.7a11.45,11.45 0 0 1 0,22.9h-58.7a11.45,11.45 0 0 1 0,-22.9z"/>
+</svg>

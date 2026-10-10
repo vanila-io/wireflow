@@ -78,8 +78,20 @@ export const CARD_WIDTH = 220;
 const BORDER = 1;
 const HEADER = 24;
 const ratios = graphicSizes as Record<string, number>;
-// Graphics share one aspect ratio within a few percent; this is the median.
+// The landscape graphics share one aspect ratio within a few percent; this is the median.
 const DEFAULT_RATIO = 0.7872;
+
+// Portrait templates (#69: the Mobile screens, 240 x 440) are drawn narrower,
+// at the scale of the others (a 425-wide landscape graphic in a 218px card), so
+// their lines, text and buttons look the same size and a phone screen doesn't
+// dwarf a desktop one. The width follows from the template, so it isn't stored.
+// The user's own images stay 220px wide at any shape.
+export const PORTRAIT_CARD_WIDTH = 124;
+
+export const isPortrait = (data: Pick<CardData, "graphicId">) =>
+  data.graphicId !== OWN_IMAGE && (ratios[data.graphicId] ?? DEFAULT_RATIO) > 1;
+
+export const cardWidth = (data: Pick<CardData, "graphicId">) => (isPortrait(data) ? PORTRAIT_CARD_WIDTH : CARD_WIDTH);
 
 export function cardSize(data: Pick<CardData, "graphicId" | "showHeader" | "ratio">): {
   width: number;
@@ -87,7 +99,8 @@ export function cardSize(data: Pick<CardData, "graphicId" | "showHeader" | "rati
 } {
   const ratio = data.graphicId === OWN_IMAGE ? imageRatio(data.ratio) : (ratios[data.graphicId] ?? DEFAULT_RATIO);
   const header = data.showHeader === false ? 0 : HEADER;
-  return { width: CARD_WIDTH, height: 2 * BORDER + header + (CARD_WIDTH - 2 * BORDER) * ratio };
+  const width = cardWidth(data);
+  return { width, height: 2 * BORDER + header + (width - 2 * BORDER) * ratio };
 }
 
 // New card ids, as the editor has always made them: <graphic id>-<time>-<random>.

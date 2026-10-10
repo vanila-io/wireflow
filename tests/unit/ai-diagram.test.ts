@@ -50,9 +50,12 @@ const bad = (ops: unknown[], data = base()) => {
 };
 
 describe("catalog and prompt", () => {
-  it("lists the 102 templates by their stable ids", () => {
-    expect(catalogText().split("\n")).toHaveLength(102);
+  it("lists the 125 templates by their stable ids", () => {
+    expect(catalogText().split("\n")).toHaveLength(125);
     expect(catalogText()).toContain("e-commerce-cart | E-Commerce | Cart");
+    // The phone screens (#69) and the flow screens (#86).
+    expect(catalogText()).toContain("mobile-sign-in | Mobile | Sign In");
+    expect(catalogText()).toContain("flow-yes-no | Flow | Yes / No Choice");
     expect(templateExists("e-commerce-cart")).toBe(true);
     expect(templateExists("https://evil.example/x.svg")).toBe(false);
   });
@@ -62,6 +65,22 @@ describe("catalog and prompt", () => {
     expect(systemPrompt()).toContain("e-commerce-cart | E-Commerce | Cart");
     // Groups are explained, with the frame's real padding (#105's hidden-screen fix).
     expect(systemPrompt()).toContain(`plus ${GROUP_PADDING.top} px above for the title`);
+    // Portrait cards get their own size (#69).
+    expect(systemPrompt()).toContain("drawn portrait: 124 px wide and about 250 px tall");
+  });
+
+  it("places a mobile screen by its portrait size, and warns when it overlaps", () => {
+    const r = ok([{ op: "add_screen", id: "m", template: "mobile-cart", label: "Cart", x: 200, y: 600, header: true }]);
+    const d = applyActions(base(), r.actions);
+    const box = absoluteBoxes(d.nodes).get("m")!;
+    expect(box.width).toBe(124);
+    expect(box.height).toBeCloseTo(2 + 24 + 122 * (440 / 240), 1);
+    expect(box.x + box.width / 2).toBe(200);
+    expect(box.y + box.height / 2).toBeCloseTo(600, 6);
+    // 124 px wide: beside a desktop card 180 px away (centre to centre) it doesn't overlap...
+    expect(ok([{ op: "add_screen", id: "m", template: "mobile-cart", label: "Cart", x: 372, y: 200, header: true }]).warnings).toEqual([]);
+    // ...but a desktop-sized screen there would.
+    expect(ok([{ op: "add_screen", id: "m", template: "misc-404", label: "x", x: 372, y: 200, header: true }]).warnings.length).toBe(1);
   });
 });
 

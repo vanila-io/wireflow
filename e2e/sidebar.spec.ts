@@ -24,9 +24,9 @@ test("search looks in every category, whatever category is picked", async ({ pag
     `${names.length} ${names.length === 1 ? "graphic matches" : "graphics match"}`
   );
 
-  // A category name matches too.
+  // A category name matches too: the six in Sign in, and the Mobile one named Sign In.
   await search.fill("sign in");
-  expect(await tiles(page).count()).toBe(6);
+  expect(await tiles(page).count()).toBe(7);
   await search.fill("zzz");
   await expect(sidebar(page).getByText("No graphics match “zzz”")).toBeVisible();
 

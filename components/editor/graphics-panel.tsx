@@ -4,6 +4,7 @@ import { ImagePlus, StickyNote } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { categoryLabels, graphicsByCategory } from "@/lib/graphics";
 import type { Graphic } from "@/lib/graphics";
+import { isPortrait } from "@/lib/diagram/model";
 
 /** What a tile adds: a screen template, a note (#83), or the user's own image (#86). */
 export type Addable = Graphic | "note" | "image";
@@ -261,7 +262,7 @@ export default function GraphicsPanel({ onAddCard, onTouchDrop }: Props) {
         {items.map((g) => (
           <button key={g.id} {...tile(g)} title={`${g.label} - drag onto canvas or click to add`} className={TILE_CLASS}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={g.src} alt={g.label} className="h-auto w-full" />
+            <img src={g.src} alt={g.label} className={isPortrait({ graphicId: g.id }) ? PORTRAIT_THUMB_CLASS : "h-auto w-full"} />
           </button>
         ))}
         {items.length === 0 && extras.length === 0 && (
@@ -321,6 +322,10 @@ export default function GraphicsPanel({ onAddCard, onTouchDrop }: Props) {
     };
   }
 }
+
+// A portrait (Mobile) template is shown at the width its card has on the canvas
+// next to a landscape one (124 of 220px), so the thumbnails share one scale.
+const PORTRAIT_THUMB_CLASS = "mx-auto h-auto w-[56%]";
 
 const TILE_CLASS =
   "touch-pan-y cursor-grab rounded-md border border-wire-border bg-white p-2 transition hover:border-wire-blue/50 hover:shadow-md active:cursor-grabbing";
