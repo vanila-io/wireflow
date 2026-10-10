@@ -7,10 +7,14 @@ const API = "https://api.anthropic.com";
 const panel = (page: Page) => page.getByRole("complementary", { name: "AI assistant" });
 const aiButton = (page: Page) => page.getByRole("banner").getByRole("button", { name: /AI assistant|Couldn't load/ });
 
-async function openPanel(page: Page, key = "sk-ant-test-key") {
+// Most specs aren't about key storage, so the key is not remembered unless asked
+// (remembering is the default; its own spec covers it).
+async function openPanel(page: Page, key = "sk-ant-test-key", { remember = false } = {}) {
   await openEditor(page);
   await aiButton(page).click();
   await panel(page).getByLabel("API key").fill(key);
+  const box = panel(page).getByRole("checkbox", { name: "Remember on this device" });
+  if (await box.isEnabled()) await box.setChecked(remember);
   await panel(page).getByRole("button", { name: "Check & use key" }).click();
   await expect(panel(page).getByLabel("Message")).toBeVisible();
 }
@@ -134,7 +138,7 @@ test("the AI panel and its SDK load only when opened", async ({ page }) => {
   expect(await sdkLoaded()).toBe(false);
   await aiButton(page).click();
   await expect(panel(page).getByLabel("API key")).toBeVisible();
-  await expect(panel(page)).toContainText("Stored encrypted in this browser");
+  await expect(panel(page)).toContainText("Saved encrypted in this browser");
   expect(await sdkLoaded()).toBe(true);
   // Closing keeps the panel (and a chat) around; the button reopens it.
   await panel(page).getByRole("button", { name: "Close the AI assistant" }).click();
@@ -352,7 +356,7 @@ test.describe("when requests fail", () => {
     expect((await saved(page))!.nodes.map((n) => n.id)).toEqual(["a"]);
   });
 
-  test("a rejected key and a rate limit show a clear message; the key is kept only if asked", async ({ page }) => {
+  test("a rejected key is never kept; a rate limit shows a clear message; an unticked key is not kept", async ({ page }) => {
     await page.route(`${API}/v1/models/**`, (route) =>
       route.fulfill({
         status: 401,
@@ -369,12 +373,15 @@ test.describe("when requests fail", () => {
     );
     await page.unroute(`${API}/v1/models/**`);
 
+    expect((await page.evaluate(() => localStorage.getItem("wireflow-ai"))) ?? "").not.toContain("sk-ant");
+
     await mockAnthropic(page, [429, 429, 429]);
     await panel(page).getByLabel("API key").fill("sk-ant-ok");
+    await panel(page).getByRole("checkbox", { name: "Remember on this device" }).uncheck();
     await panel(page).getByRole("button", { name: "Check & use key" }).click();
     await ask(page, "hi");
     await expect(panel(page).getByRole("alert")).toHaveText("Rate limited by Anthropic. Try again shortly.");
-    // Not remembered: nothing in storage, and a reload asks again.
+    // Unticked: nothing in storage, and a reload asks again.
     expect((await page.evaluate(() => localStorage.getItem("wireflow-ai"))) ?? "").not.toContain("sk-ant");
     await page.reload();
     await aiButton(page).click();
@@ -443,7 +450,10 @@ test.describe("what the AI panel keeps in this browser", () => {
 
   async function useKey(page: Page, key = "sk-ant-test-key", { remember = false } = {}) {
     await panel(page).getByLabel("API key").fill(key);
-    if (remember) await panel(page).getByRole("checkbox", { name: "Remember on this device" }).check();
+    // "Remember on this device" starts ticked; set it as the test asks (it is disabled
+    // where the browser keeps nothing).
+    const box = panel(page).getByRole("checkbox", { name: "Remember on this device" });
+    if (await box.isEnabled()) await box.setChecked(remember);
     await panel(page).getByRole("button", { name: "Check & use key" }).click();
     await expect(panel(page).getByLabel("Message")).toBeVisible();
   }
@@ -489,6 +499,27 @@ test.describe("what the AI panel keeps in this browser", () => {
     await expect.poll(async () => Object.keys(await kv(page))).toEqual([]);
     await reopen(page);
     await expect(panel(page).getByLabel("API key")).toBeVisible();
+  });
+
+  test("a pasted key is remembered by default, without touching the checkbox; after Forget key it is ticked again", async ({
+    page,
+  }) => {
+    await mockAnthropic(page, []);
+    await openEditor(page);
+    await aiButton(page).click();
+    const remember = panel(page).getByRole("checkbox", { name: "Remember on this device" });
+    await expect(remember).toBeChecked();
+    await panel(page).getByLabel("API key").fill("sk-ant-test-default-remember");
+    await panel(page).getByRole("button", { name: "Check & use key" }).click();
+    await expect(panel(page).getByLabel("Message")).toBeVisible();
+
+    await reopen(page);
+    await expect(panel(page).getByLabel("Message")).toBeVisible();
+    await expect(panel(page).locator(".ai-masked-key")).toHaveText("sk-ant-…mber");
+
+    await panel(page).getByRole("button", { name: "Forget key" }).click();
+    await expect(panel(page).getByLabel("API key")).toBeVisible();
+    await expect(remember).toBeChecked();
   });
 
   test("a key an earlier version kept in plain text is encrypted once and the plain text deleted", async ({ page }) => {
@@ -543,7 +574,7 @@ test.describe("what the AI panel keeps in this browser", () => {
     const remember = panel(page).getByRole("checkbox", { name: "Remember on this device" });
     await expect(remember).toBeDisabled();
     await expect(remember).not.toBeChecked();
-    await expect(panel(page)).toContainText("the key can't be remembered");
+    await expect(panel(page)).toContainText("This browser won't keep it");
     await useKey(page);
     await expect(panel(page).getByRole("checkbox", { name: "Keep chat after reload" })).toHaveCount(0);
     expect(await page.evaluate(() => localStorage.getItem("wireflow-ai"))).toBeNull();
@@ -551,7 +582,7 @@ test.describe("what the AI panel keeps in this browser", () => {
     await expect(panel(page).getByLabel("API key")).toBeVisible();
   });
 
-  test("Keep chat after reload is off by default; on, the chat comes back and the next request continues it; New chat and unticking delete it", async ({
+  test("Keep chat after reload is on by default and unticking it sticks; the chat comes back and the next request continues it; New chat and unticking delete it", async ({
     page,
   }) => {
     const requests = await mockAnthropic(page, [
@@ -562,12 +593,16 @@ test.describe("what the AI panel keeps in this browser", () => {
     ]);
     const keep = panel(page).getByRole("checkbox", { name: "Keep chat after reload" });
     await openPanel(page);
-    await expect(keep).not.toBeChecked();
+    await expect(keep).toBeChecked();
     await ask(page, "first");
     await expect(replies(page).getByText("First reply.", { exact: true })).toBeVisible();
-    expect(await kv(page)).toEqual({});
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual(["chat"]);
+    // Unticking deletes the kept chat, and the choice survives a reload.
+    await keep.uncheck();
+    await expect.poll(async () => Object.keys(await kv(page))).toEqual([]);
     await reopen(page);
     await useKey(page);
+    await expect(keep).not.toBeChecked();
     await expect(replies(page).getByText("First reply.", { exact: true })).toHaveCount(0);
 
     await keep.check();

@@ -69,12 +69,13 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
   const [canStore, setCanStore] = useState<boolean | null>(null);
   const [remembered, setRemembered] = useState(false);
   const [keyDraft, setKeyDraft] = useState("");
-  const [remember, setRemember] = useState(false);
+  // Remembering is the default: nobody wants to paste the key on every reload.
+  const [remember, setRemember] = useState(true);
   const [keyError, setKeyError] = useState<string | null>(null);
   const [checkingKey, setCheckingKey] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const [keepChat, setKeepChat] = useState(!!settings.keepChat);
+  const [keepChat, setKeepChat] = useState(settings.keepChat ?? true);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [sessionCost, setSessionCost] = useState(0);
@@ -105,7 +106,7 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
       const legacy = await saved.migrateLegacyKey();
       const key = legacy?.key ?? (ok ? await saved.loadKey().catch(() => null) : null);
       let kept: ChatRecord | null = null;
-      if (ok && settings.keepChat) {
+      if (ok && (settings.keepChat ?? true)) {
         const value = await saved.loadChat().catch(() => null);
         kept = parseChatRecord(value, { provider: providerId, model, history: store.history() });
       }
@@ -150,7 +151,7 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
 
   function changeKeepChat(on: boolean) {
     setKeepChat(on);
-    saved.storeSettings({ provider: providerId, model, ...(on && { keepChat: true }) });
+    saved.storeSettings({ provider: providerId, model, keepChat: on });
     if (!on) saved.clearChat().catch(() => {});
   }
 
@@ -303,7 +304,7 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
     newChat();
     setApiKey(null);
     setRemembered(false);
-    setRemember(false);
+    setRemember(true);
     if (canStore) saved.forgetKey().catch(() => {});
   }
 
@@ -357,17 +358,21 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
         )}
         <select
           aria-label="Model"
+          title={(() => {
+            const m = provider.models.find((x) => x.id === model);
+            return m ? `$${m.price.input} in / $${m.price.output} out per million tokens` : undefined;
+          })()}
           value={model}
           onChange={(e) => {
             setModel(e.target.value);
             newChat(); // a conversation stays on one model
-            saved.storeSettings({ provider: providerId, model: e.target.value, ...(keepChat && { keepChat: true }) });
+            saved.storeSettings({ provider: providerId, model: e.target.value, keepChat });
           }}
           className="max-w-44 rounded-md border border-wire-border px-2 py-1 text-xs text-ink"
         >
           {provider.models.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.label} (${m.price.input}/${m.price.output} per MTok)
+            <option key={m.id} value={m.id} title={`$${m.price.input} in / $${m.price.output} out per million tokens`}>
+              {m.label}
             </option>
           ))}
         </select>
@@ -386,8 +391,8 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
       ) : !apiKey ? (
         <div className="flex flex-col gap-3 p-4 text-xs leading-5 text-ink">
           <p>
-            Paste your {provider.label} API key. Requests go straight from this browser to {provider.label}, with your
-            diagram and your messages; Wireflow has no server and never sees them.
+            Paste your {provider.label} API key to edit your flow with AI. Your key and messages go straight to{" "}
+            {provider.label}; Wireflow has no server.
           </p>
           <input
             type="password"
@@ -415,15 +420,22 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
                 Remember on this device
               </label>
               {canStore ? (
-                <p id="ai-remember-note" className="text-ink-soft">
-                  Stored encrypted in this browser, so the key never shows as plain text in its storage or in a copy of
-                  it. Code running on this page, a browser extension or someone using this browser profile could still
-                  use it. Unticked, the key stays in memory until you close or reload the tab.
-                </p>
+                <>
+                  <p id="ai-remember-note" className="text-ink-soft">
+                    Saved encrypted in this browser. Forget it anytime.
+                  </p>
+                  <details className="text-ink-soft">
+                    <summary className="cursor-pointer select-none hover:text-ink">How is my key stored?</summary>
+                    <p className="mt-1">
+                      Encrypted with a key this browser can&apos;t export, so it never sits in storage as plain text.
+                      Code running on this page, browser extensions or anyone using this browser profile could still
+                      use it, so prefer a key with a spend limit. Untick to keep it only until the tab closes.
+                    </p>
+                  </details>
+                </>
               ) : (
                 <p id="ai-remember-note" className="text-ink-soft">
-                  This browser doesn&apos;t let Wireflow keep data here (a private window, or site data blocked?), so
-                  the key can&apos;t be remembered. It stays in memory until you close or reload the tab.
+                  This browser won&apos;t keep it (private window?), so you&apos;ll paste it again next time.
                 </p>
               )}
             </div>
@@ -441,14 +453,14 @@ export default function AiPanel({ open, onClose }: AiPanelProps) {
             {checkingKey ? "Checking…" : "Check & use key"}
           </button>
           <p className="text-ink-soft">
-            Tip: use a dedicated key with an expiry and a spend limit.{" "}
+            Tip: give the key a spend limit.{" "}
             <a
               href={provider.keyUrl}
               target="_blank"
               rel="noreferrer"
               className="font-semibold text-wire-blue hover:underline"
             >
-              Create a key
+              Get a key
             </a>
           </p>
         </div>

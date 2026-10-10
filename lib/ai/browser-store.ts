@@ -1,8 +1,9 @@
 // What the AI assistant keeps in this browser beyond its settings (#104), in
 // IndexedDB: database "wireflow-ai", one key-value store "kv".
-// - "deviceKey" and "apiKey": the remembered API key, encrypted (key-crypto.ts),
-//   only when the user ticks "Remember on this device".
-// - "chat": the conversation, only while "Keep chat after reload" is on.
+// - "deviceKey" and "apiKey": the remembered API key, encrypted (key-crypto.ts).
+//   "Remember on this device" is ticked by default; unticked, nothing is stored.
+// - "chat": the conversation, while "Keep chat after reload" is on (the default;
+//   unticking it is remembered as keepChat: false).
 // The settings (provider, model, whether to keep the chat) hold no secret and
 // stay in localStorage["wireflow-ai"], which before this change also held a
 // remembered key in plain text; migrateLegacyKey moves it here once.
@@ -99,7 +100,7 @@ export function loadSettings(): Settings {
   return {
     ...(typeof provider === "string" && { provider }),
     ...(typeof model === "string" && { model }),
-    ...(keepChat === true && { keepChat }),
+    ...(typeof keepChat === "boolean" && { keepChat }),
   };
 }
 
