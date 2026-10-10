@@ -19,7 +19,7 @@ import { cardSize, CARD_WIDTH, isCard, isGroup, isNote, NOTE_SIZE, OWN_IMAGE, ST
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
-import { formatCost, formatHours, projectTotal } from "@/lib/diagram/estimate";
+import { formatCost, formatHours, projectEstimate } from "@/lib/diagram/estimate";
 import {
   BringToFront,
   ClipboardPaste,
@@ -217,11 +217,12 @@ function EditorInner({ loaded }: { loaded: Start }) {
   const { store, notices: initialNotices, hadDiagram, lock } = loaded;
   const [notices, setNotices] = useState(initialNotices);
   const { nodes, edges, settings, saveFailed } = useStoreState(store);
-  // The project's estimate (#84): shown only once a card has hours.
-  const estimate = projectTotal({ nodes });
+  // The project's estimate (#84), its cards and stages: shown only once a card
+  // has hours or the project has a stage.
+  const estimate = projectEstimate({ nodes, settings });
   const rate = settings?.hourlyRate;
   const estimateText =
-    estimate.estimated > 0
+    estimate.cards.estimated > 0 || estimate.stages.length > 0
       ? `${formatHours(estimate.hours)}${rate !== undefined ? ` · ${formatCost(estimate.hours * rate, settings?.currency)}` : ""}`
       : null;
   const [estimateOpen, setEstimateOpen] = useState(false);

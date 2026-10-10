@@ -24,7 +24,7 @@ describe("autosave storage", () => {
     const storage = new MemoryStorage();
     expect(writeDiagram(storage, serialize({ nodes: [card("a")], edges: [] }))).toBe(true);
     const stored = JSON.parse(storage.getItem(STORAGE_KEY)!);
-    expect(stored.version).toBe(3);
+    expect(stored.version).toBe(4);
     // The previous loader: saved?.nodes?.length, then nodes/edges as React Flow data.
     expect(stored.nodes[0]).toMatchObject({
       id: "a",

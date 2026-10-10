@@ -43,7 +43,7 @@ test("a saved file opens again in a fresh browser, with stable template ids", as
   expect(file.suggestedFilename()).toBe("wireflow.json");
   const text = readFileSync(await file.path(), "utf8");
   const json = JSON.parse(text);
-  expect(json).toMatchObject({ format: "wireflow", version: 3 });
+  expect(json).toMatchObject({ format: "wireflow", version: 4 });
   expect(json.diagram.nodes).toHaveLength(2);
   expect(text).not.toContain("/graphics/");
   const before = (await saved(page))!;

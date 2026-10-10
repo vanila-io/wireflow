@@ -90,7 +90,7 @@ describe("notes", () => {
   it("survive a save and open, and an older version 2 file still opens", () => {
     const d = withNote();
     const file = JSON.parse(serializeFile(d));
-    expect(file.version).toBe(3);
+    expect(file.version).toBe(4);
     expect(serialize(parseFile(JSON.stringify(file)).diagram)).toBe(serialize(d));
     const v2 = JSON.stringify({ format: "wireflow", version: 2, diagram: { nodes: [card("a")], edges: [] } });
     expect(parseFile(v2).diagram.nodes).toHaveLength(1);

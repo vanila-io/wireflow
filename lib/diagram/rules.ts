@@ -8,7 +8,8 @@
 //   user's own image as a JPEG, PNG or WebP data URL of at most MAX_IMAGE_CHARS;
 // - a note has text (at most MAX_NOTE_TEXT characters) and a size within NOTE_BOUNDS;
 // - a card's estimate is 0 to MAX_ESTIMATE hours; the settings hold an hourly
-//   rate (0 to MAX_RATE) and one of CURRENCIES;
+//   rate (0 to MAX_RATE), one of CURRENCIES, and at most MAX_STAGES stages, each
+//   with a name and either 0 to MAX_ESTIMATE hours or 0 to MAX_PERCENT percent;
 // - a parentId names an existing group, parent chains have no loops, and
 //   parents come before their children (React Flow requires it);
 // - every edge connects two existing cards or notes (no loose or dangling edges), and
@@ -33,12 +34,14 @@ import {
   MAX_RATE,
   MAX_IMAGE_CHARS,
   MAX_NOTE_TEXT,
+  MAX_PERCENT,
+  MAX_STAGES,
   NOTE_BOUNDS,
   OWN_IMAGE,
   NOTE_SIZE,
   isConnectable,
   isGroup,
-  type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type DiagramSettings, type GroupNode, type NoteNode } from "./model";
+  type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type DiagramSettings, type GroupNode, type NoteNode, type Stage } from "./model";
 
 // `parents` (only when there were any): items taken out of a group that doesn't
 // exist or contains itself.
@@ -59,11 +62,30 @@ export const dropProto = (key: string, value: unknown) => (key === "__proto__" ?
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const estimate = (v: unknown) => (isNum(v) && v >= 0 && v <= MAX_ESTIMATE ? { estimate: round2(v) } : {});
 
+const within = (v: unknown, max: number): v is number => isNum(v) && v >= 0 && v <= max;
+
+// A stage keeps its name and one amount: its hours if they are valid, else its
+// percentage. One with neither is dropped.
+function stage(v: unknown): Stage | undefined {
+  if (!isObject(v)) return undefined;
+  const label = text(v.label, MAX_LABEL) ?? "";
+  if (within(v.hours, MAX_ESTIMATE)) return { label, hours: round2(v.hours) };
+  if (within(v.percent, MAX_PERCENT)) return { label, percent: round2(v.percent) };
+  return undefined;
+}
+
 function settings(v: unknown): DiagramSettings | undefined {
   if (!isObject(v)) return undefined;
-  const rate = isNum(v.hourlyRate) && v.hourlyRate >= 0 && v.hourlyRate <= MAX_RATE ? round2(v.hourlyRate) : undefined;
+  const rate = within(v.hourlyRate, MAX_RATE) ? round2(v.hourlyRate) : undefined;
   const currency = (CURRENCIES as readonly unknown[]).includes(v.currency) ? (v.currency as string) : undefined;
-  const s = { ...(rate !== undefined && { hourlyRate: rate }), ...(currency && { currency }) };
+  const stages = Array.isArray(v.stages)
+    ? v.stages.map(stage).filter((s): s is Stage => s !== undefined).slice(0, MAX_STAGES)
+    : [];
+  const s = {
+    ...(rate !== undefined && { hourlyRate: rate }),
+    ...(currency && { currency }),
+    ...(stages.length > 0 && { stages }),
+  };
   return Object.keys(s).length ? s : undefined;
 }
 
