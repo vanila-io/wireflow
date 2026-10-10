@@ -25,6 +25,7 @@ import {
   Copy,
   Delete,
   Ellipsis,
+  FolderOpen,
   Group,
   ImageDown,
   SendToBack,
@@ -536,14 +537,14 @@ function EditorInner({ loaded }: { loaded: Start }) {
             {nodes.length} cards &middot; {edges.length} connections
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 max-sm:gap-2">
           <span
             role="status"
             className={saveFailed ? "text-xs font-semibold text-rose-600" : "text-xs text-ink-soft"}
           >
             {saveFailed ? "Not saved in this browser" : "All changes saved"}
           </span>
-          {/* On a phone the header keeps only Export JSON, as before (Open file is in the toolbar). */}
+          {/* AI and Open file: on a phone they are under More (below). */}
           <button
             onClick={() => void ai.toggle()}
             aria-expanded={ai.open}
@@ -575,6 +576,31 @@ function EditorInner({ loaded }: { loaded: Start }) {
               if (file) void openFile(file);
             }}
           />
+          {/* On a phone, AI and Open file are in this menu instead. */}
+          <span className="flex sm:hidden">
+            <Menu
+              label="More"
+              side="bottom"
+              align="end"
+              trigger={
+                <button
+                  title="More"
+                  aria-label="More"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-wire-blue ring-1 ring-wire-blue/40 transition hover:bg-wire-lavender"
+                >
+                  <Ellipsis size={16} aria-hidden />
+                </button>
+              }
+              items={[
+                {
+                  label: ai.failed ? "AI assistant (couldn't load)" : "AI assistant",
+                  icon: <Sparkles size={14} aria-hidden />,
+                  onSelect: () => void ai.toggle(),
+                },
+                { label: "Open file", icon: <FolderOpen size={14} aria-hidden />, onSelect: chooseFile },
+              ]}
+            />
+          </span>
           <button
             onClick={exportJson}
             title="Save the diagram as wireflow.json"
