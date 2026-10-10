@@ -19,7 +19,7 @@ import { isGroup, STORAGE_KEY, type Diagram } from "@/lib/diagram/model";
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
-import { Group, Sparkles, Ungroup } from "lucide-react";
+import { Group, ImageDown, Sparkles, Ungroup } from "lucide-react";
 import { LOAD_FAILED, PanelBoundary, useAiPanel } from "@/components/ai/use-ai-panel";
 import ConfirmDialog from "./confirm-dialog";
 import EdgePanel from "./edge-panel";
@@ -27,6 +27,8 @@ import FlowNodeComp from "./flow-node";
 import GraphicsPanel from "./graphics-panel";
 import GroupNodeComp from "./group-node";
 import GroupPanel from "./group-panel";
+import { download, renderImage, type ImageFormat } from "./export-image";
+import Menu from "./menu";
 import Notices, { notice, type Notice } from "./notices";
 import { StoreContext, useStoreState } from "./store-context";
 import UpdatePrompt from "./update-prompt";
@@ -215,7 +217,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
       })),
     [edges]
   );
-  const { screenToFlowPosition, zoomIn, zoomOut, fitView } = useReactFlow();
+  const { screenToFlowPosition, zoomIn, zoomOut, fitView, getNodes, getNodesBounds } = useReactFlow();
 
   const dismiss = useCallback((id: number) => setNotices((ns) => ns.filter((n) => n.id !== id)), []);
   const say = useCallback((n: Notice) => setNotices((ns) => [...ns.slice(-3), n]), []);
@@ -344,6 +346,26 @@ function EditorInner({ loaded }: { loaded: Start }) {
       addGraphic(g, { x: pos.x - 120, y: pos.y - 100 });
     },
     [addGraphic, screenToFlowPosition]
+  );
+
+  // Export the whole diagram as wireflow.jpg or wireflow.png (export-image.ts).
+  const [exporting, setExporting] = useState(false);
+  const exportImage = useCallback(
+    async (format: ImageFormat) => {
+      const viewport = canvas.current?.querySelector<HTMLElement>(".react-flow__viewport");
+      if (!viewport || !getNodes().length || exporting) return;
+      setExporting(true);
+      try {
+        const image = await renderImage(viewport, getNodesBounds(getNodes()), format);
+        download(image.url, `wireflow.${format}`);
+        say(notice(`Exported wireflow.${format} (${image.width} × ${image.height} px).`));
+      } catch {
+        say(notice("Couldn't export the image. Try again, or save the diagram with Export JSON.", "error"));
+      } finally {
+        setExporting(false);
+      }
+    },
+    [getNodes, getNodesBounds, say, exporting]
   );
 
   // Save the diagram as a versioned wireflow.json (lib/diagram/file.ts).
@@ -547,6 +569,22 @@ function EditorInner({ loaded }: { loaded: Start }) {
             <span className="mx-1 h-5 w-px bg-wire-border" />
             <ToolbarButton label="Open file" onClick={chooseFile} />
             <ToolbarButton label="Export JSON" onClick={exportJson} />
+            <Menu
+              trigger={
+                <button
+                  title="Export the whole diagram as an image"
+                  aria-label="Export image"
+                  disabled={!nodes.length || exporting}
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-ink transition hover:bg-wire-canvas hover:text-wire-blue disabled:pointer-events-none disabled:opacity-35"
+                >
+                  <ImageDown size={16} aria-hidden />
+                </button>
+              }
+              items={[
+                { label: "JPG image", onSelect: () => void exportImage("jpg") },
+                { label: "PNG image", onSelect: () => void exportImage("png") },
+              ]}
+            />
             <ToolbarButton label="Clear canvas" onClick={clearCanvas} />
           </div>
 
@@ -583,6 +621,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
               <li>Select cards and press Group; drag a card onto a group to add it</li>
               <li>Your flow autosaves in this browser</li>
               <li>Export JSON saves it as a file; Open file opens it again</li>
+              <li>The image button exports the whole diagram as JPG or PNG</li>
             </ul>
           </aside>
         </div>
