@@ -1,0 +1,38 @@
+# Installed/built inside the image
+node_modules
+.next
+.open-next
+.wrangler
+public/sw.js
+
+# VCS, CI, editor and OS files
+.git
+.github
+.gitignore
+.editorconfig
+.vscode
+.idea
+.DS_Store
+
+# Local env files (may hold secrets); build settings are build args
+.env*
+.dev.vars*
+
+# Teammate tooling, local helpers, tests, reports and docs are not needed to build the app
+.agents
+.box-internal
+.tools
+.claude
+e2e
+tests
+test-results
+playwright-report
+blob-report
+coverage
+docs
+*.md
+
+# Docker files themselves
+Dockerfile
+docker-compose.yml
+.dockerignore

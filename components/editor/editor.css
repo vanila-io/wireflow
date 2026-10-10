@@ -1,6 +1,20 @@
 /* Editor node + canvas styles (kept in its own file so preview proxies never
    serve a stale cached chunk for it) */
 
+/* Connections without a colour or width of their own: #a3a8c3 at 2px, and the
+   wire blue when selected or focused. React Flow themes edges through these
+   variables, defined on .react-flow in @xyflow/react/dist/style.css; its
+   documented way to change them is a .react-flow rule that sets them, which
+   wins here because flow-editor.tsx imports this file after that stylesheet
+   (Next.js orders CSS by import order). The arrowheads follow the same
+   variable (defaultMarkerColor={null} in flow-editor.tsx). Keep in step with
+   DEFAULT_EDGE_COLOR and DEFAULT_EDGE_WIDTH in lib/diagram/model.ts. */
+.react-flow {
+  --xy-edge-stroke-default: #a3a8c3;
+  --xy-edge-stroke-width-default: 2;
+  --xy-edge-stroke-selected-default: var(--color-wire-blue);
+}
+
 .flow-node {
   width: 220px;
   border-radius: 6px;
@@ -64,4 +78,98 @@
   height: 4px;
   border-radius: 50%;
   background: #c4cbd1;
+}
+
+/* A connection with a colour of its own keeps it when selected (#106), so the
+   selection shows as a thicker, glowing line instead of the selection blue. */
+.react-flow__edge.colored.selected .react-flow__edge-path {
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 2px rgb(67 83 255 / 0.9));
+}
+
+/* While an image is exported (flow-editor.tsx sets data-exporting on the
+   canvas), the selection isn't drawn: the image shows the diagram, not what
+   happens to be selected. Transitions are off so the capture sees the result. */
+[data-exporting] .react-flow {
+  --xy-edge-stroke-selected-default: #a3a8c3;
+}
+[data-exporting] .flow-node.selected {
+  outline-color: transparent;
+  transition: none;
+}
+[data-exporting] .react-flow__edge.colored.selected .react-flow__edge-path {
+  stroke-width: var(--xy-edge-stroke-width-default);
+  filter: none;
+}
+[data-exporting] .flow-group.selected {
+  border-style: dashed;
+  border-color: #b8bfd6;
+  transition: none;
+}
+
+/* The template that follows a finger dragged from the sidebar. */
+.touch-drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  width: 110px;
+  pointer-events: none;
+  opacity: 0.85;
+  border-radius: 6px;
+  box-shadow: 0 8px 30px rgb(29 28 40 / 0.25);
+}
+
+/* Groups: a labelled frame around its members, as in the earlier editor.
+   React Flow's own look for its "group" type is replaced. */
+.react-flow__node-group {
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+}
+.react-flow__node-group.selectable:hover,
+.react-flow__node-group.selectable.selected,
+.react-flow__node-group.selectable:focus,
+.react-flow__node-group.selectable:focus-visible {
+  box-shadow: none;
+}
+
+.flow-group {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed #b8bfd6;
+  border-radius: 10px;
+  background: rgb(238 240 255 / 0.45);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.flow-group.selected {
+  border-style: solid;
+  border-color: var(--color-wire-blue);
+}
+
+/* The group a dragged card would join if dropped now (#81). */
+.flow-group.drop-target {
+  border-color: var(--color-wire-blue);
+  background: rgb(67 83 255 / 0.08);
+}
+
+.flow-group-label {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  cursor: text;
 }

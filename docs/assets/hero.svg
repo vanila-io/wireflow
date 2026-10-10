@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="t d">
+<title id="t">Wireflow</title>
+<desc id="d">Animated banner: four wireframe screens appear on a canvas, connecting edges draw between them, and a dot follows the user flow from Header Image to Checkout Complete.</desc>
+<style>
+.f{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.lbl{font-size:11px;font-weight:600;fill:#94A4A5}
+.ln{fill:#BCC2C6}
+.o{stroke:#34495E;stroke-width:1.5;stroke-linejoin:round}
+.e,.x{fill:none;stroke-width:2;stroke-dasharray:1 1}
+.e{stroke:#a4b2c0}
+.x{stroke:#22A6EF;stroke-dashoffset:1}
+.ring,.ax{opacity:0}
+.scene{animation:out 9s linear infinite}
+.c0{animation:c0 9s ease-out infinite}.c1{animation:c1 9s ease-out infinite}.c2{animation:c2 9s ease-out infinite}.c3{animation:c3 9s ease-out infinite}
+.e0{animation:e0 9s linear infinite}.e1{animation:e1 9s linear infinite}.e2{animation:e2 9s linear infinite}
+.a0{animation:a0 9s linear infinite}.a1{animation:a1 9s linear infinite}.a2{animation:a2 9s linear infinite}
+.x0{animation:x0 9s linear infinite}.x1{animation:x1 9s linear infinite}.x2{animation:x2 9s linear infinite}
+.r0{animation:r0 9s linear infinite}.r1{animation:r1 9s linear infinite}.r2{animation:r2 9s linear infinite}.r3{animation:r3 9s linear infinite}
+@keyframes out{0%,91%{opacity:1}97%,100%{opacity:0}}
+@keyframes c0{0%,2%{opacity:0;transform:translateY(14px)}8%,100%{opacity:1;transform:translateY(0)}}
+@keyframes c1{0%,5.5%{opacity:0;transform:translateY(14px)}11.5%,100%{opacity:1;transform:translateY(0)}}
+@keyframes c2{0%,9%{opacity:0;transform:translateY(14px)}15%,100%{opacity:1;transform:translateY(0)}}
+@keyframes c3{0%,12.5%{opacity:0;transform:translateY(14px)}18.5%,100%{opacity:1;transform:translateY(0)}}
+@keyframes e0{0%,20%{stroke-dashoffset:1}25.6%,100%{stroke-dashoffset:0}}
+@keyframes e1{0%,25.6%{stroke-dashoffset:1}31.1%,100%{stroke-dashoffset:0}}
+@keyframes e2{0%,31.1%{stroke-dashoffset:1}36.7%,100%{stroke-dashoffset:0}}
+@keyframes a0{0%,25.4%{opacity:0}26.6%,100%{opacity:1}}
+@keyframes a1{0%,30.9%{opacity:0}32.1%,100%{opacity:1}}
+@keyframes a2{0%,36.5%{opacity:0}37.7%,100%{opacity:1}}
+@keyframes x0{0%,40%{stroke-dashoffset:1}50%,100%{stroke-dashoffset:0}}
+@keyframes x1{0%,51.11%{stroke-dashoffset:1}61.11%,100%{stroke-dashoffset:0}}
+@keyframes x2{0%,62.22%{stroke-dashoffset:1}72.22%,100%{stroke-dashoffset:0}}
+@keyframes r0{0%,37.8%{opacity:0}40%,100%{opacity:1}}
+@keyframes r1{0%,50%{opacity:0}51.5%,100%{opacity:1}}
+@keyframes r2{0%,61.1%{opacity:0}62.6%,100%{opacity:1}}
+@keyframes r3{0%,72.2%{opacity:0}73.7%,100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.dot{display:none}}
+</style>
+<defs>
+<pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#d3d9df"/></pattern>
+<g id="node"><rect x="0" y="3" width="120" height="108" rx="6" fill="#34495E" opacity=".07"/><rect x=".5" y=".5" width="119" height="107" rx="6" fill="#EBEFF0" stroke="#BCC2C6"/><rect x="6" y="22" width="108" height="80" rx="4" fill="#fff" stroke="#BCC2C6"/></g>
+<rect id="ring" x="-4" y="-4" width="128" height="116" rx="9" fill="none" stroke="#22A6EF" stroke-width="2"/>
+</defs>
+
+<rect x=".5" y=".5" width="1199" height="359" rx="16" fill="#fff" stroke="#d8dee4"/>
+
+<g class="f">
+  <rect x="48" y="84" width="44" height="44" rx="11" fill="#34495E"/>
+  <rect x="56" y="93" width="13" height="11" rx="2.5" fill="#fff"/>
+  <rect x="71" y="108" width="13" height="11" rx="2.5" fill="#fff"/>
+  <path d="M69,98.5 H73 Q77.5,98.5 77.5,103 V108" fill="none" stroke="#39D4FF" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="106" y="123" font-size="46" font-weight="700" fill="#34495E" letter-spacing="-1">Wireflow</text>
+  <text x="48" y="172" font-size="18" fill="#4f5f6f">Sketch user flows for websites and apps</text>
+  <text x="48" y="198" font-size="18" fill="#4f5f6f">with drag-and-drop wireframe screens.</text>
+  <g font-size="13" font-weight="600" text-anchor="middle">
+    <rect x="48" y="224" width="118" height="28" rx="14" fill="#e8f4fd" stroke="#b6dcf7"/>
+    <text x="107" y="243" fill="#1677b8">100+ templates</text>
+    <rect x="174" y="224" width="122" height="28" rx="14" fill="#f0f2f5" stroke="#d8dee4"/>
+    <text x="235" y="243" fill="#34495E">Local autosave</text>
+    <rect x="304" y="224" width="102" height="28" rx="14" fill="#f0f2f5" stroke="#d8dee4"/>
+    <text x="355" y="243" fill="#34495E">JPEG export</text>
+  </g>
+  <text x="48" y="292" font-size="13" fill="#8796a5">Open source (MIT) · runs entirely in your browser</text>
+</g>
+
+<rect x="500" y="24" width="676" height="312" rx="12" fill="#f0f2f5"/>
+<rect x="500" y="24" width="676" height="312" rx="12" fill="url(#grid)"/>
+
+<g class="scene">
+  <g class="f lbl" text-anchor="middle">
+    <g transform="translate(532,56)"><g class="c0">
+      <use href="#node"/><text x="60" y="15">Header Image</text>
+      <rect x="12" y="28" width="16" height="3" rx="1.5" fill="#34495E"/>
+      <rect class="ln" x="76" y="28" width="32" height="3" rx="1.5"/>
+      <rect class="o" x="12" y="36" width="96" height="40" rx="3" fill="#22A6EF"/>
+      <path class="o" d="M42,68 L54,52 L62,62 L67,57 L78,68Z" fill="#39D4FF"/>
+      <circle class="o" cx="73" cy="47" r="4" fill="#39D4FF"/>
+      <rect class="o" x="44" y="83" width="32" height="9" rx="4.5" fill="#27CABF"/>
+      <use href="#ring" class="ring r0"/>
+    </g></g>
+    <g transform="translate(700,200)"><g class="c1">
+      <use href="#node"/><text x="60" y="15">Product Item</text>
+      <g class="o" stroke-width="1.2" fill="#39D4FF">
+        <rect x="14" y="30" width="44" height="22" rx="2"/><rect x="62" y="30" width="44" height="22" rx="2"/>
+        <rect x="14" y="64" width="44" height="22" rx="2"/><rect x="62" y="64" width="44" height="22" rx="2" fill="#F19C1F"/>
+      </g>
+      <g class="ln"><rect x="14" y="56" width="30" height="3" rx="1.5"/><rect x="62" y="56" width="30" height="3" rx="1.5"/><rect x="14" y="90" width="30" height="3" rx="1.5"/><rect x="62" y="90" width="30" height="3" rx="1.5"/></g>
+      <use href="#ring" class="ring r1"/>
+    </g></g>
+    <g transform="translate(868,56)"><g class="c2">
+      <use href="#node"/><text x="60" y="15">Cart</text>
+      <g class="o" stroke-width="1.2" fill="#F19C1F"><rect x="14" y="30" width="14" height="14" rx="2"/><rect x="14" y="50" width="14" height="14" rx="2"/><rect x="14" y="70" width="14" height="14" rx="2"/></g>
+      <g class="ln"><rect x="34" y="32" width="48" height="3" rx="1.5"/><rect x="34" y="39" width="32" height="3" rx="1.5"/><rect x="34" y="52" width="48" height="3" rx="1.5"/><rect x="34" y="59" width="32" height="3" rx="1.5"/><rect x="34" y="72" width="48" height="3" rx="1.5"/><rect x="34" y="79" width="32" height="3" rx="1.5"/><rect x="14" y="92" width="40" height="3" rx="1.5"/></g>
+      <path d="M97,34l6,6m0-6l-6,6M97,54l6,6m0-6l-6,6M97,74l6,6m0-6l-6,6" stroke="#BCC2C6" stroke-width="1.6" stroke-linecap="round"/>
+      <rect class="o" x="74" y="88" width="30" height="9" rx="4.5" fill="#27CABF"/>
+      <use href="#ring" class="ring r2"/>
+    </g></g>
+    <g transform="translate(1036,200)"><g class="c3">
+      <use href="#node"/><text x="60" y="15">Checkout Complete</text>
+      <circle class="o" cx="60" cy="48" r="14" fill="#27CABF"/>
+      <path d="M53,48.5l5,5l9-10" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <g class="ln"><rect x="34" y="70" width="52" height="3" rx="1.5"/><rect x="42" y="77" width="36" height="3" rx="1.5"/></g>
+      <rect class="o" x="44" y="87" width="32" height="9" rx="4.5" fill="#27CABF"/>
+      <use href="#ring" class="ring r3"/>
+    </g></g>
+  </g>
+
+  <path class="e e0" pathLength="1" d="M652,110 H752 Q760,110 760,118 V192"/>
+  <path class="e e1" pathLength="1" d="M820,254 H920 Q928,254 928,246 V172"/>
+  <path class="e e2" pathLength="1" d="M988,110 H1088 Q1096,110 1096,118 V192"/>
+  <path class="x x0" pathLength="1" d="M652,110 H752 Q760,110 760,118 V192"/>
+  <path class="x x1" pathLength="1" d="M820,254 H920 Q928,254 928,246 V172"/>
+  <path class="x x2" pathLength="1" d="M988,110 H1088 Q1096,110 1096,118 V192"/>
+  <g fill="#a4b2c0">
+    <path class="a0" d="M760,200 l-5,-9 h10z"/>
+    <path class="a1" d="M928,164 l-5,9 h10z"/>
+    <path class="a2" d="M1096,200 l-5,-9 h10z"/>
+  </g>
+  <g fill="#22A6EF">
+    <path class="ax r1" d="M760,200 l-5,-9 h10z"/>
+    <path class="ax r2" d="M928,164 l-5,9 h10z"/>
+    <path class="ax r3" d="M1096,200 l-5,-9 h10z"/>
+  </g>
+  <g class="a1">
+    <rect x="832" y="244" width="76" height="20" rx="10" fill="#fff" stroke="#d8dee4"/>
+    <text class="f" x="870" y="258" font-size="11" fill="#6b7b8b" text-anchor="middle">add to cart</text>
+  </g>
+
+  <g class="dot" opacity="0">
+    <circle r="9" fill="#22A6EF" opacity=".22"/><circle r="4.5" fill="#22A6EF" stroke="#fff" stroke-width="2"/>
+    <animate attributeName="opacity" dur="9s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.4;.5"/>
+    <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;.4;.5;1" path="M652,110 H752 Q760,110 760,118 V192"/>
+  </g>
+  <g class="dot" opacity="0">
+    <circle r="9" fill="#22A6EF" opacity=".22"/><circle r="4.5" fill="#22A6EF" stroke="#fff" stroke-width="2"/>
+    <animate attributeName="opacity" dur="9s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.5111;.6111"/>
+    <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;.5111;.6111;1" path="M820,254 H920 Q928,254 928,246 V172"/>
+  </g>
+  <g class="dot" opacity="0">
+    <circle r="9" fill="#22A6EF" opacity=".22"/><circle r="4.5" fill="#22A6EF" stroke="#fff" stroke-width="2"/>
+    <animate attributeName="opacity" dur="9s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.6222;.7222"/>
+    <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;.6222;.7222;1" path="M988,110 H1088 Q1096,110 1096,118 V192"/>
+  </g>
+</g>
+</svg>

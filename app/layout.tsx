@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { analytics } from "@/lib/env";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,6 +39,8 @@ export const metadata: Metadata = {
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    // Safari's pinned tab icon (a one-colour SVG), from the earlier app.
+    other: [{ rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#465BFF" }],
   },
   appleWebApp: {
     capable: true,
@@ -49,6 +52,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#465BFF",
 };
+
+const { rybbit, gaId } = analytics();
 
 export default function RootLayout({
   children,
@@ -62,23 +67,18 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         {children}
-        <script
-          async
-          defer
-          src="https://dokploy-rybbit-059dcf.automatio.run/api/script.js"
-          data-site-id="3"
-          data-api-key="rb_9893c5768820f59953ab49af2782f465"
-        />
-        {/* Google Analytics 4 — property WireFlow.co - GA4 (365729338) */}
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-GBPQX24QS2"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: "window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', 'G-GBPQX24QS2');",
-          }}
-        />
+        {/* Analytics load only when configured (lib/env.ts, README "Environment variables"). */}
+        {rybbit && <script async defer src={rybbit.src} data-site-id={rybbit.siteId} />}
+        {gaId && (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', '${gaId}');`,
+              }}
+            />
+          </>
+        )}
       </body>
     </html>
   );

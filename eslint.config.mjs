@@ -12,6 +12,16 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The teammate's agent tooling (vendored skills and scripts), not app code.
+    ".agents/**",
+    ".box-internal/**",
+    // Test output.
+    "playwright-report/**",
+    "test-results/**",
+    // Build output: the OpenNext Worker, wrangler's local state, the offline worker.
+    ".open-next/**",
+    ".wrangler/**",
+    "public/sw.js",
   ]),
 ]);
 

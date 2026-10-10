@@ -27,14 +27,10 @@ body {
   opacity: 1;
 }
 
-.react-flow__edge-path {
-  stroke: #a3a8c3;
-  stroke-width: 2;
-}
-
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke: var(--color-wire-blue);
-}
+/* Connections (#a3a8c3 at 2px, the wire blue when selected) are styled in
+   components/editor/editor.css, through React Flow's own CSS variables: rules
+   for .react-flow__edge-path here lose to React Flow's stylesheet, which the
+   editor loads after this file with the same selectors. */
 
 .react-flow__controls-button {
   border: none;

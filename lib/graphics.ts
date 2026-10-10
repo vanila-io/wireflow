@@ -27,3 +27,7 @@ export function graphicsByCategory(category: string): Graphic[] {
 export function graphicById(id: string): Graphic | undefined {
   return graphics.find((g) => g.id === id);
 }
+
+export function graphicBySrc(src: string): Graphic | undefined {
+  return graphics.find((g) => g.src === src);
+}

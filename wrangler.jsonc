@@ -1,0 +1,55 @@
+// Cloudflare Worker for the OpenNext build (`opennextjs-cloudflare build`
+// writes .open-next/). See README "Deploy" and https://opennext.js.org/cloudflare.
+//
+// The top level is what `npm run preview` (local workerd) and a plain
+// `wrangler deploy` use. It is the STAGING Worker on purpose, so a deploy
+// without `--env` can never replace production.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wireflow-staging",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-20",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Serve on <worker>.<subdomain>.workers.dev, without public per-version URLs.
+  "workers_dev": true,
+  "preview_urls": false,
+  // ISR for "/" (the sponsors list revalidates hourly), as in OpenNext's
+  // template: an R2 incremental cache, and a self-reference for the memory
+  // queue that revalidates pages. `npm run preview` simulates both locally.
+  "r2_buckets": [
+    // OWNER TODO before a staging deploy: create the bucket
+    // (wrangler r2 bucket create wireflow-staging-opennext-cache).
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "wireflow-staging-opennext-cache" }
+    // lib/storage.js and /uploads/[...path] read and write uploads through an
+    // R2 binding named STORAGE (plus an optional SITE_PREFIX var). Nothing in the
+    // app uploads today, and the bucket production uses is unknown, so it is not
+    // bound here; without it /uploads/* answers 404. OWNER TODO: if uploads are
+    // needed, add { "binding": "STORAGE", "bucket_name": "<bucket>" }.
+  ],
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "wireflow-staging" }],
+  "env": {
+    // npm run deploy:staging (opennextjs-cloudflare deploy --env staging)
+    "staging": {
+      "name": "wireflow-staging",
+      "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "wireflow-staging-opennext-cache" }],
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "wireflow-staging" }]
+    },
+    // OWNER TODO before the first production deploy. The Worker that serves
+    // wireflow.co today was not created from this repo; its name, routes, the
+    // /blog/* route to Ghost, its R2 buckets (incremental cache, and STORAGE if
+    // uploads are used) and its vars could not be seen from outside. Fill them in
+    // from the Cloudflare dashboard. The placeholders below are not valid names,
+    // so a deploy to this environment fails until then. Deploy only with an
+    // explicit `opennextjs-cloudflare deploy --env production`.
+    "production": {
+      "name": "OWNER-TODO-production-worker-name",
+      "workers_dev": false,
+      "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "OWNER-TODO-production-cache-bucket" }],
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "OWNER-TODO-production-worker-name" }]
+    }
+  }
+}
