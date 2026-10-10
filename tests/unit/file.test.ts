@@ -171,9 +171,11 @@ describe("files from the earlier gg-editor app (G6)", () => {
   };
 
   it("maps every old template key to one of the graphics, one to one", () => {
+    // The earlier app's 102 templates; the ones added since (#69, #86) have no old key.
     const ids = Object.values(legacyTemplates);
-    expect(new Set(ids).size).toBe(graphics.length);
-    expect(new Set(ids)).toEqual(new Set(graphics.map((g) => g.id)));
+    expect(ids).toHaveLength(102);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.filter((id) => !graphics.some((g) => g.id === id))).toEqual([]);
   });
 
   it("opens #109's version 1 files, scaling the layout and keeping their groups", () => {

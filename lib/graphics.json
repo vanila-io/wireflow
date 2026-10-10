@@ -712,5 +712,166 @@
   "category": "socials",
   "categoryLabel": "Socials",
   "src": "/graphics/socials/users.svg"
+ },
+ {
+  "id": "flow-yes-no",
+  "label": "Yes / No Choice",
+  "category": "flow",
+  "categoryLabel": "Flow",
+  "src": "/graphics/flow/yes-no.svg"
+ },
+ {
+  "id": "flow-three-way-choice",
+  "label": "Three-Way Choice",
+  "category": "flow",
+  "categoryLabel": "Flow",
+  "src": "/graphics/flow/three-way-choice.svg"
+ },
+ {
+  "id": "flow-email-sent",
+  "label": "Email Sent",
+  "category": "flow",
+  "categoryLabel": "Flow",
+  "src": "/graphics/flow/email-sent.svg"
+ },
+ {
+  "id": "flow-email-code",
+  "label": "Email Code",
+  "category": "flow",
+  "categoryLabel": "Flow",
+  "src": "/graphics/flow/email-code.svg"
+ },
+ {
+  "id": "flow-email-confirmed",
+  "label": "Email Confirmed",
+  "category": "flow",
+  "categoryLabel": "Flow",
+  "src": "/graphics/flow/email-confirmed.svg"
+ },
+ {
+  "id": "flow-wizard-step-1",
+  "label": "Wizard Step 1",
+  "category": "flow",
+  "categoryLabel": "Flow",
+  "src": "/graphics/flow/wizard-step-1.svg"
+ },
+ {
+  "id": "flow-wizard-step-2",
+  "label": "Wizard Step 2",
+  "category": "flow",
+  "categoryLabel": "Flow",
+  "src": "/graphics/flow/wizard-step-2.svg"
+ },
+ {
+  "id": "flow-wizard-step-3",
+  "label": "Wizard Step 3",
+  "category": "flow",
+  "categoryLabel": "Flow",
+  "src": "/graphics/flow/wizard-step-3.svg"
+ },
+ {
+  "id": "mobile-onboarding",
+  "label": "Onboarding",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/onboarding.svg"
+ },
+ {
+  "id": "mobile-sign-in",
+  "label": "Sign In",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/sign-in.svg"
+ },
+ {
+  "id": "mobile-sign-up",
+  "label": "Sign Up",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/sign-up.svg"
+ },
+ {
+  "id": "mobile-home",
+  "label": "Home Feed",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/home.svg"
+ },
+ {
+  "id": "mobile-list",
+  "label": "List",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/list.svg"
+ },
+ {
+  "id": "mobile-detail",
+  "label": "Detail",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/detail.svg"
+ },
+ {
+  "id": "mobile-search",
+  "label": "Search",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/search.svg"
+ },
+ {
+  "id": "mobile-tab-bar",
+  "label": "Tab Bar",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/tab-bar.svg"
+ },
+ {
+  "id": "mobile-menu",
+  "label": "Menu",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/menu.svg"
+ },
+ {
+  "id": "mobile-profile",
+  "label": "Profile",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/profile.svg"
+ },
+ {
+  "id": "mobile-chat",
+  "label": "Chat",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/chat.svg"
+ },
+ {
+  "id": "mobile-settings",
+  "label": "Settings",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/settings.svg"
+ },
+ {
+  "id": "mobile-cart",
+  "label": "Cart",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/cart.svg"
+ },
+ {
+  "id": "mobile-checkout",
+  "label": "Checkout",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/checkout.svg"
+ },
+ {
+  "id": "mobile-empty-state",
+  "label": "Empty State",
+  "category": "mobile",
+  "categoryLabel": "Mobile",
+  "src": "/graphics/mobile/empty-state.svg"
  }
 ]

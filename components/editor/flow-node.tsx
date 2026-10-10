@@ -2,7 +2,7 @@
 
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
-import { CARD_WIDTH, cardSize, type CardData } from "@/lib/diagram/model";
+import { cardSize, cardWidth, type CardData } from "@/lib/diagram/model";
 import { useStore } from "./store-context";
 
 // The same fields as before; lib/diagram/model.ts defines them for the whole editor.
@@ -10,8 +10,8 @@ export type FlowNodeData = CardData;
 
 // The graphic's drawn size inside the card's 1px border. Known before the image
 // loads (width/height set its aspect ratio), so the card and its handles never
-// move when it arrives.
-const IMG_WIDTH = CARD_WIDTH - 2;
+// move when it arrives. A portrait (Mobile) template's card is narrower.
+const imgWidth = (data: CardData) => cardWidth(data) - 2;
 const imgHeight = (data: CardData) =>
   Math.round(cardSize({ graphicId: data.graphicId, ratio: data.ratio, showHeader: false }).height - 2);
 
@@ -53,7 +53,7 @@ export default function FlowNode({ id, data, selected }: NodeProps) {
   return (
     // `selected` gives the card the blue outline editor.css has always defined for
     // .flow-node.selected (#82: it was never applied, so a selection didn't show).
-    <div className={`flow-node group relative ${selected ? "selected" : ""}`}>
+    <div className={`flow-node group relative ${selected ? "selected" : ""}`} style={{ width: cardWidth(d) }}>
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />
 
@@ -96,7 +96,7 @@ export default function FlowNode({ id, data, selected }: NodeProps) {
         alt={d.label}
         draggable={false}
         className="flow-node-img"
-        width={IMG_WIDTH}
+        width={imgWidth(d)}
         height={imgHeight(d)}
       />
     </div>

@@ -4,6 +4,9 @@ import { catalogText } from "./catalog";
 
 const tall = Math.round(cardSize({ graphicId: "article-article-1" }).height);
 const short = Math.round(cardSize({ graphicId: "article-article-1", showHeader: false }).height);
+// The Mobile templates are portrait cards (#69).
+const phone = cardSize({ graphicId: "mobile-sign-in" });
+const phoneShort = Math.round(cardSize({ graphicId: "mobile-sign-in", showHeader: false }).height);
 
 // Stable across the whole session so the provider can cache it. Nothing
 // per-session (time, ids, the diagram) belongs in here; the diagram travels
@@ -23,6 +26,7 @@ How to work:
 
 Layout:
 - Screens are ${CARD_WIDTH} px wide and about ${tall} px tall (about ${short} px without the header); x and y are their centres in canvas pixels. Keep new screens inside the view when they fit.
+- The "Mobile" templates are phone screens, drawn portrait: ${phone.width} px wide and about ${Math.round(phone.height)} px tall (about ${phoneShort} px without the header). Use them for a phone app and the other templates for a website or desktop app; don't mix the two in one flow unless the user asks. Put the next mobile screen about 340 px below the one before it, and mobile alternatives about 200 px apart.
 - Notes are ${NOTE_SIZE.width} x ${NOTE_SIZE.height} px unless you give a size; make a note taller for longer text (about 18 px per line of about 30 characters at the default width). Put a note beside the screen it is about, not on top of it.
 - Arrows always leave a screen at its bottom edge and enter the next screen at its top edge, so a flow reads top to bottom: put each next screen about 300 px below the one before it, starting near the top-left of the view. When a column reaches the bottom of the view, continue in a new column about 300 px to the right. Put branches and alternatives side by side, about 300 px apart.
 - When adding to an existing diagram, keep clear of existing screens; place new screens next to the ones they connect to.

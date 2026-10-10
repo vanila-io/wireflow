@@ -16,6 +16,7 @@
 }
 
 .flow-node {
+  /* flow-node.tsx sets the width from the template (narrower for a portrait one) */
   width: 220px;
   border-radius: 6px;
   background: #fff;
