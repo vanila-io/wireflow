@@ -5,12 +5,15 @@
 // renames it too. Dragging the frame moves everything in it.
 import type { NodeProps } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
+import { formatHours, groupTotal } from "@/lib/diagram/estimate";
 import type { GroupNode as GroupNodeType } from "@/lib/diagram/model";
 import { useStore, useStoreState } from "./store-context";
 
 export default function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
   const store = useStore();
-  const { dropTarget } = useStoreState(store);
+  const { dropTarget, nodes } = useStoreState(store);
+  // The hours of the cards inside (#84), once any of them has an estimate.
+  const total = groupTotal(nodes, id);
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const ended = useRef(false);
@@ -58,6 +61,9 @@ export default function GroupNode({ id, data, selected }: NodeProps<GroupNodeTyp
           }}
         >
           {data.label}
+          {total.estimated > 0 && (
+            <span className="font-semibold normal-case tracking-normal"> &middot; {formatHours(total.hours)}</span>
+          )}
         </button>
       )}
     </div>

@@ -7,6 +7,8 @@
 // - a card shows a catalog graphic, and its image URL is the catalog's, or the
 //   user's own image as a JPEG, PNG or WebP data URL of at most MAX_IMAGE_CHARS;
 // - a note has text (at most MAX_NOTE_TEXT characters) and a size within NOTE_BOUNDS;
+// - a card's estimate is 0 to MAX_ESTIMATE hours; the settings hold an hourly
+//   rate (0 to MAX_RATE) and one of CURRENCIES;
 // - a parentId names an existing group, parent chains have no loops, and
 //   parents come before their children (React Flow requires it);
 // - every edge connects two existing cards or notes (no loose or dangling edges), and
@@ -24,8 +26,11 @@ import {
   EDGE_SHAPES,
   MAX_EDGE_WIDTH,
   MIN_EDGE_WIDTH,
+  CURRENCIES,
   IMAGE_SRC_RE,
   imageRatio,
+  MAX_ESTIMATE,
+  MAX_RATE,
   MAX_IMAGE_CHARS,
   MAX_NOTE_TEXT,
   NOTE_BOUNDS,
@@ -33,7 +38,7 @@ import {
   NOTE_SIZE,
   isConnectable,
   isGroup,
-  type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type GroupNode, type NoteNode } from "./model";
+  type CardNode, type Diagram, type DiagramEdge, type DiagramNode, type DiagramSettings, type GroupNode, type NoteNode } from "./model";
 
 // `parents` (only when there were any): items taken out of a group that doesn't
 // exist or contains itself.
@@ -50,6 +55,17 @@ export const COLOR_RE = /^#[0-9a-f]{6}$/;
 
 // JSON.parse reviver for anything that came from outside the app.
 export const dropProto = (key: string, value: unknown) => (key === "__proto__" ? undefined : value);
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const estimate = (v: unknown) => (isNum(v) && v >= 0 && v <= MAX_ESTIMATE ? { estimate: round2(v) } : {});
+
+function settings(v: unknown): DiagramSettings | undefined {
+  if (!isObject(v)) return undefined;
+  const rate = isNum(v.hourlyRate) && v.hourlyRate >= 0 && v.hourlyRate <= MAX_RATE ? round2(v.hourlyRate) : undefined;
+  const currency = (CURRENCIES as readonly unknown[]).includes(v.currency) ? (v.currency as string) : undefined;
+  const s = { ...(rate !== undefined && { hourlyRate: rate }), ...(currency && { currency }) };
+  return Object.keys(s).length ? s : undefined;
+}
 
 function position(v: unknown) {
   return isObject(v) && isNum(v.x) && isNum(v.y) ? { x: v.x, y: v.y } : undefined;
@@ -74,6 +90,7 @@ function card(raw: Obj, id: string): CardNode | undefined {
       label: text(data.label, MAX_LABEL) ?? graphic.label,
       ...(headerText !== undefined && { headerText }),
       ...(typeof data.showHeader === "boolean" && { showHeader: data.showHeader }),
+      ...estimate(data.estimate),
     },
   };
 }
@@ -96,6 +113,7 @@ function imageCard(raw: Obj, id: string, pos: { x: number; y: number }, data: Ob
       ...(headerText !== undefined && { headerText }),
       ...(typeof data.showHeader === "boolean" && { showHeader: data.showHeader }),
       ratio: imageRatio(isNum(data.ratio) ? data.ratio : undefined),
+      ...estimate(data.estimate),
     },
   };
 }
@@ -224,7 +242,8 @@ export function enforceRules(input: unknown): { diagram: Diagram; dropped: Dropp
     edges.push(e);
   }
 
-  return { diagram: { nodes: ordered, edges }, dropped };
+  const s = isObject(input) ? settings(input.settings) : undefined;
+  return { diagram: { nodes: ordered, edges, ...(s && { settings: s }) }, dropped };
 }
 
 // A diagram as stored: only what the rules keep.
@@ -234,5 +253,5 @@ export const serialize = (diagram: Diagram) => JSON.stringify(enforceRules(diagr
 // every group framed around its members (a hand-made file may give groups no size).
 export function enforceRulesOnLoad(input: unknown): { diagram: Diagram; dropped: Dropped } {
   const { diagram, dropped } = enforceRules(input);
-  return { diagram: { nodes: fitGroups(diagram.nodes), edges: diagram.edges }, dropped };
+  return { diagram: { ...diagram, nodes: fitGroups(diagram.nodes) }, dropped };
 }

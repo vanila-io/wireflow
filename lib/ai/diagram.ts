@@ -13,6 +13,7 @@ import {
   isNote,
   makeCard,
   makeNote,
+  MAX_ESTIMATE,
   MAX_NOTE_TEXT,
   NOTE_BOUNDS,
   NOTE_SIZE,
@@ -44,6 +45,10 @@ export function snapshot({ data, selected = [], view }: { data: Diagram; selecte
   return {
     selected,
     ...(view ? { view } : {}),
+    ...(data.settings?.hourlyRate !== undefined && {
+      hourlyRate: data.settings.hourlyRate,
+      currency: data.settings.currency ?? "USD",
+    }),
     screens: data.nodes.filter(isCard).map((n) => {
       const b = boxes.get(n.id)!;
       return {
@@ -54,6 +59,7 @@ export function snapshot({ data, selected = [], view }: { data: Diagram; selecte
         y: round(b.y + b.height / 2),
         header: n.data.showHeader !== false,
         group: n.parentId ?? null,
+        ...(n.data.estimate !== undefined && { estimate: n.data.estimate }),
       };
     }),
     connections: data.edges.map((e) => ({
@@ -135,6 +141,10 @@ export const EDIT_DIAGRAM_TOOL = {
                 x: num("New centre x."),
                 y: num("New centre y."),
                 header: { type: "boolean", description: "Show or hide the label header." },
+                estimate: {
+                  type: ["number", "null"],
+                  description: `Hours to build the screen (0 to ${MAX_ESTIMATE}); null removes it. Only when the user asks to change estimates.`,
+                },
               },
               ["id"]
             ),
@@ -216,7 +226,16 @@ export const EDIT_DIAGRAM_TOOL = {
 export type Action =
   | { kind: "clear" }
   | { kind: "add_screen"; id: string; template: string; label: string; x: number; y: number; header: boolean }
-  | { kind: "update_screen"; id: string; template?: string; label?: string; x?: number; y?: number; header?: boolean }
+  | {
+      kind: "update_screen";
+      id: string;
+      template?: string;
+      label?: string;
+      x?: number;
+      y?: number;
+      header?: boolean;
+      estimate?: number | null;
+    }
   | { kind: "add_note"; id: string; text: string; x: number; y: number; width: number; height: number }
   | { kind: "update_note"; id: string; text?: string; x?: number; y?: number; width?: number; height?: number }
   | { kind: "connect"; id: string; from: string; to: string; label?: string }
@@ -255,7 +274,7 @@ const has = (o: Record<string, unknown>, k: string) => o[k] !== undefined && o[k
 const ALLOWED: Record<string, string[]> = {
   clear: [],
   add_screen: ["id", "template", "label", "x", "y", "header"],
-  update_screen: ["id", "template", "label", "x", "y", "header"],
+  update_screen: ["id", "template", "label", "x", "y", "header", "estimate"],
   add_note: ["id", "text", "x", "y", "width", "height"],
   update_note: ["id", "text", "x", "y", "width", "height"],
   connect: ["id", "from", "to", "label"],
@@ -433,6 +452,13 @@ export function planOps(input: unknown, data: Diagram): Plan {
         if (has(o, "x")) action.x = screen.x = o.x as number;
         if (has(o, "y")) action.y = screen.y = o.y as number;
         if (has(o, "header")) action.header = screen.header = o.header as boolean;
+        if (o.estimate !== undefined) {
+          const e = o.estimate;
+          if (e !== null && !(typeof e === "number" && Number.isFinite(e) && e >= 0 && e <= MAX_ESTIMATE)) {
+            return fail(i, name, `estimate must be a number of hours from 0 to ${MAX_ESTIMATE}, or null`);
+          }
+          action.estimate = e;
+        }
         if (Object.keys(action).length === 2) return fail(i, name, "nothing to update");
         if (has(o, "template")) delete screen.ratio;
         screen.size = sizeFor(screen.template, screen.header, screen.ratio);
@@ -603,6 +629,8 @@ function applyAction(d: Diagram, a: Action): Diagram {
         }
         if (a.label !== undefined) data.headerText = a.label || data.label;
         if (a.header !== undefined) data.showHeader = a.header;
+        if (a.estimate === null) delete data.estimate;
+        else if (a.estimate !== undefined) data.estimate = a.estimate;
         return { ...n, data };
       });
       const centre = { x: a.x ?? before.x + before.width / 2, y: a.y ?? before.y + before.height / 2 };

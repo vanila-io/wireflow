@@ -222,6 +222,20 @@ export function setHeaderText(d: Diagram, id: string, value: string): Diagram {
   };
 }
 
+// A card's estimate in hours (#84); null removes it. The rules check the value.
+export function setEstimate(d: Diagram, id: string, hours: number | null): Diagram {
+  return {
+    nodes: d.nodes.map((n): DiagramNode => {
+      if (n.id !== id || !isCard(n)) return n;
+      const data = { ...n.data };
+      if (hours === null) delete data.estimate;
+      else data.estimate = hours;
+      return { ...n, data };
+    }),
+    edges: d.edges,
+  };
+}
+
 // A note's text, as typed (line breaks kept; only the end is trimmed of blank lines).
 export function setNoteText(d: Diagram, id: string, value: string): Diagram {
   const text = value.replace(/\s+$/, "").slice(0, MAX_NOTE_TEXT);

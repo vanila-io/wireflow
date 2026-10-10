@@ -3,7 +3,7 @@
 //   {
 //     "format": "wireflow",
 //     "version": 2,
-//     "diagram": { "nodes": [...], "edges": [...] }
+//     "diagram": { "nodes": [...], "edges": [...], "settings": {...} }
 //   }
 //
 // `diagram` is the stored diagram (see model.ts): cards, notes, groups (React
@@ -24,7 +24,8 @@ import { isCard, isOwnImage, OWN_IMAGE, type Diagram } from "./model";
 import { dropProto, enforceRules, enforceRulesOnLoad, type Dropped } from "./rules";
 
 export const FILE_FORMAT = "wireflow";
-// 3: notes (#83) and the user's own images (#86). Version 2 files open unchanged.
+// 3: notes (#83), the user's own images (#86), estimates and settings (#84).
+// Version 2 files open unchanged.
 export const FILE_VERSION = 3;
 export const FILE_NAME = "wireflow.json";
 // Anything larger can't be a hand-made diagram and could hang the tab.
@@ -35,14 +36,18 @@ export const MAX_EDGES = 5000;
 export class DiagramFileError extends Error {}
 
 export function serializeFile(diagram: Diagram): string {
-  const { nodes, edges } = enforceRules(diagram).diagram;
+  const { nodes, edges, settings } = enforceRules(diagram).diagram;
   const fileNodes = nodes.map((n) => {
     if (!isCard(n) || isOwnImage(n.data)) return n;
     const data: Partial<typeof n.data> = { ...n.data };
     delete data.src;
     return { ...n, data };
   });
-  return JSON.stringify({ format: FILE_FORMAT, version: FILE_VERSION, diagram: { nodes: fileNodes, edges } }, null, 2);
+  return JSON.stringify(
+    { format: FILE_FORMAT, version: FILE_VERSION, diagram: { nodes: fileNodes, edges, ...(settings && { settings }) } },
+    null,
+    2
+  );
 }
 
 type Obj = Record<string, unknown>;
@@ -109,6 +114,10 @@ function parseCurrent(diagram: Obj): Obj {
         ? `The card "${n.id}" has an image Wireflow can't show (it takes JPEG, PNG or WebP data, up to about 500 KB).`
         : `It uses a screen template this version of Wireflow doesn't have: "${data.graphicId}".`
     );
+    check(
+      data.estimate === undefined || (typeof data.estimate === "number" && Number.isFinite(data.estimate)),
+      `The card "${n.id}" has an estimate that isn't a number of hours.`
+    );
     for (const key of ["label", "headerText"]) {
       check(
         data[key] === undefined || typeof data[key] === "string",
@@ -116,7 +125,8 @@ function parseCurrent(diagram: Obj): Obj {
       );
     }
   }
-  return { nodes, edges };
+  // The settings are checked by the rules, like everything else.
+  return { nodes, edges, settings: diagram.settings };
 }
 
 function parseG6(diagram: Obj): G6Diagram {

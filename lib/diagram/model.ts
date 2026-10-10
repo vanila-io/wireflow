@@ -12,8 +12,10 @@
 //
 // Version 3 adds note nodes (#83): free text in a resizable box that connects
 // like a card; and cards that show the user's own image (#86, #69), stored in
-// the card as a data URL. An editor that knows only version 2 would drop them,
-// so it sees version 3 data as newer and doesn't save over it (see readDiagram).
+// the card as a data URL; an estimate in hours on cards (#84), and project
+// settings (the hourly rate that turns hours into cost). An editor that knows
+// only version 2 would drop them, so it sees version 3 data as newer and
+// doesn't save over it (see readDiagram).
 import type { Edge, Node } from "@xyflow/react";
 import graphicSizes from "@/lib/graphic-sizes.json";
 import { graphicById, type Graphic } from "@/lib/graphics";
@@ -31,6 +33,8 @@ export type CardData = {
   headerText?: string;
   showHeader?: boolean;
   ratio?: number;
+  /** Hours to make this screen (#84); none if not estimated. */
+  estimate?: number;
 };
 export type GroupData = { label: string };
 export type NoteData = { text: string };
@@ -41,7 +45,16 @@ export type NoteNode = Node<NoteData, "note">;
 export type DiagramNode = CardNode | GroupNode | NoteNode;
 export type DiagramEdge = Edge;
 
-export type Diagram = { nodes: DiagramNode[]; edges: DiagramEdge[] };
+// Project settings, stored with the diagram: the hourly rate (#84) in a currency.
+export type DiagramSettings = { hourlyRate?: number; currency?: string };
+export type Diagram = { nodes: DiagramNode[]; edges: DiagramEdge[]; settings?: DiagramSettings };
+
+// Estimates (#84): hours per card, 0 to MAX_ESTIMATE, to two decimals; an hourly
+// rate up to MAX_RATE in one of CURRENCIES (USD when none is set).
+export const MAX_ESTIMATE = 10_000;
+export const MAX_RATE = 1_000_000;
+export const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "INR", "JPY", "CHF", "BRL", "PLN"] as const;
+export const DEFAULT_CURRENCY = "USD";
 
 export const isCard = (node: Node): node is CardNode => node.type === "flow";
 export const isGroup = (node: Node): node is GroupNode => node.type === "group";

@@ -27,6 +27,7 @@ import {
   type Diagram,
   type DiagramEdge,
   type DiagramNode,
+  type DiagramSettings,
 } from "./model";
 import {
   canGroup,
@@ -39,6 +40,7 @@ import {
   setGroupLabel,
   setHeaders,
   setHeaderText,
+  setEstimate,
   setNoteText,
   setParents,
   toggleHeaders,
@@ -52,6 +54,8 @@ import { enforceRules, serialize } from "./rules";
 export type StoreState = {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
+  /** Project settings stored with the diagram (the hourly rate, #84). */
+  settings?: DiagramSettings;
   canUndo: boolean;
   canRedo: boolean;
   /** The last save failed (storage full or blocked); the diagram is only in memory. */
@@ -88,13 +92,13 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
   let pastes = 0;
   const emit = () => listeners.forEach((l) => l());
 
-  const live = (): Diagram => ({ nodes: state.nodes, edges: state.edges });
+  const live = (): Diagram => ({ nodes: state.nodes, edges: state.edges, ...(state.settings && { settings: state.settings }) });
   /** The current diagram as stored (through the rules). */
   const current = () => enforceRules(live()).diagram;
 
   // The save boundary. `kind` labels the undo step this change makes. Returns
   // the id of the step it recorded, or null if the stored diagram didn't change.
-  function commit(next: Partial<Pick<StoreState, "nodes" | "edges" | "dropTarget">>, kind?: string): number | null {
+  function commit(next: Partial<Pick<StoreState, "nodes" | "edges" | "dropTarget" | "settings">>, kind?: string): number | null {
     state = { ...state, ...next };
     let recorded: number | null = null;
     if (!state.nodes.some((n) => n.dragging || n.resizing)) {
@@ -128,9 +132,11 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     if (next === history) return;
     history = next;
     state.saveFailed = !save(history.present.json);
+    const d = JSON.parse(history.present.json) as Diagram;
     state = {
       ...state,
-      ...show(JSON.parse(history.present.json)),
+      ...show(d),
+      settings: d.settings,
       canUndo: canUndo(history),
       canRedo: canRedo(history),
     };
@@ -158,9 +164,17 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     return selected.length === 1 && isGroup(selected[0]) ? selected[0].id : null;
   };
 
-  /** Apply a batch of changes as one undo step. Returns the step's id (null: nothing changed). */
-  const apply = (change: (d: Diagram) => Diagram, { kind, select }: { kind?: string; select?: string[] } = {}) =>
-    commit(show(enforceRules(change(current())).diagram, select), kind);
+  /**
+   * Apply a batch of changes as one undo step. Returns the step's id (null:
+   * nothing changed). Operations that only change nodes and edges return
+   * {nodes, edges}: the settings stay as they were.
+   */
+  const apply = (change: (d: Diagram) => Diagram, { kind, select }: { kind?: string; select?: string[] } = {}) => {
+    const before = current();
+    const changed = change(before);
+    const d = enforceRules("settings" in changed ? changed : { ...changed, settings: before.settings }).diagram;
+    return commit({ ...show(d, select), settings: d.settings }, kind);
+  };
 
   return {
     subscribe(listener: () => void) {
@@ -299,6 +313,14 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
     setHeaderText(id: string, value: string) {
       apply((d) => setHeaderText(d, id, value));
     },
+    /** A card's estimate in hours (null: none). */
+    setEstimate(id: string, hours: number | null) {
+      apply((d) => setEstimate(d, id, hours));
+    },
+    /** Change project settings (undefined values remove them): one undo step. */
+    setSettings(patch: DiagramSettings) {
+      apply((d) => ({ ...d, settings: { ...d.settings, ...patch } }));
+    },
     /** An edge's colour (null or the default colour: none of its own), label, shape and width. Unchanged values add no step. */
     updateEdge(id: string, patch: EdgePatch) {
       const color = patch.color === DEFAULT_EDGE_COLOR ? null : patch.color;
@@ -338,7 +360,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
         if (!save(json)) return false;
         history = record(history, json, kind);
       }
-      state = { ...state, ...show(d, []), saveFailed: false, canUndo: canUndo(history), canRedo: canRedo(history) };
+      state = { ...state, ...show(d, []), settings: d.settings, saveFailed: false, canUndo: canUndo(history), canRedo: canRedo(history) };
       emit();
       return true;
     },
@@ -351,7 +373,7 @@ export function createDiagramStore({ initial, save, history: restored }: StoreOp
       const json = serialize(d);
       if (json === history.present.json) return;
       history = record(history, json, "sync");
-      state = { ...state, ...show(d), dropTarget: null, canUndo: canUndo(history), canRedo: canRedo(history) };
+      state = { ...state, ...show(d), settings: d.settings, dropTarget: null, canUndo: canUndo(history), canRedo: canRedo(history) };
       emit();
     },
     undo: () => travel(undo),

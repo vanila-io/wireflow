@@ -19,11 +19,13 @@ import { cardSize, CARD_WIDTH, isCard, isGroup, isNote, NOTE_SIZE, OWN_IMAGE, ST
 import type { Dropped } from "@/lib/diagram/rules";
 import { createDiagramStore, type DiagramStore } from "@/lib/diagram/store";
 import { readDiagram, readHistory, writeDiagram, writeHistory } from "@/lib/diagram/storage";
+import { formatCost, formatHours, projectTotal } from "@/lib/diagram/estimate";
 import {
   BringToFront,
   ClipboardPaste,
   Copy,
   Delete,
+  Calculator,
   Ellipsis,
   FolderOpen,
   Group,
@@ -37,6 +39,7 @@ import { LOAD_FAILED, PanelBoundary, useAiPanel } from "@/components/ai/use-ai-p
 import CardPanel from "./card-panel";
 import ConfirmDialog from "./confirm-dialog";
 import EdgePanel from "./edge-panel";
+import EstimatePanel from "./estimate-panel";
 import FlowNodeComp from "./flow-node";
 import GraphicsPanel, { DRAG_ADD, DRAG_CARD, type Addable } from "./graphics-panel";
 import GroupNodeComp from "./group-node";
@@ -213,7 +216,15 @@ const nodeTypes = { flow: FlowNodeComp, group: GroupNodeComp, note: NoteNodeComp
 function EditorInner({ loaded }: { loaded: Start }) {
   const { store, notices: initialNotices, hadDiagram, lock } = loaded;
   const [notices, setNotices] = useState(initialNotices);
-  const { nodes, edges, saveFailed } = useStoreState(store);
+  const { nodes, edges, settings, saveFailed } = useStoreState(store);
+  // The project's estimate (#84): shown only once a card has hours.
+  const estimate = projectTotal({ nodes });
+  const rate = settings?.hourlyRate;
+  const estimateText =
+    estimate.estimated > 0
+      ? `${formatHours(estimate.hours)}${rate !== undefined ? ` · ${formatCost(estimate.hours * rate, settings?.currency)}` : ""}`
+      : null;
+  const [estimateOpen, setEstimateOpen] = useState(false);
   // The connection panel shows for exactly one selected edge and nothing else selected.
   const selectedEdges = edges.filter((e) => e.selected);
   const selectedEdge = selectedEdges.length === 1 && !nodes.some((n) => n.selected) ? selectedEdges[0] : null;
@@ -225,6 +236,9 @@ function EditorInner({ loaded }: { loaded: Start }) {
     selectedNodes.length === 1 && isCard(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
   const selectedNote =
     selectedNodes.length === 1 && isNote(selectedNodes[0]) && !selectedEdges.length ? selectedNodes[0] : null;
+  // The estimate panel, opened from the header, gives way to a selection's panel.
+  const showEstimate =
+    estimateOpen && !!estimateText && !(selectedEdge || selectedGroup || selectedCard || selectedNote);
   const canGroup = !!store.groupable();
   const canUngroup = !!store.selectedGroup();
   const { hasClipboard } = useStoreState(store);
@@ -619,6 +633,18 @@ function EditorInner({ loaded }: { loaded: Start }) {
           <span className="text-xs text-ink-soft">
             {nodes.length} cards &middot; {edges.length} connections
           </span>
+          {estimateText && (
+            <button
+              onClick={() => setEstimateOpen((open) => !open)}
+              aria-expanded={estimateOpen}
+              title="The project's estimate, per group"
+              className="-ml-2 hidden items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-wire-blue transition hover:bg-wire-lavender sm:flex"
+            >
+              <Calculator size={13} aria-hidden />
+              <span className="sr-only">Estimate: </span>
+              {estimateText}
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-3 max-sm:gap-2">
           <span
@@ -693,6 +719,15 @@ function EditorInner({ loaded }: { loaded: Start }) {
                   onSelect: () => void ai.toggle(),
                 },
                 { label: "Open file", icon: <FolderOpen size={14} aria-hidden />, onSelect: chooseFile },
+                ...(estimateText
+                  ? [
+                      {
+                        label: `Estimate: ${estimateText}`,
+                        icon: <Calculator size={14} aria-hidden />,
+                        onSelect: () => setEstimateOpen(true),
+                      },
+                    ]
+                  : []),
               ]}
             />
           </span>
@@ -860,7 +895,8 @@ function EditorInner({ loaded }: { loaded: Start }) {
           {selectedGroup && isGroup(selectedGroup) && <GroupPanel group={selectedGroup} />}
           {selectedCard && isCard(selectedCard) && <CardPanel card={selectedCard} />}
           {selectedNote && isNote(selectedNote) && <NotePanel note={selectedNote} />}
-          <ShortcutsPanel hidden={!!(selectedEdge || selectedGroup || selectedCard || selectedNote)} />
+          {showEstimate && <EstimatePanel diagram={store.diagram()} onClose={() => setEstimateOpen(false)} />}
+          <ShortcutsPanel hidden={!!(selectedEdge || selectedGroup || selectedCard || selectedNote || showEstimate)} />
         </div>
       </div>
     </div>
