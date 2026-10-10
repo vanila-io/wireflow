@@ -33,7 +33,7 @@ describe.skipIf(!live)("live: anthropic", () => {
     await expect(provider.validateKey({ apiKey: "sk-ant-wrong", model })).rejects.toMatchObject({ kind: "auth" });
   });
 
-  it("builds a flow, then edits it in a follow-up, with prompt caching", { timeout: 240_000 }, async () => {
+  it("builds a flow, edits it in a follow-up with prompt caching, then groups part of it", { timeout: 240_000 }, async () => {
     const store = createDiagramStore({ initial: { nodes: [], edges: [] }, save: () => true });
     const chat = provider.createChat({ apiKey, model, system: systemPrompt(), tools: TOOLS });
     const editor = {
@@ -70,7 +70,23 @@ describe.skipIf(!live)("live: anthropic", () => {
     expect(d.nodes.some((n) => isCard(n) && n.data.headerText === "My Bag")).toBe(true);
     // The system prompt + tools (thousands of tokens) were cached on turn 1 and read back on turn 2.
     expect(r2.usage.cacheRead).toBeGreaterThan(2000);
-    // The result follows every diagram rule, and no screen is stacked on another.
+
+    // Turn 3: a group (#105's group operation), with no screen left inside its frame.
+    const r3 = await runRequest({
+      chat,
+      editor,
+      onEvent,
+      text: 'Put the cart, checkout and payment screens in a group called "Checkout".',
+    });
+    d = store.diagram();
+    console.log("turn 3", JSON.stringify(r3), JSON.stringify(snapshot({ data: d })));
+    expect(r3.status).toBe("done");
+    const group = d.nodes.find(isGroup);
+    expect(group?.data.label).toBe("Checkout");
+    expect(d.nodes.filter((n) => n.parentId === group!.id).length).toBeGreaterThanOrEqual(3);
+
+    // The result follows every diagram rule, no screen is stacked on another,
+    // and none lies inside a group frame it isn't in.
     expect(enforceRules(d).dropped).toEqual({ nodes: 0, edges: 0 });
     const boxes = absoluteBoxes(d.nodes);
     const screens = new Map<string, Screen>(
@@ -81,7 +97,7 @@ describe.skipIf(!live)("live: anthropic", () => {
     );
     const groups = new Map(d.nodes.filter(isGroup).map((g) => [g.id, { parent: g.parentId ?? null }]));
     expect([...layoutIssues(screens, groups).values()]).toEqual([]);
-    const report = { model, turn1: r1.usage, turn2: r2.usage, usd: r1.usage.usd + r2.usage.usd };
+    const report = { model, turn1: r1.usage, turn2: r2.usage, turn3: r3.usage, usd: r1.usage.usd + r2.usage.usd + r3.usage.usd };
     console.log(`total cost $${report.usd.toFixed(4)}`);
     if (process.env.AI_LIVE_REPORT) appendFileSync(process.env.AI_LIVE_REPORT, `${JSON.stringify(report)}\n`);
   });
