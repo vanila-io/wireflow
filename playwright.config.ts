@@ -10,7 +10,7 @@ const preview = process.env.E2E_SERVER === "preview";
 const external = process.env.E2E_BASE_URL;
 
 const desktop = { viewport: { width: 1440, height: 900 } };
-const mobileSpecs = /\.mobile\.spec\.ts$/;
+const touchSpecs = /\.touch\.spec\.ts$/;
 
 export default defineConfig({
   testDir: "e2e",
@@ -25,9 +25,10 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
-    { name: "chromium", testIgnore: mobileSpecs, use: { ...devices["Desktop Chrome"], ...desktop } },
-    // A phone with real touch events (hasTouch, isMobile).
-    { name: "mobile", testMatch: mobileSpecs, use: { ...devices["Pixel 7"] } },
+    { name: "chromium", testIgnore: touchSpecs, use: { ...devices["Desktop Chrome"], ...desktop } },
+    // A tablet with real touch events (hasTouch, isMobile). The editor's layout
+    // is the desktop one, so a phone leaves too little canvas to test on.
+    { name: "touch", testMatch: touchSpecs, use: { ...devices["Galaxy Tab S4 landscape"] } },
   ],
   webServer: external
     ? undefined

@@ -282,6 +282,18 @@ function EditorInner({ loaded }: { loaded: Start }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [store]);
 
+  // A template dragged with a finger from the sidebar, dropped on the canvas.
+  const canvas = useRef<HTMLDivElement>(null);
+  const touchDrop = useCallback(
+    (g: Graphic, point: { x: number; y: number }) => {
+      const r = canvas.current?.getBoundingClientRect();
+      if (!r || point.x < r.left || point.x > r.right || point.y < r.top || point.y > r.bottom) return;
+      const pos = screenToFlowPosition(point);
+      addGraphic(g, { x: pos.x - 120, y: pos.y - 100 });
+    },
+    [addGraphic, screenToFlowPosition]
+  );
+
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
@@ -425,8 +437,9 @@ function EditorInner({ loaded }: { loaded: Start }) {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <GraphicsPanel onAddCard={(g) => addGraphic(g)} />
+        <GraphicsPanel onAddCard={(g) => addGraphic(g)} onTouchDrop={touchDrop} />
         <div
+          ref={canvas}
           className="relative min-w-0 flex-1"
           onDrop={onDrop}
           onDragOver={(e) => {

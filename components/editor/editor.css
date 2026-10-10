@@ -72,3 +72,16 @@
   stroke-width: 3px;
   filter: drop-shadow(0 0 2px rgb(67 83 255 / 0.9));
 }
+
+/* The template that follows a finger dragged from the sidebar. */
+.touch-drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  width: 110px;
+  pointer-events: none;
+  opacity: 0.85;
+  border-radius: 6px;
+  box-shadow: 0 8px 30px rgb(29 28 40 / 0.25);
+}
