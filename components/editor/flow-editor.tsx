@@ -45,6 +45,7 @@ import { download, renderImage, type ImageFormat } from "./export-image";
 import Menu from "./menu";
 import Notices, { notice, type Notice } from "./notices";
 import SelectionChip from "./selection-chip";
+import ShortcutsPanel from "./shortcuts-panel";
 import { StoreContext, useStoreState } from "./store-context";
 import UpdatePrompt from "./update-prompt";
 
@@ -765,39 +766,7 @@ function EditorInner({ loaded }: { loaded: Start }) {
           {selectedEdge && <EdgePanel edge={selectedEdge} edges={edges} />}
           {selectedGroup && isGroup(selectedGroup) && <GroupPanel group={selectedGroup} />}
           {selectedCard && isCard(selectedCard) && <CardPanel card={selectedCard} />}
-          <aside className={`absolute right-4 top-4 hidden w-60 rounded-xl bg-white p-4 shadow-lg ring-1 ring-wire-border ${selectedEdge || selectedGroup || selectedCard ? "" : "lg:block"}`}>
-            <h3 className="text-sm font-bold text-ink">Keyboard shortcuts</h3>
-            <dl className="mt-3 space-y-2 text-xs">
-              {[
-                ["Zoom in", "Ctrl + ="],
-                ["Zoom out", "Ctrl + -"],
-                ["Undo", "Ctrl + Z"],
-                ["Redo", "Ctrl + Y"],
-                ["Toggle header", "H"],
-                ["Edit header", "Double-click"],
-                ["Delete selected", "Backspace"],
-                ["Copy / paste", "Ctrl + C / V"],
-                ["Group / ungroup", "Ctrl + G / ⇧G"],
-                ["Actual size", "Ctrl + 0"],
-                ["Select all / none", "Ctrl + A / Esc"],
-              ].map(([action, keys]) => (
-                <div key={action} className="flex items-center justify-between">
-                  <dt className="text-ink-soft">{action}</dt>
-                  <dd className="font-semibold text-rose-500">{keys}</dd>
-                </div>
-              ))}
-            </dl>
-            <h3 className="mt-5 text-sm font-bold text-ink">How it works</h3>
-            <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-5 text-ink-soft">
-              <li>Drag a graphic from the left panel onto the canvas</li>
-              <li>Hover a card, grab its bottom dot and drop it on another card to connect them</li>
-              <li>Double-click a card&rsquo;s header to rename it, press H to hide/show it</li>
-              <li>Click a card and press Backspace to remove it</li>
-              <li>Click a connection to label or colour it</li>
-              <li>Your flow autosaves in this browser</li>
-              <li>Export JSON saves it as a file; Open file opens it again</li>
-            </ul>
-          </aside>
+          <ShortcutsPanel hidden={!!(selectedEdge || selectedGroup || selectedCard)} />
         </div>
       </div>
     </div>
