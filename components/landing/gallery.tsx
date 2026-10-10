@@ -1,56 +1,115 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import graphicSizes from "@/lib/graphic-sizes.json";
 import { isPortrait } from "@/lib/diagram/model";
 import { categoryLabels, graphicsByCategory } from "@/lib/graphics";
+import { container, sectionTitle } from "./ui";
+
+// "All" opens on the first rows (three rows of six; four rows of two on a
+// phone); the rest is one click away. A category shows all of its flows.
+const FIRST_ROWS = 18;
+const FIRST_ROWS_PHONE = 8;
+const PHONE = "(max-width: 639px)"; // Tailwind's max-sm
+const ratios = graphicSizes as Record<string, number>;
+const total = graphicsByCategory("all").length;
 
 export default function Gallery() {
   const [category, setCategory] = useState("all");
+  const [expanded, setExpanded] = useState(false);
+  const grid = useRef<HTMLUListElement>(null);
   const items = useMemo(() => graphicsByCategory(category), [category]);
-
+  const collapsed = category === "all" && !expanded && items.length > FIRST_ROWS;
+  const shown = collapsed ? items.slice(0, FIRST_ROWS) : items;
   const filters = [{ slug: "all", label: "All" }, ...categoryLabels];
+  const current = filters.find((f) => f.slug === category)!;
+
+  // "Show all" removes its own button, so focus moves to the first newly shown flow.
+  const showAll = () => {
+    flushSync(() => setExpanded(true));
+    const first = window.matchMedia(PHONE).matches ? FIRST_ROWS_PHONE : FIRST_ROWS;
+    grid.current?.querySelectorAll("a")[first]?.focus();
+  };
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 py-20">
-      <h2 className="text-3xl font-extrabold tracking-tight text-ink">
-        Choose from {graphicsByCategory("all").length} flows in{" "}
-        {categoryLabels.length} categories
-      </h2>
+    <section id="templates" aria-labelledby="gallery-title" className="py-16 sm:py-24">
+      <div className={container}>
+        <h2 id="gallery-title" className={`${sectionTitle} max-w-[18ch]`}>
+          Choose from {total} flows in {categoryLabels.length} categories
+        </h2>
 
-      <div className="mt-8 flex flex-wrap gap-x-7 gap-y-3 text-xs font-bold uppercase tracking-wider">
-        {filters.map((f) => (
-          <button
-            key={f.slug}
-            onClick={() => setCategory(f.slug)}
-            className={`transition hover:text-wire-blue ${
-              category === f.slug ? "text-wire-blue" : "text-ink-soft"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+        {/* Phones scroll the chips sideways inside the page's gutter; wider screens wrap them. */}
+        <div className="-mx-5 mt-8 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:overflow-visible sm:px-0">
+          <div role="group" aria-label="Filter flows by category" className="flex w-max gap-2 py-1 sm:w-auto sm:flex-wrap">
+            {filters.map((f) => {
+              const active = category === f.slug;
+              return (
+                <button
+                  key={f.slug}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setCategory(f.slug)}
+                  className={`h-9 shrink-0 rounded-full border px-4 text-sm font-medium transition-colors ${
+                    active
+                      ? "border-night bg-night text-white"
+                      : "border-line bg-white text-ink-soft hover:border-night/30 hover:text-night"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <p className="sr-only" aria-live="polite">
+          {category === "all" ? `Showing ${shown.length} of ${total} flows` : `${items.length} ${current.label} flows`}
+        </p>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
-        {items.map((g) => (
-          <a
-            key={g.id}
-            href={`/app?card=${encodeURIComponent(g.id)}`}
-            className="group rounded-lg border border-wire-border bg-white p-3 transition hover:-translate-y-0.5 hover:border-wire-blue/40 hover:shadow-lg"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={g.src}
-              alt={g.label}
-              loading="lazy"
-              // a phone screen at the scale of the others, as in the editor's panel
-              className={isPortrait({ graphicId: g.id }) ? "mx-auto h-auto w-[56%]" : "h-auto w-full"}
-            />
-            <p className="mt-2 truncate text-[11px] font-semibold text-ink-soft group-hover:text-wire-blue">
-              {g.label}
-            </p>
-          </a>
-        ))}
+        <ul ref={grid} className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+          {shown.map((g, i) => {
+            const portrait = isPortrait({ graphicId: g.id });
+            const width = portrait ? 124 : 220;
+            return (
+              <li key={g.id} className={collapsed && i >= FIRST_ROWS_PHONE ? "max-sm:hidden" : undefined}>
+                <a
+                  href={`/app?card=${encodeURIComponent(g.id)}`}
+                  className="group flex h-full flex-col rounded-2xl border border-line bg-white p-2 transition hover:border-night/20 hover:shadow-[0_16px_36px_-20px_rgba(27,26,31,0.4)] motion-safe:hover:-translate-y-0.5"
+                >
+                  <span className="flex aspect-[5/4] items-center justify-center overflow-hidden rounded-xl bg-paper p-2.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={g.src}
+                      // The label below names the link; repeating it as alt text would read it twice.
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      width={width}
+                      height={Math.round(width * (ratios[g.id] ?? 0.79))}
+                      // a phone screen at the scale of the others, as in the editor's panel
+                      className={portrait ? "h-full w-auto" : "h-auto w-full"}
+                    />
+                  </span>
+                  <span className="truncate px-1.5 pb-1 pt-2.5 text-[13px] font-medium text-ink group-hover:text-wire-blue">
+                    {g.label}
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+
+        {collapsed && (
+          <div className="mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={showAll}
+              className="h-12 rounded-xl border border-line bg-white px-6 text-[15px] font-medium text-night transition-colors hover:border-night/30"
+            >
+              Show all {total} flows
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

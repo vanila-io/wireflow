@@ -1,101 +1,76 @@
-import Link from "next/link";
+import { Star } from "lucide-react";
+import { formatCount, REPO_URL } from "@/lib/github";
+import { Button, container } from "./ui";
 
-function Arrow({ className }: { className?: string }) {
+// The live star count (null when GitHub couldn't be read: the line then says
+// "Open source on GitHub" without a number).
+function StarLine({ stars }: { stars: number | null }) {
   return (
-    <svg
-      className={className}
-      width="24"
-      height="40"
-      viewBox="0 0 24 40"
-      fill="none"
-      aria-hidden
+    <a
+      href={REPO_URL}
+      className="inline-flex items-center gap-2 rounded-md text-sm text-ink-soft transition-colors hover:text-night"
+      data-testid="hero-stars"
     >
-      <path
-        d="M12 2v30M12 32l-5.5-6.5M12 32l5.5-6.5"
-        stroke="#A3A8C3"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+      <Star size={16} className="fill-amber-400 text-amber-500" aria-hidden />
+      {stars === null ? (
+        <span>Open source on GitHub</span>
+      ) : (
+        <span>
+          <strong className="font-semibold text-night">{formatCount(stars)}</strong> stars on GitHub
+        </span>
+      )}
+    </a>
   );
 }
 
-function HeroMockup() {
+// A real screenshot of the editor, framed on the warm wash. Phones get a
+// square crop of the canvas instead of the whole (tiny) window.
+function ProductShot() {
   return (
-    <div className="relative rounded-xl bg-white shadow-[0_30px_80px_-20px_rgba(45,43,51,0.35)] ring-1 ring-wire-border">
-      <div className="flex items-center gap-1.5 rounded-t-xl bg-ink px-4 py-3">
-        <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-        <span className="ml-3 h-2 w-24 rounded-full bg-white/20" />
-      </div>
-      <div className="grid w-[560px] max-w-full grid-cols-2 gap-10 bg-wire-canvas/60 px-8 py-8 max-lg:w-[480px]">
-        <div className="flex flex-col items-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/graphics/header/header-1.svg"
-            alt="Header wireframe card"
-            width={220}
-            className="w-[200px] rounded-lg shadow-md"
-          />
-          <Arrow className="my-1" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/graphics/sign-in/sign-in-1.svg"
-            alt="Sign in wireframe card"
-            width={220}
-            className="w-[220px] rounded-lg shadow-md"
-          />
-        </div>
-        <div className="flex flex-col items-center pt-14">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/graphics/article/article-1.svg"
-            alt="Article wireframe card"
-            width={220}
-            className="w-[220px] rounded-lg shadow-md"
-          />
-          <Arrow className="my-1" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/graphics/e-commerce/checkout.svg"
-            alt="Checkout wireframe card"
-            width={220}
-            className="w-[220px] rounded-lg shadow-md"
-          />
-        </div>
-      </div>
+    <div className="landing-aura relative mt-12 aspect-square overflow-hidden rounded-[24px] pl-5 pt-5 sm:mt-16 sm:aspect-[16/10] sm:rounded-[28px] sm:pl-10 sm:pt-10 lg:pl-14 lg:pt-14">
+      <picture>
+        <source media="(max-width: 639px)" srcSet="/landing/editor-canvas-800.webp" width={800} height={800} />
+        <img
+          src="/landing/editor-1200.webp"
+          srcSet="/landing/editor-1200.webp 1200w, /landing/editor-2400.webp 2400w"
+          sizes="(min-width: 1120px) 1000px, 92vw"
+          width={1200}
+          height={750}
+          fetchPriority="high"
+          decoding="async"
+          alt="The Wireflow editor: a checkout flow of wireframe screens joined by labelled connections, with the template sidebar on the left and the toolbar below"
+          className="block h-auto w-[115%] max-w-none rounded-tl-[14px] bg-white shadow-[0_30px_80px_-30px_rgba(27,26,31,0.55)] ring-1 ring-black/5 sm:w-full"
+        />
+      </picture>
     </div>
   );
 }
 
-export default function Hero() {
+export default function Hero({ stars }: { stars: number | null }) {
   return (
-    <section className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-20 pt-16 lg:grid-cols-[1fr_1.15fr]">
-      <div>
-        <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-ink">
+    <section aria-labelledby="hero-title" className="pt-10 sm:pt-16 lg:pt-20">
+      <div className={container}>
+        <h1
+          id="hero-title"
+          className="text-[44px] font-medium leading-[1.04] tracking-[-0.04em] text-night sm:text-[56px] lg:text-[64px]"
+        >
           Free Wire /<br />
           User Flow Tool
         </h1>
-        <p className="mt-6 max-w-md text-lg leading-8 text-ink-soft">
-          Wireflow is a <strong className="font-semibold text-ink">free, online and open source tool</strong>{" "}
+        <p className="mt-5 max-w-[34rem] text-[17px] leading-[1.65] text-ink-soft sm:text-lg">
+          Wireflow is a <strong className="font-medium text-night">free, online and open source tool</strong>{" "}
           for creating beautiful user flow prototypes.{" "}
-          <strong className="font-semibold text-ink">No Photoshop</strong> skills required!
+          <strong className="font-medium text-night">No Photoshop</strong> skills required!
         </p>
-        <div className="mt-8">
-          <Link
-            href="/app"
-            className="inline-block rounded-md bg-wire-blue px-8 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-wire-blue/25 transition hover:bg-wire-blue-dark"
-          >
-            Start designing
-          </Link>
+        <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
+          <Button href="/app">Start designing</Button>
+          <p className="text-sm text-ink-soft">Free forever. No sign up needed.</p>
         </div>
-        <p className="mt-4 text-sm text-ink-soft">
-          Free forever. No sign up needed.
-        </p>
+        <div className="mt-6">
+          <StarLine stars={stars} />
+        </div>
+        <ProductShot />
       </div>
-      <HeroMockup />
     </section>
   );
 }

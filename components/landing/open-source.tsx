@@ -1,4 +1,7 @@
-import Link from "next/link";
+import Image from "next/image";
+import { Check, Star } from "lucide-react";
+import { formatCount, REPO, REPO_URL } from "@/lib/github";
+import { Button, container, GitHubMark, sectionTitle } from "./ui";
 
 const techs = [
   {
@@ -15,58 +18,74 @@ const techs = [
   },
 ];
 
-export default function OpenSource() {
+// The repository at a glance: its live star count (left out when GitHub
+// couldn't be read) and its licence.
+function RepoCard({ stars }: { stars: number | null }) {
   return (
-    <section className="w-full bg-wire-lavender py-20">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 lg:grid-cols-2">
+    <div className="relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-[28px] bg-night p-8 text-white sm:min-h-[420px] sm:p-10">
+      <div
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-wire-blue/40 blur-3xl"
+        aria-hidden
+      />
+      <div className="relative flex items-center gap-3">
+        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white">
+          <Image src="/wireflow-logo.png" alt="Wireflow logo" width={30} height={30} />
+        </span>
+        <span className="flex items-center gap-2 font-mono text-sm text-white/75">
+          <GitHubMark size={16} />
+          {REPO}
+        </span>
+      </div>
+      <div className="relative" data-testid="repo-stars">
+        {stars === null ? (
+          <p className="text-[40px] font-medium leading-none tracking-[-0.03em]">Open source</p>
+        ) : (
+          <>
+            <p className="flex items-center gap-3 text-[56px] font-medium leading-none tracking-[-0.04em] sm:text-[72px]">
+              <Star className="h-10 w-10 fill-amber-400 text-amber-400 sm:h-12 sm:w-12" aria-hidden />
+              {formatCount(stars)}
+            </p>
+            <p className="mt-3 text-sm uppercase tracking-[0.12em] text-white/65">stars on GitHub</p>
+          </>
+        )}
+      </div>
+      <p className="relative inline-flex w-fit rounded-full border border-white/20 px-3 py-1 text-xs font-medium text-white/80">
+        MIT licensed
+      </p>
+    </div>
+  );
+}
+
+export default function OpenSource({ stars }: { stars: number | null }) {
+  return (
+    <section id="open-source" aria-labelledby="open-source-title" className="py-16 sm:py-24">
+      <div className={`${container} grid gap-12 lg:grid-cols-2 lg:items-stretch lg:gap-16`}>
+        <RepoCard stars={stars} />
         <div>
-          <img
-            src="/wireflow-logo.png"
-            alt="Wireflow logo"
-            className="h-14 w-14"
-          />
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-ink">
+          <h2 id="open-source-title" className={sectionTitle}>
             Fully Open Source
           </h2>
-          <p className="mt-4 max-w-md leading-7 text-ink-soft">
-            Wireflow is MIT licensed and developed in the open. Fork it, self
-            host it, or contribute. The whole project lives on GitHub.
+          <p className="mt-5 max-w-md text-[17px] leading-[1.65] text-ink-soft">
+            Wireflow is MIT licensed and developed in the open. Fork it, self host it, or contribute. The whole
+            project lives on GitHub.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a
-              href="https://github.com/vanila-io/wireflow"
-              className="inline-block rounded-md border border-ink/80 bg-white px-6 py-3 text-xs font-bold uppercase tracking-wider text-ink transition hover:bg-ink hover:text-white"
-            >
-              Check on GitHub
-            </a>
-            <a
-              href="https://opencollective.com/wireflow/contribute"
-              target="_blank"
-              rel="noopener"
-              className="inline-block rounded-md bg-wire-blue px-6 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-wire-blue-dark"
-            >
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button href={REPO_URL}>Check on GitHub</Button>
+            <Button href="https://opencollective.com/wireflow/contribute" variant="secondary" newTab rel="noopener">
               Support us
-            </a>
+            </Button>
           </div>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {techs.map((t) => (
-            <div
-              key={t.name}
-              className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-wire-border"
-            >
-              <div className="flex items-center justify-center py-3 text-2xl font-extrabold tracking-tight text-ink">
-                {t.name}
-              </div>
-              <p className="text-xs leading-5 text-ink-soft">{t.text}</p>
-              <Link
-                href="https://github.com/vanila-io/wireflow"
-                className="mt-4 block rounded-md bg-ink py-2 text-center text-[11px] font-bold uppercase tracking-wider text-white transition hover:bg-wire-blue"
-              >
-                Check on GitHub
-              </Link>
-            </div>
-          ))}
+          <ul className="mt-10 divide-y divide-line border-y border-line">
+            {techs.map((t) => (
+              <li key={t.name} className="flex gap-3 py-4">
+                <Check size={18} strokeWidth={2.2} className="mt-0.5 shrink-0 text-night" aria-hidden />
+                <p className="text-sm leading-6 text-ink-soft">
+                  <span className="font-medium text-night">{t.name}</span>
+                  <span className="block">{t.text}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
