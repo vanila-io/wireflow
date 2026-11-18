@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analytics } from "@/lib/env";
+import { analytics, DEFAULT_RYBBIT, rybbitScript } from "@/lib/env";
 
 describe("analytics env vars", () => {
   it("loads nothing when nothing is set", () => {
@@ -17,6 +17,17 @@ describe("analytics env vars", () => {
       rybbit: { src: "https://stats.example.com/api/script.js", siteId: "3", origin: "https://stats.example.com" },
       gaId: "G-ABC123",
     });
+  });
+
+  it("falls back to this site's own Rybbit property when none is configured", () => {
+    expect(rybbitScript({})).toEqual(DEFAULT_RYBBIT);
+    expect(rybbitScript({}).origin).toBe("https://rybbit-d367d4.automatio.run");
+  });
+
+  it("prefers a configured Rybbit property over the default", () => {
+    expect(
+      rybbitScript({ NEXT_PUBLIC_RYBBIT_SRC: "https://stats.example.com/api/script.js", NEXT_PUBLIC_RYBBIT_SITE_ID: "9" })
+    ).toEqual({ src: "https://stats.example.com/api/script.js", siteId: "9", origin: "https://stats.example.com" });
   });
 
   it("refuses values that would be unsafe in the page", () => {

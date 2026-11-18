@@ -6,14 +6,17 @@
 // while these are prerendered. So scripts are limited to this origin, inline,
 // and the analytics a deployment turns on, and the rest of the policy does the
 // work: connections only to this origin, Anthropic's API (the AI assistant,
-// with the user's own key) and configured analytics; no plugins, no <base>, no
-// forms to other sites, no framing.
-import { analytics } from "./env";
+// with the user's own key) and analytics; no plugins, no <base>, no forms to
+// other sites, no framing.
+import { analytics, rybbitScript } from "./env";
 
 type Env = Record<string, string | undefined>;
 
 export function contentSecurityPolicy(env: Env = process.env, { dev = env.NODE_ENV !== "production" } = {}) {
-  const { rybbit, gaId } = analytics(env);
+  const { gaId } = analytics(env);
+  // The origin the page actually loads its Rybbit script from (env, or this
+  // site's own property), so script-src and connect-src always allow it.
+  const rybbitOrigin = rybbitScript(env).origin;
   // Cloudflare Web Analytics, if the zone injects its beacon (see README).
   const cfBeacon = env.CLOUDFLARE_WEB_ANALYTICS === "1";
   const ga = gaId ? ["https://www.googletagmanager.com"] : [];
@@ -28,7 +31,7 @@ export function contentSecurityPolicy(env: Env = process.env, { dev = env.NODE_E
       "'self'",
       "'unsafe-inline'",
       ...(dev ? ["'unsafe-eval'"] : []),
-      ...(rybbit ? [rybbit.origin] : []),
+      rybbitOrigin,
       ...ga,
       ...(cfBeacon ? ["https://static.cloudflareinsights.com"] : []),
     ],
@@ -41,7 +44,7 @@ export function contentSecurityPolicy(env: Env = process.env, { dev = env.NODE_E
     "connect-src": [
       "'self'",
       "https://api.anthropic.com",
-      ...(rybbit ? [rybbit.origin] : []),
+      rybbitOrigin,
       ...gaConnect,
       ...(cfBeacon ? ["https://cloudflareinsights.com"] : []),
       ...(dev ? ["ws:"] : []),

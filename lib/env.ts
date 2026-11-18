@@ -16,6 +16,16 @@ export type Analytics = {
 
 type Env = Record<string, string | undefined>;
 
+// This site's own Rybbit property, used when a deployment sets no Rybbit
+// variables. The page (app/layout.tsx) and the Content-Security-Policy
+// (lib/security.ts) both read it, so the script tag and the policy that has to
+// allow it can never point at different origins.
+export const DEFAULT_RYBBIT = {
+  src: "https://rybbit-d367d4.automatio.run/api/script.js",
+  siteId: "3",
+  origin: "https://rybbit-d367d4.automatio.run",
+};
+
 function httpsUrl(value: string | undefined, name: string): URL | undefined {
   if (!value) return undefined;
   let url: URL;
@@ -26,6 +36,11 @@ function httpsUrl(value: string | undefined, name: string): URL | undefined {
   }
   if (url.protocol !== "https:") throw new Error(`${name} must be an https:// URL`);
   return url;
+}
+
+// The Rybbit script a page loads: the deployment's own, or this site's default.
+export function rybbitScript(env: Env = process.env): NonNullable<Analytics["rybbit"]> {
+  return analytics(env).rybbit ?? DEFAULT_RYBBIT;
 }
 
 // Throws (and so fails the build) on a malformed value instead of shipping it.

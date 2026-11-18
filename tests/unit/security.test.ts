@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_RYBBIT } from "@/lib/env";
 import { APP_PATHS, contentSecurityPolicy, securityHeaders } from "@/lib/security";
 
 const directive = (csp: string, name: string) =>
@@ -9,13 +10,21 @@ const directive = (csp: string, name: string) =>
     .slice(1);
 
 describe("security headers", () => {
-  it("allows connections only to this origin and Anthropic, with no analytics configured", () => {
+  it("allows connections to this origin, Anthropic and the site's own Rybbit, with no analytics configured", () => {
     const csp = contentSecurityPolicy({ NODE_ENV: "production" });
-    expect(directive(csp, "connect-src")).toEqual(["'self'", "https://api.anthropic.com"]);
-    expect(directive(csp, "script-src")).toEqual(["'self'", "'unsafe-inline'"]);
+    expect(directive(csp, "connect-src")).toEqual(["'self'", "https://api.anthropic.com", DEFAULT_RYBBIT.origin]);
+    expect(directive(csp, "script-src")).toEqual(["'self'", "'unsafe-inline'", DEFAULT_RYBBIT.origin]);
     expect(directive(csp, "object-src")).toEqual(["'none'"]);
     expect(directive(csp, "frame-ancestors")).toEqual(["'none'"]);
     expect(directive(csp, "base-uri")).toEqual(["'self'"]);
+  });
+
+  it("always allows the Rybbit origin the page loads, in both script-src and connect-src", () => {
+    for (const env of [{ NODE_ENV: "production" }, { NODE_ENV: "development" }]) {
+      const csp = contentSecurityPolicy(env);
+      expect(directive(csp, "script-src")).toContain("https://rybbit-d367d4.automatio.run");
+      expect(directive(csp, "connect-src")).toContain("https://rybbit-d367d4.automatio.run");
+    }
   });
 
   it("adds exactly the analytics a deployment turns on", () => {

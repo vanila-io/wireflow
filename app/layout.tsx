@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { analytics } from "@/lib/env";
+import { analytics, rybbitScript } from "@/lib/env";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,11 +53,8 @@ export const viewport: Viewport = {
   themeColor: "#465BFF",
 };
 
-const { rybbit: configuredRybbit, gaId } = analytics();
-const rybbit = configuredRybbit ?? {
-  src: "https://rybbit-d367d4.automatio.run/api/script.js",
-  siteId: "3",
-};
+const { gaId } = analytics();
+const rybbit = rybbitScript();
 
 export default function RootLayout({
   children,
@@ -71,7 +68,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         {children}
-        {/* Use the shared Wireflow Rybbit property unless another Rybbit site is configured. */}
+        {/* The shared Wireflow Rybbit property, unless another Rybbit site is configured. */}
         <script async defer src={rybbit.src} data-site-id={rybbit.siteId} />
         {gaId && (
           <>
