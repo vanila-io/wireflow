@@ -76,3 +76,14 @@ __error_bridge.js
 
 # Claude Code: per-agent git worktrees (local only)
 /.claude/worktrees/
+.wrangler/
+.output/
+.astro/
+.svelte-kit/
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+.agents/
+.gallery-artifact-*
+.clone-staging-*

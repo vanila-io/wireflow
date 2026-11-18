@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { API_URL, fetchStars, formatCount, getStars } from "@/lib/github";
-import { RemoteDataError, unavailable } from "@/lib/remote-data";
+import { unavailable } from "@/lib/remote-data";
 import { getSponsors, OC_MEMBERS_URL, tierSponsors, type OcMember } from "@/lib/sponsors";
 
 const json = (body: unknown, status = 200) =>
@@ -17,16 +17,17 @@ afterEach(() => {
 describe("unavailable (what the landing does when GitHub or Open Collective can't be read)", () => {
   it("uses the fallback during next build, so the build never fails", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    expect(unavailable(null, "x", { NODE_ENV: "production", NEXT_PHASE: "phase-production-build" })).toBeNull();
+    expect(unavailable(null, "x")).toBeNull();
   });
 
-  it("throws during a background regeneration, so Next.js keeps the last good page", () => {
-    expect(() => unavailable(null, "GitHub API answered 403", { NODE_ENV: "production" })).toThrow(RemoteDataError);
+  it("uses the fallback during production regeneration when a remote source fails", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(unavailable(null, "GitHub API answered 403")).toBeNull();
   });
 
   it("uses the fallback in development and tests", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    expect(unavailable([], "x", { NODE_ENV: "development" })).toEqual([]);
+    expect(unavailable([], "x")).toEqual([]);
   });
 });
 
@@ -48,10 +49,11 @@ describe("GitHub stars", () => {
     expect(await getStars(json({ stargazers_count: "lots" }) as unknown as typeof fetch)).toBeNull();
   });
 
-  it("keeps the last page when regeneration can't read it", async () => {
+  it("renders without a star count when GitHub is rate-limited during production", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("NEXT_PHASE", "");
-    await expect(getStars(json({}, 403) as unknown as typeof fetch)).rejects.toThrow(RemoteDataError);
+    expect(await getStars(json({}, 403) as unknown as typeof fetch)).toBeNull();
   });
 
   it("formats the count with thousands separators", () => {
@@ -100,12 +102,12 @@ describe("sponsors", () => {
     expect(init.next.revalidate).toBe(3600);
   });
 
-  it("shows no sponsors when Open Collective can't be read during a build, and keeps the last page after it", async () => {
+  it("shows no sponsors when Open Collective can't be read during a build or production revalidation", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("NEXT_PHASE", "phase-production-build");
     expect(await getSponsors(failing as unknown as typeof fetch)).toEqual({ diamond: [], gold: [], silver: [], bronze: [] });
     vi.stubEnv("NEXT_PHASE", "");
-    await expect(getSponsors(json({ error: "nope" }) as unknown as typeof fetch)).rejects.toThrow(RemoteDataError);
+    expect(await getSponsors(json({ error: "nope" }) as unknown as typeof fetch)).toEqual({ diamond: [], gold: [], silver: [], bronze: [] });
   });
 });
