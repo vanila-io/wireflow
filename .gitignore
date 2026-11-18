@@ -87,3 +87,7 @@ venv/
 .agents/
 .gallery-artifact-*
 .clone-staging-*
+**/.local/share/pnpm/
+/.box-internal/
+.download-*
+.code-graph-out-*

@@ -55,7 +55,7 @@ export const viewport: Viewport = {
 
 const { rybbit: configuredRybbit, gaId } = analytics();
 const rybbit = configuredRybbit ?? {
-  src: "https://dokploy-rybbit-059dcf.automatio.run/api/script.js",
+  src: "https://rybbit-d367d4.automatio.run/api/script.js",
   siteId: "3",
 };
 
