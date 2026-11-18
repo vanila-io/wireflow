@@ -509,7 +509,7 @@ test.describe("what the AI panel keeps in this browser", () => {
     await aiButton(page).click();
     const remember = panel(page).getByRole("checkbox", { name: "Remember on this device" });
     await expect(remember).toBeChecked();
-    await panel(page).getByLabel("API key").fill("sk-ant-test-default-remember");
+    await panel(page).getByLabel("API key").fill("sk-ant-dummy-september");
     await panel(page).getByRole("button", { name: "Check & use key" }).click();
     await expect(panel(page).getByLabel("Message")).toBeVisible();
 

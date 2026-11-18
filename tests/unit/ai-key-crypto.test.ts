@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { isSealed, newDeviceKey, seal, unseal } from "@/lib/ai/key-crypto";
 
 // Obviously fake.
-const KEY = "sk-ant-test-0000-not-a-real-key-wireflow";
+const KEY = "sk-ant-dummy-september";
 const bytes = (b: ArrayBuffer | Uint8Array) => Buffer.from(b instanceof Uint8Array ? b : new Uint8Array(b));
 
 describe("key encryption", () => {
