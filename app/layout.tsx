@@ -53,7 +53,11 @@ export const viewport: Viewport = {
   themeColor: "#465BFF",
 };
 
-const { rybbit, gaId } = analytics();
+const { rybbit: configuredRybbit, gaId } = analytics();
+const rybbit = configuredRybbit ?? {
+  src: "https://dokploy-rybbit-059dcf.automatio.run/api/script.js",
+  siteId: "3",
+};
 
 export default function RootLayout({
   children,
@@ -67,8 +71,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         {children}
-        {/* Analytics load only when configured (lib/env.ts, README "Environment variables"). */}
-        {rybbit && <script async defer src={rybbit.src} data-site-id={rybbit.siteId} />}
+        {/* Use the shared Wireflow Rybbit property unless another Rybbit site is configured. */}
+        <script async defer src={rybbit.src} data-site-id={rybbit.siteId} />
         {gaId && (
           <>
             <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
